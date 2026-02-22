@@ -7,6 +7,13 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'backend/**' # Only trigger if files in the backend folder change
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
   workflow_dispatch:
 
 jobs:
@@ -62,4 +69,5 @@ jobs:
           app-name: 'BackgroundWorker'
           slot-name: 'Production'
           package: .
+
           
