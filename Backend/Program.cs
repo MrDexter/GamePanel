@@ -1,15 +1,39 @@
 using Microsoft.Extensions.Hosting;
 using Scalar.AspNetCore;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
 using BackgroundJobs.Endpoints;
 using BackgroundJobs.Services;
 using BackgroundJobs.Background;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddAuthentication("Bearer").AddJwtBearer("Bearer", options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+      ValidateIssuer = true,
+      ValidateAudience = true,
+      ValidateLifetime = true,
+      ValidateIssuerSigningKey = true, 
+
+      ValidIssuer = builder.Configuration["Jwt:Issuer"],
+      ValidAudience = builder.Configuration["Jwt:Audience"],
+
+      IssuerSigningKey = new SymmetricSecurityKey(
+        Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]
+        ?? throw new InvalidOperationException("Missing Default Key"))
+      )
+    };
+});
+
+builder.Services.AddAuthentication();
+builder.Services.AddAuthorization();
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<IPlayerService, PlayerService>();
+builder.Services.AddScoped<IGangService, GangService>();
+builder.Services.AddScoped<ISecurityService, SecurityService>();
 builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<IProcessorService, ProcessorService>();
 // For the Azure App Service test platform, Disable this and do a manual trigger on job creation to save on resources
@@ -32,9 +56,13 @@ if (app.Environment.IsDevelopment())
 {}
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapJobEndpoints();
 app.MapPlayerEndpoints();
 app.MapMiscEndpoints();
+app.MapAuthEndpoints();
+app.MapGangEndpoints();
 app.MapOpenApi();
 app.MapScalarApiReference();
 
