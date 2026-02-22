@@ -1,4 +1,4 @@
-namespace BackgroundJobs.Models;
+namespace DecsPage.Models;
 
 public record Player (
     string Id,
@@ -64,6 +64,7 @@ public record Job (
     string Type,
     string Status,
     string Result,
+    object Payload,
     DateTime CreatedAt,
     DateTime InsertTime
 );

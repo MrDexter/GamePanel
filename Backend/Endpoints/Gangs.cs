@@ -1,13 +1,13 @@
-using BackgroundJobs.Models;
-using BackgroundJobs.Services;
+using DecsPage.Models;
+using DecsPage.Services;
 
-namespace BackgroundJobs.Endpoints;
+namespace DecsPage.Endpoints;
 
 public static class GangEndpoints
 {
     public static IEndpointRouteBuilder MapGangEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/gangs");
+        var group = app.MapGroup("/gangs").WithTags("Gang Management");
 
         group.MapGet("/", async (int? limit, int? offset, IGangService gangs) =>
         {
@@ -21,6 +21,18 @@ public static class GangEndpoints
             if (result is null)
                 return Results.NotFound();
             return Results.Ok(result);
+        });
+
+        group.MapPost("/export", async (IJobService jobs) =>
+        {
+            var id = await jobs.CreateJobAsync("gangsExport", new {});
+            return Results.Accepted($"/jobs/{id}", new {id});
+        });
+
+        group.MapPost("/{id}/export", async (string id, IJobService jobs) =>
+        {
+            var jobId = await jobs.CreateJobAsync("gangExport", new { gangId =  id} );
+            return Results.Accepted($"/jobs/{jobId}", new {jobId});
         });
 
         return app;

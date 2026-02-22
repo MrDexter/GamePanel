@@ -1,5 +1,9 @@
 @Background_Job_Processor_HostAddress = http://localhost:5214
 
+GET {{Background_Job_Processor_HostAddress}}/players?limit=1
+Accept: application/json
+
+###
 GET {{Background_Job_Processor_HostAddress}}/jobs/
 Accept: application/json
 

@@ -1,14 +1,14 @@
-using BackgroundJobs.Models;
-using BackgroundJobs.Services;
+using DecsPage.Models;
+using DecsPage.Services;
 using Microsoft.AspNetCore.Authorization;
 
-namespace BackgroundJobs.Endpoints;
+namespace DecsPage.Endpoints;
 
 public static class PlayerEndpoints
 {
     public static IEndpointRouteBuilder MapPlayerEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/players");
+        var group = app.MapGroup("/players").WithTags("Player Management");
 
         group.MapGet("/", async (int? limit, int? offset, IPlayerService players) =>
         {
@@ -74,10 +74,16 @@ public static class PlayerEndpoints
             return Results.Ok(result);
         });
 
-        group.MapPost("/dump", async (IJobService jobs) =>
+        group.MapPost("/export", async (IJobService jobs) =>
         {
-            var id = await jobs.CreateJobAsync("PlayersDump");
+            var id = await jobs.CreateJobAsync("playersExport", new {});
             return Results.Accepted($"/jobs/{id}", new {id});
+        });
+
+        group.MapPost("/{id}/export", async (string id, IJobService jobs) =>
+        {
+            var jobId = await jobs.CreateJobAsync("playerExport", new { playerId =  id} );
+            return Results.Accepted($"/jobs/{jobId}", new {jobId});
         });
         return app;
     }

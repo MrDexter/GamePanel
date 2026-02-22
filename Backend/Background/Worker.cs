@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
-using BackgroundJobs.Services;
+using DecsPage.Services;
 
-namespace BackgroundJobs.Background;
+namespace DecsPage.Background;
 
 // Added for the manual trigger for Azure hosting. Not needed normally with the "BackgroundService" and Protected override Task
 public interface IJobWorker

@@ -1,7 +1,7 @@
 using Microsoft.Data.SqlClient;
-using BackgroundJobs.Models;
+using DecsPage.Models;
 
-namespace BackgroundJobs.Services;
+namespace DecsPage.Services;
 
 
 public interface IPlayerService
@@ -89,7 +89,7 @@ public class PlayerService : IPlayerService
         using (var connnection2 = new SqlConnection(connectionString))
         {
         await connnection2.OpenAsync();
-        var sql2 = "SELECT a.id, a.location, a.securityLevel, b.VirtualContents, a.timeBought FROM housing a INNER JOIN housinginvstorage b ON (a.HousingInvStorageID=b.id) WHERE a.alive = 1 AND a.ownerpid=@pid AND a.isOrgHouse=0";
+        var sql2 = "SELECT a.id, a.location, a.securityLevel, b.VirtualContents, a.timeBought FROM housing a INNER JOIN housinginvstorage b ON (a.HousingInvStorageID=b.id) WHERE a.alive = 1 AND a.ownerPid=@pid AND a.isOrgHouse=0";
         using var command2 = new SqlCommand(sql2, connnection2);
         command2.Parameters.AddWithValue("@pid", result[0]["playerid"]);
         using var reader2 = await command2.ExecuteReaderAsync();

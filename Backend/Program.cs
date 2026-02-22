@@ -3,9 +3,10 @@ using Scalar.AspNetCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
-using BackgroundJobs.Endpoints;
-using BackgroundJobs.Services;
-using BackgroundJobs.Background;
+using DecsPage.Endpoints;
+using DecsPage.Services;
+using DecsPage.Background;
+using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,7 +45,14 @@ builder.Services.AddOpenApi(options => {
     options.AddDocumentTransformer((document, context, cancellationToken) => {
         document.Info.Title = "Dec's Background Worker & API Project";
         document.Info.Version = "v1.0.0";
-        document.Info.Description = "Backend service for background task processing";
+        document.Info.Description = "Service to view and update Player information and export any data";
+        document.Tags = new HashSet<OpenApiTag>
+        {
+            new() { Name = "Player Management", Description = "Real-time player statistics" },
+            new() { Name = "Gang Management", Description = "Gang analytics and management" },
+            new() { Name = "Job Management", Description = "Background worker controls" },
+            new() { Name = "Security and Misc", Description = "Authentication and Authorization" }
+        };
         return Task.CompletedTask;
     });
 });
@@ -66,6 +74,6 @@ app.MapGangEndpoints();
 app.MapOpenApi();
 app.MapScalarApiReference();
 
-app.MapGet("/", () => Results.Redirect("/scalar/"));
+app.MapGet("/", () => Results.Redirect("/scalar/")).ExcludeFromDescription();;
 
 app.Run();

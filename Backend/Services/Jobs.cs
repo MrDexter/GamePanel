@@ -1,17 +1,20 @@
 using Microsoft.Data.SqlClient;
-using BackgroundJobs.Models;
-using BackgroundJobs.Background;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using DecsPage.Models;
+using DecsPage.Background;
 
-namespace BackgroundJobs.Services;
+namespace DecsPage.Services;
 
 public interface IJobService
 {
   Task<List<Job>>GetJobsAsync();
   Task<Job>GetJobAsync(string id);  
-  Task<object>CreateJobAsync(string type);
+  Task<object>CreateJobAsync(string type, object? payload);
   Task StartWorker();
   Task <Job>GetWaitingJobAsync(CancellationToken stopToken);
   Task<String>UpdateJobStatusAsync(string id, string status, string result);
+  Task<bool>ResetJobState(string id);
 
 };
 
@@ -45,6 +48,7 @@ public class JobService : IJobService
                     reader["type"].ToString() ?? string.Empty,
                     reader["status"].ToString() ?? string.Empty,
                     reader["result"].ToString() ?? string.Empty,
+                    reader["payload"].ToString() ?? "{}",
                     reader.GetDateTime(reader.GetOrdinal("created_at")),
                     reader.GetDateTime(reader.GetOrdinal("updated_at"))
                 );
@@ -72,21 +76,23 @@ public class JobService : IJobService
                 reader["type"].ToString() ?? string.Empty,
                 reader["status"].ToString() ?? string.Empty,
                 reader["result"].ToString() ?? string.Empty,
+                reader["payload"].ToString() ?? "{}",
                 reader.GetDateTime(reader.GetOrdinal("created_at")),
                 reader.GetDateTime(reader.GetOrdinal("updated_at"))
             );
         };
     }
 
-    public async Task<object>CreateJobAsync(string type)
+    public async Task<object>CreateJobAsync(string type, object? payload)
     {
+        var JsonPayload = JsonSerializer.Serialize(payload);
         using (var connection = new SqlConnection(connectionString))
         {
             await connection.OpenAsync();
             var sql = "INSERT INTO jobs (type, status, payload, result) OUTPUT INSERTED.id VALUES (@type, 'Incomplete', @payload, NULL);";
             using var command = new SqlCommand(sql, connection);
             command.Parameters.AddWithValue("@type", type);
-            command.Parameters.AddWithValue("@payload", DBNull.Value);
+            command.Parameters.AddWithValue("@payload", JsonPayload);
             var id = Convert.ToInt32(await command.ExecuteScalarAsync());
             // Manual Trigger Worker loop on job create
             _ = StartWorker();
@@ -115,6 +121,7 @@ public class JobService : IJobService
                 reader["type"].ToString() ?? string.Empty,
                 reader["status"].ToString() ?? string.Empty,
                 reader["result"].ToString() ?? string.Empty,
+                reader["payload"].ToString() ?? "{}",
                 reader.GetDateTime(reader.GetOrdinal("created_at")),
                 reader.GetDateTime(reader.GetOrdinal("updated_at"))
             );
@@ -138,5 +145,24 @@ public class JobService : IJobService
             }
             return "Seuccess";
         }
+    }
+
+    public async Task<bool>ResetJobState(string id)
+    {
+       using (var connection = new SqlConnection(connectionString))
+        {
+            await connection.OpenAsync();
+            var sql = $"UPDATE jobs SET status = 'Incomplete' WHERE id = @id";
+            using var command = new SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@id", id);
+            int reader = await command.ExecuteNonQueryAsync();
+            if (reader == 0)
+            {
+                return false;
+            };
+            // Manual Trigger Worker loop on job create
+            _ = StartWorker();
+            return true;
+        } 
     }
 };

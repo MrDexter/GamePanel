@@ -1,7 +1,7 @@
 using Microsoft.Data.SqlClient;
-using BackgroundJobs.Models;
+using DecsPage.Models;
 
-namespace BackgroundJobs.Services;
+namespace DecsPage.Services;
 
 public interface ISecurityService
 {

@@ -1,11 +1,11 @@
-using BackgroundJobs.Models;
+using DecsPage.Models;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
 
-namespace BackgroundJobs.Endpoints;
+namespace DecsPage.Endpoints;
 
 public static class AuthEndpoints
 {
@@ -47,7 +47,7 @@ public static class AuthEndpoints
             {
                 token = new JwtSecurityTokenHandler().WriteToken(token)
             });
-        });
+        }).WithTags("Security and Misc");
 
         return app;
     }  

@@ -1,5 +1,5 @@
 using Microsoft.Data.SqlClient;
-namespace BackgroundJobs.Endpoints;
+namespace DecsPage.Endpoints;
 
 public static class MiscEndpoints
 {
@@ -8,7 +8,7 @@ public static class MiscEndpoints
         app.MapGet("/health", async () =>
         {
             return Results.Ok("Ok");   
-        });
+        }).WithTags("Security and Misc");
 
         app.MapGet("/debug/config", (IConfiguration cfg) =>
         {
@@ -17,7 +17,7 @@ public static class MiscEndpoints
             var container = cfg["Storage:Container"] ?? "(null)";
 
             return Results.Ok(new { hasSql, hasBlob, container });
-        });
+        }).WithTags("Security and Misc");
 
         app.MapGet("/debug/sql", async (IConfiguration cfg) =>
 {
@@ -28,7 +28,7 @@ public static class MiscEndpoints
             var x = (int)await cmd.ExecuteScalarAsync();
 
             return Results.Ok(new { ok = x == 1 });
-        });
+        }).WithTags("Security and Misc");
 
 
         return app;

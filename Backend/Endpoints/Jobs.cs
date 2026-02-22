@@ -1,14 +1,14 @@
-using BackgroundJobs.Models;
-using BackgroundJobs.Services;
+using DecsPage.Models;
+using DecsPage.Services;
 // using Microsoft.AspNetCore.Authorization;
 
-namespace BackgroundJobs.Endpoints;
+namespace DecsPage.Endpoints;
 
 public static class JobEndpoints
 {
     public static IEndpointRouteBuilder MapJobEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/jobs");
+        var group = app.MapGroup("/jobs").WithTags("Job Management");
 
         group.MapGet("/", async (IJobService jobs) =>
         {
@@ -36,7 +36,13 @@ public static class JobEndpoints
 
         group.MapGet("/{id}/reset", async (string id, IJobService jobs) =>
         {
-           // Get Job, if Failed, Canceled etc. Reset to Incomplete 
+           var result = await jobs.ResetJobState(id);
+           if (result)
+            {
+                return Results.Ok("Success");
+            } else {
+                return Results.NotFound();
+            };
         });
 
         group.MapGet("/{id}/download", async (string id, IJobService jobs, IProcessorService processor) =>
