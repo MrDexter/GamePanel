@@ -8,12 +8,12 @@ on:
     branches:
       - main
     paths:
-      - 'backend/**' # Only trigger if files in the backend folder change
+      - 'Backend/**' # Only trigger if files in the backend folder change
   pull_request:
     branches:
       - main
     paths:
-      - 'backend/**'
+      - 'Backend/**'
   workflow_dispatch:
 
 jobs:
@@ -71,3 +71,4 @@ jobs:
           package: .
 
           
+
