@@ -1,0 +1,19 @@
+@Background_Job_Processor_HostAddress = http://localhost:5214
+
+GET {{Background_Job_Processor_HostAddress}}/jobs/
+Accept: application/json
+
+###
+
+GET {{Background_Job_Processor_HostAddress}}/jobs/30
+Accept: application/json
+
+###
+
+POST {{Background_Job_Processor_HostAddress}}/players/dump
+Accept: application/json
+
+###
+
+GET {{Background_Job_Processor_HostAddress}}/jobs/38/download
+Accept: application/json
