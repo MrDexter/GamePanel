@@ -1,4 +1,4 @@
-### Live Demo: [api.decspage.com](https://api.decspage.com/)
+### Live Demo: [Frontend](https://decspage.com/) - [Backend](https://api.decspage.com/)
 
 This project integrates my **Community API** and **Background Worker** into a unified, high-performance service.
 
