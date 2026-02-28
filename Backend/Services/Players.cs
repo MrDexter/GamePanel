@@ -88,14 +88,13 @@ public class PlayerService : IPlayerService
                 result.Add(row);
         };
         // Housing
-        var sql2 = "SELECT a.id, a.location, a.securityLevel, b.VirtualContents, a.timeBought FROM housing a INNER JOIN housinginvstorage b ON (a.HousingInvStorageID=b.id) WHERE a.alive = 1 AND a.ownerPid=@pid AND a.isOrgHouse=0";
+        var sql2 = "SELECT a.id, a.location, a.securityLevel, b.VirtualContents, a.timeBought, a.isOrgHouse FROM housing a INNER JOIN housinginvstorage b ON (a.HousingInvStorageID=b.id) WHERE a.alive = 1 AND a.ownerPid=@pid";
         using (var command2 = new SqlCommand(sql2, connection))
         {
             command2.Parameters.AddWithValue("@pid", result[0]["playerid"]);
             using var reader2 = await command2.ExecuteReaderAsync();
             // var housing = new Dictionary<string, object>();
             var housing = new List<Houses>();
-            var count = 0;
             while (await reader2.ReadAsync())
             {
                 var row2 = new Houses(
@@ -103,6 +102,7 @@ public class PlayerService : IPlayerService
                     reader2["location"].ToString() ?? string.Empty,
                     reader2["securityLevel"].ToString() ?? string.Empty,
                     reader2["virtualContents"].ToString() ?? string.Empty,
+                    reader2["isOrgHouse"].ToString() ?? string.Empty,
                     reader2.GetDateTime(reader2.GetOrdinal("timeBought"))
                 );
                 housing.Add(row2);
@@ -116,7 +116,6 @@ public class PlayerService : IPlayerService
             command3.Parameters.AddWithValue("@pid", result[0]["playerid"]);
             using var reader3 = await command3.ExecuteReaderAsync();
             var vehicles = new List<Vehicles>();
-            var count = 0;
             while (await reader3.ReadAsync())
             {
                 var row3 = new Vehicles(

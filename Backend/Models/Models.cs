@@ -33,6 +33,7 @@ public record Houses (
     string Location,
     string SecurityLevel,
     string VirtualContents,
+    string IsOrgHouse,
     DateTime TimeBought
 );
 
