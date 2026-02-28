@@ -91,6 +91,8 @@ public class GangService : IGangService
                 reader2["location"].ToString() ?? string.Empty,
                 reader2["securityLevel"].ToString() ?? string.Empty,
                 reader2["virtualContents"].ToString() ?? string.Empty,
+                reader2["Contents"].ToString() ?? string.Empty,
+                reader2["isOrgHouse"].ToString() ?? string.Empty,
                 reader2.GetDateTime(reader2.GetOrdinal("timeBought"))
               );
               count = count + 1;
