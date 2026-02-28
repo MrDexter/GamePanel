@@ -69,33 +69,33 @@ public class PlayerService : IPlayerService
     {
         var result = new List<Dictionary<string, object>>();
         var row = new Dictionary<string, object>();
-        using (var connection = new SqlConnection(connectionString))
-        {
+        using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
+
         var sql = "Select * FROM players WHERE uid = @uid OR playerid = @uid";
-        using var command = new SqlCommand(sql, connection);
-        command.Parameters.AddWithValue("@uid", id);
-        using var reader = await command.ExecuteReaderAsync();
-        if (!await reader.ReadAsync())
-            {
-                return null;
-            };
-            for (int i=0; i < reader.FieldCount; i++)
-            {
-                row[reader.GetName(i)] = reader.GetValue(i);
-            };
-            result.Add(row);
+        using (var command = new SqlCommand(sql, connection))
+        {
+            command.Parameters.AddWithValue("@uid", id);
+            using var reader = await command.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+                {
+                    return null;
+                };
+                for (int i=0; i < reader.FieldCount; i++)
+                {
+                    row[reader.GetName(i)] = reader.GetValue(i);
+                };
+                result.Add(row);
         };
         // Housing
-        using (var connnection2 = new SqlConnection(connectionString))
-        {
-        await connnection2.OpenAsync();
         var sql2 = "SELECT a.id, a.location, a.securityLevel, b.VirtualContents, a.timeBought FROM housing a INNER JOIN housinginvstorage b ON (a.HousingInvStorageID=b.id) WHERE a.alive = 1 AND a.ownerPid=@pid AND a.isOrgHouse=0";
-        using var command2 = new SqlCommand(sql2, connnection2);
-        command2.Parameters.AddWithValue("@pid", result[0]["playerid"]);
-        using var reader2 = await command2.ExecuteReaderAsync();
-        var housing = new Dictionary<string, object>();
-        var count = 0;
+        using (var command2 = new SqlCommand(sql2, connection))
+        {
+            command2.Parameters.AddWithValue("@pid", result[0]["playerid"]);
+            using var reader2 = await command2.ExecuteReaderAsync();
+            // var housing = new Dictionary<string, object>();
+            var housing = new List<Houses>();
+            var count = 0;
             while (await reader2.ReadAsync())
             {
                 var row2 = new Houses(
@@ -105,20 +105,17 @@ public class PlayerService : IPlayerService
                     reader2["virtualContents"].ToString() ?? string.Empty,
                     reader2.GetDateTime(reader2.GetOrdinal("timeBought"))
                 );
-                count = count + 1;
-                housing["House " + count ] = row2;
+                housing.Add(row2);
             };
             row["housing"] = housing;
         };
         // Vehicles
-        using (var connection3 = new SqlConnection(connectionString))
+        var sql3 = "Select id, side, classname, type, inventory, reg, capacity, security, acceleration, insert_time FROM vehicles where pid = @pid";
+        using (var command3 = new SqlCommand(sql3, connection))
         {
-            await connection3.OpenAsync();
-            var sql3 = "Select id, side, classname, type, inventory, reg, capacity, security, acceleration, insert_time FROM vehicles where pid = @pid";
-            using var command3 = new SqlCommand(sql3, connection3);
             command3.Parameters.AddWithValue("@pid", result[0]["playerid"]);
             using var reader3 = await command3.ExecuteReaderAsync();
-            var vehicles = new Dictionary<string, object>();
+            var vehicles = new List<Vehicles>();
             var count = 0;
             while (await reader3.ReadAsync())
             {
@@ -134,8 +131,7 @@ public class PlayerService : IPlayerService
                     reader3["acceleration"].ToString() ?? string.Empty,
                     reader3.GetDateTime(reader3.GetOrdinal("insert_time"))
                 );
-                count = count + 1;
-                vehicles["Vehicle " + count ] = row3;
+                vehicles.Add(row3);
             };
             row["vehicles"] = vehicles;
         };
@@ -149,7 +145,7 @@ public class PlayerService : IPlayerService
         {
             await connection.OpenAsync();
 
-            var sql = "Select uid, name, playerid, cash, bankacc, cartelCredits, adminLevel, copLevel, ionLevel, medicLevel, last_seen, insert_time From players WHERE Name LIKE '%' + @search + '%' OR Aliases LIKE '%' + @search + '%' OR PlayerId = @search ";
+            var sql = "Select uid, name, playerid, cash, bankacc, cartelCredits, adminLevel, copLevel, ionLevel, medicLevel, last_seen, insert_time From players WHERE Name LIKE '%' + @search + '%' OR Aliases LIKE '%' + @search + '%' OR PlayerId = @search OR uid = @search";
 
             using var command = new SqlCommand(sql, connection);
             command.Parameters.AddWithValue("@search", search);
