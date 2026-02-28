@@ -88,7 +88,7 @@ public class PlayerService : IPlayerService
                 result.Add(row);
         };
         // Housing
-        var sql2 = "SELECT a.id, a.location, a.securityLevel, b.VirtualContents, a.timeBought, a.isOrgHouse FROM housing a INNER JOIN housinginvstorage b ON (a.HousingInvStorageID=b.id) WHERE a.alive = 1 AND a.ownerPid=@pid";
+        var sql2 = "SELECT a.id, a.location, a.securityLevel, b.VirtualContents, b.Contents, a.timeBought, a.isOrgHouse FROM housing a INNER JOIN housinginvstorage b ON (a.HousingInvStorageID=b.id) WHERE a.alive = 1 AND a.ownerPid=@pid";
         using (var command2 = new SqlCommand(sql2, connection))
         {
             command2.Parameters.AddWithValue("@pid", result[0]["playerid"]);
@@ -102,6 +102,7 @@ public class PlayerService : IPlayerService
                     reader2["location"].ToString() ?? string.Empty,
                     reader2["securityLevel"].ToString() ?? string.Empty,
                     reader2["virtualContents"].ToString() ?? string.Empty,
+                    reader2["Contents"].ToString() ?? string.Empty,
                     reader2["isOrgHouse"].ToString() ?? string.Empty,
                     reader2.GetDateTime(reader2.GetOrdinal("timeBought"))
                 );
