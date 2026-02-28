@@ -3,10 +3,14 @@ using Scalar.AspNetCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
+using System.Text.Json;
 using DecsPage.Endpoints;
 using DecsPage.Services;
 using DecsPage.Background;
 using Microsoft.OpenApi;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+// using Microsoft.AspNetCore.HealthChecks.AzureStorage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +45,7 @@ builder.Services.AddScoped<IProcessorService, ProcessorService>();
 // builder.Services.AddHostedService<JobWorker>();
 builder.Services.AddScoped<IJobWorker, JobWorker>();
 
+// Scalar / Open API Tags, Information
 builder.Services.AddOpenApi(options => {
     options.AddDocumentTransformer((document, context, cancellationToken) => {
         document.Info.Title = "Dec's Background Worker & API Project";
@@ -56,6 +61,20 @@ builder.Services.AddOpenApi(options => {
         return Task.CompletedTask;
     });
 });
+// Cors for Frontend Support
+builder.Services.AddCors(options => {
+    options.AddDefaultPolicy(policy => {
+        policy.WithOrigins("http://localhost:5173", "https://decspage.com")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
+// Health report for the Frontend Check
+builder.Services.AddHealthChecks()
+    .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new Exception("No Default Connection"))
+     .AddAzureBlobStorage(builder.Configuration["Storage:ConnectionString"] ?? throw new Exception("No Storage Default Connection"), containerName: builder.Configuration["Storage:Container"]);
+
 
 var app = builder.Build();
 
@@ -73,7 +92,25 @@ app.MapAuthEndpoints();
 app.MapGangEndpoints();
 app.MapOpenApi();
 app.MapScalarApiReference();
+app.UseCors();
 
-app.MapGet("/", () => Results.Redirect("/scalar/")).ExcludeFromDescription();;
+app.MapGet("/", () => Results.Redirect("/scalar/")).ExcludeFromDescription();
+
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        var result = JsonSerializer.Serialize(new
+        {
+            status = report.Status.ToString(), // "Healthy", "Degraded", or "Unhealthy"
+            services = report.Entries.Select(e => new { 
+                name = e.Key, 
+                status = e.Value.Status.ToString() 
+            })
+        });
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsync(result);
+    }
+});
 
 app.Run();

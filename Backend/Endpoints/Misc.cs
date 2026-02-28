@@ -5,7 +5,7 @@ public static class MiscEndpoints
 {
     public static IEndpointRouteBuilder MapMiscEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/health", async () =>
+/*         app.MapGet("/health", async () =>
         {
             return Results.Ok("Ok");   
         }).WithTags("Security and Misc");
@@ -28,7 +28,7 @@ public static class MiscEndpoints
             var x = (int)await cmd.ExecuteScalarAsync();
 
             return Results.Ok(new { ok = x == 1 });
-        }).WithTags("Security and Misc");
+        }).WithTags("Security and Misc"); */
 
 
         return app;
