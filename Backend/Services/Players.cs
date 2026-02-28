@@ -9,6 +9,7 @@ public interface IPlayerService
     Task<List<Player>> GetAllPlayers(int? limit, int? offset);
     Task<List<Dictionary<string, object>>> GetPlayer(string id);
     Task<UpdateRank> UpdateRank(int id, string rank, string newRank);
+    Task<List<Player>>SearchPlayersAsync(string search);
 }
 
 public class PlayerService : IPlayerService
@@ -139,6 +140,41 @@ public class PlayerService : IPlayerService
             row["vehicles"] = vehicles;
         };
         return result; 
+    }
+
+    public async Task<List<Player>> SearchPlayersAsync(string search)
+    {
+        var result = new List<Player>();
+        using (var connection = new SqlConnection(connectionString))
+        {
+            await connection.OpenAsync();
+
+            var sql = "Select uid, name, playerid, cash, bankacc, cartelCredits, adminLevel, copLevel, ionLevel, medicLevel, last_seen, insert_time From players WHERE Name LIKE '%' + @search + '%' OR Aliases LIKE '%' + @search + '%' OR PlayerId = @search ";
+
+            using var command = new SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@search", search);
+            using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                var row = new Player(
+                    reader["uid"].ToString() ?? string.Empty,
+                    reader["name"].ToString() ?? string.Empty,
+                    reader["playerid"].ToString() ?? string.Empty,
+                    reader["cash"].ToString() ?? string.Empty,
+                    reader["bankacc"].ToString() ?? string.Empty,
+                    reader["cartelCredits"].ToString() ?? string.Empty,
+                    reader["adminLevel"].ToString() ?? string.Empty,
+                    reader["copLevel"].ToString() ?? string.Empty,
+                    reader["ionLevel"].ToString() ?? string.Empty,
+                    reader["medicLevel"].ToString() ?? string.Empty,
+                    reader.GetDateTime(reader.GetOrdinal("last_seen")),
+                    reader.GetDateTime(reader.GetOrdinal("insert_time"))
+                );
+                result.Add(row);
+            };
+        };
+        return result;
     }
 
     public async Task<UpdateRank> UpdateRank(int id, string column, string newRank)

@@ -25,6 +25,15 @@ public static class PlayerEndpoints
             return Results.Ok(result);
         });
 
+        group.MapGet("/search", async (string search, IPlayerService players) =>
+        {
+           var result = await players.SearchPlayersAsync(search);
+           if (result is null)
+                return Results.NotFound();
+                
+            return Results.Ok(result);
+        });
+
         group.MapPost("/{id}/updaterank", [Authorize] async (HttpContext ctx, int id, string rank, string newRank, IPlayerService players, ISecurityService security) =>
         {
             var userName = ctx.User.Identity?.Name ?? "Unknown";

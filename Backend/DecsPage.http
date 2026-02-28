@@ -21,3 +21,8 @@ Accept: application/json
 
 GET {{Background_Job_Processor_HostAddress}}/jobs/38/download
 Accept: application/json
+
+
+###
+GET {{Background_Job_Processor_HostAddress}}/players/search?search=Tom
+Accept: application/json
