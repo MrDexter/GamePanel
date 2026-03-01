@@ -6,7 +6,6 @@ import StatsPlayer from "./features/StatsPlayer";
 
 // Pages
 const Home = () => <div className='p-8 text-white'><h1>About Me Coming Soon. Check Out Stats</h1></div>;
-// const Jobs = () => <div className='p-8 text-white'><h1>Background Worker Queue</h1></div>;
 
 
 export default function App() {
