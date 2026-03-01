@@ -4,6 +4,7 @@ import {Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import {copRanks, medicRanks, ionRanks, formatDate, formatMoney} from "@/lib/constants"
 import { useNavigate } from "react-router-dom";
+import { apiFetch } from "@/lib/api";
 
 export default function Stats() {
     const [search, setSearch] = useState("")
@@ -20,7 +21,7 @@ export default function Stats() {
         const delayedSearch = setTimeout(async () => {
             setIsLoading(true);
             try {
-                const response = await fetch(`https://api.decspage.com/players/search?search=${search}`)
+                const response = await apiFetch(`/players/search?search=${search}`)
                 const data = await response.json();
                 setResults(data);
             } catch (error) {

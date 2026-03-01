@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import  Stats from "./features/Stats";
 import StatsPlayer from "./features/StatsPlayer";
+import { apiFetch } from "@/lib/api";
 
 // Pages
 const Home = () => <div className='p-8 text-white'><h1>About Me Coming Soon. Check Out Stats</h1></div>;
@@ -14,7 +15,7 @@ export default function App() {
   useEffect(() => {
     const checkHealth = async () => {
       try {
-        const res = await fetch("https://api.decspage.com/health");
+        const res = await apiFetch("/health");
         if (!res.ok) {
           setHealth({ status: "Offline" });
           return; 

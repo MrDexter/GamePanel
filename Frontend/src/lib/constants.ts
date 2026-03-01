@@ -50,3 +50,36 @@ export const ionRanks: Record<number, string> = {
     7: "Cpt.",
     8: "Gen."
 };
+
+export const unitNames: Record<string, string> = {
+  "acadLevel": "Academy",
+  "tfuLevel": "TFU",
+  "ncaLevel": "NCA",
+  "npaslevel": "NPAS",
+  "mpuLevel": "MPU",
+  "hemslevel": "HEMS",
+  "hartlevel": "HART",
+  "deltalevel": "Delta",
+  "UmLevel": "UM",
+  "iaflevel": "AIR",
+  "irulevel": "Academy",
+  "rpLevel": "Academy"
+};
+
+export const unitRankNames: Record<string, Record<number, string>> = {
+  // Police
+  tfuLevel: { 0: "None", 1: "Guest", 2: "Member", 3: "Marksman", 4: "Senior", 5: "Lead" },
+  ncaLevel: { 0: "None", 1: "Guest", 2: "Member", 3: "Trained", 4: "Senior", 5: "Lead" },
+  npaslevel: { 0: "None", 1: "Tier 1", 2: "Tier 2", 3: "Tier 3", 4: "Lead" },
+  mpuLevel: { 0: "None", 1: "Basic", 2: "Advanced", 3: "Full", 4: "Lead" },
+  acadLevel: { 0: "None", 1: "Trainee", 2: "Trainer", 3: "Senior", 4: "Lead" },
+  // Ion
+  deltalevel: { 0: "None", 1: "Guest", 2: "Member", 3: "Advanced", 4: "Senior", 5: "Lead" },
+  iaflevel: { 0: "None", 1: "Tier 1", 2: "Tier 2", 3: "Tier 3", 4: "Lead" },
+  UmLevel: { 0: "None", 1: "Basic", 2: "Advanced", 3: "Full", 4: "Lead" },
+  irulevel: { 0: "None", 1: "Trainee", 2: "Trainer", 3: "Senior", 4: "Lead" },
+  // Medic
+  hemslevel: { 0: "None", 1: "Basic", 2: "Advanced", 3: "Full", 4: "Lead" },
+  hartlevel: { 0: "None", 1: "Basic", 2: "Advanced", 3: "Full", 4: "Lead" },
+  rpLevel: { 0: "None", 1: "Trainee", 2: "Trainer", 3: "Senior", 4: "Lead" }
+};
