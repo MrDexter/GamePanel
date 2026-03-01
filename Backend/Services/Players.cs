@@ -85,15 +85,70 @@ public class PlayerService : IPlayerService
                 {
                     row[reader.GetName(i)] = reader.GetValue(i);
                 };
+
+                //Fix Licenses
+                var rawLicenses = reader["civ_licenses"].ToString();
+                var clean = rawLicenses.Replace("[[", "").Replace("]]", "").Replace("\"", "");
+                var pairs = clean.Split("],[");
+                var activeLicenses = new List<string>();
+                foreach (var p in pairs)
+                {
+                    var parts = p.Split(",");
+                    if (parts.Length == 2 && parts[1] == "1")
+                    {
+                        var name = parts[0].Replace("license_civ_", "").Replace("license_med_", "");
+                        activeLicenses.Add(char.ToUpper(name[0]) + name.Substring(1));
+                    }
+                }
+                row["civ_licenses"] = activeLicenses;
                 result.Add(row);
         };
+        // Gang
+        var sql1 = "SELECT id, name, members, bank, leader, tag FROM organisations WHERE alive = '1' AND members LIKE '%' + @pid + '%'";
+        using (var command1 = new SqlCommand(sql1, connection))
+        {
+            command1.Parameters.AddWithValue("@pid", result[0]["playerid"]);
+            using var reader1 = await command1.ExecuteReaderAsync();
+            var gang =  new List<Gangs>();
+            while (await reader1.ReadAsync())
+            {
+                var rawMembers = reader1["members"].ToString() ?? string.Empty;
+                var cleanMembers = rawMembers.Replace("[[", "").Replace("]]", "").Replace("\"", "").Split("],[");
+
+                var memberList = new List<GangMember>();
+                foreach (var m in cleanMembers) {
+                    var parts = m.Split(",");
+                    memberList.Add(new GangMember("Jason", "123", 1));
+                    memberList.Add(new GangMember("Tom", "123", 2));
+                    memberList.Add(new GangMember("DillyDallyWatcher", "123", 2));
+                    memberList.Add(new GangMember("King Julian", "123", 3));
+                    memberList.Add(new GangMember("Top Fragger", "123", 4));
+                    memberList.Add(new GangMember (
+                        parts[2].Replace("\"", "").Trim(),
+                        parts[0].Replace("\"", "").Trim(),
+                        int.Parse(parts[1])
+                    ));
+                };
+
+                var row1 = new Gangs(
+                    reader1["id"].ToString() ?? string.Empty,
+                    reader1["name"].ToString() ?? string.Empty,
+                    memberList,
+                    reader1["leader"].ToString() ?? string.Empty,
+                    reader1["tag"].ToString() ?? string.Empty,
+                    reader1["bank"].ToString() ?? string.Empty
+                );
+                gang.Add(row1);
+            };
+            row["gang"] = gang[0];
+        };
+
         // Housing
         var sql2 = "SELECT a.id, a.location, a.securityLevel, b.VirtualContents, b.Contents, a.timeBought, a.isOrgHouse FROM housing a INNER JOIN housinginvstorage b ON (a.HousingInvStorageID=b.id) WHERE a.alive = 1 AND a.ownerPid=@pid";
         using (var command2 = new SqlCommand(sql2, connection))
         {
             command2.Parameters.AddWithValue("@pid", result[0]["playerid"]);
             using var reader2 = await command2.ExecuteReaderAsync();
-            // var housing = new Dictionary<string, object>();
             var housing = new List<Houses>();
             while (await reader2.ReadAsync())
             {

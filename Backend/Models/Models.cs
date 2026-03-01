@@ -41,10 +41,16 @@ public record Houses (
 public record Gangs (
     string Id,
     string Name,
-    string Members,
+    List<GangMember> Members,
     string Leader,
     string Tag,
     string Bank
+);
+
+public record GangMember (
+    string Name,
+    string Id,
+    int Rank
 );
 
 public record UpdateRankGet (

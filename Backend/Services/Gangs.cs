@@ -40,11 +40,23 @@ public class GangService : IGangService
         using var reader = await command.ExecuteReaderAsync();
 
         while (await reader.ReadAsync())
-            {        
+            {     
+                var rawMembers = reader["members"].ToString() ?? string.Empty;
+                var cleanMembers = rawMembers.Replace("[[", "").Replace("]]", "").Replace("\"", "").Split("],[");
+
+                var memberList = new List<GangMember>();
+                foreach (var m in cleanMembers) {
+                    var parts = m.Split(",");
+                    memberList.Add(new GangMember (
+                        parts[2].Replace("\"", "").Trim(),
+                        parts[0].Replace("\"", "").Trim(),
+                        int.Parse(parts[1])
+                    ));
+                };   
                 var row = new Gangs(
                     reader["id"].ToString() ?? string.Empty,
                     reader["name"].ToString() ?? string.Empty,
-                    reader["members"].ToString() ?? string.Empty,
+                    memberList,
                     reader["leader"].ToString() ?? string.Empty,
                     reader["tag"].ToString() ?? string.Empty,
                     reader["bank"].ToString() ?? string.Empty

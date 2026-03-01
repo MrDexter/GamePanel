@@ -4,6 +4,10 @@ GET {{Background_Job_Processor_HostAddress}}/players?limit=1
 Accept: application/json
 
 ###
+GET {{Background_Job_Processor_HostAddress}}/players/76561198213433993
+Accept: application/json
+
+###
 GET {{Background_Job_Processor_HostAddress}}/jobs/
 Accept: application/json
 
