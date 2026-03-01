@@ -72,7 +72,7 @@ public class PlayerService : IPlayerService
         using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        var sql = "Select * FROM players WHERE uid = @uid OR playerid = @uid";
+        var sql = "Select * FROM players WHERE CAST(uid AS NVARCHAR) = @uid OR playerid = @uid";
         using (var command = new SqlCommand(sql, connection))
         {
             command.Parameters.AddWithValue("@uid", id);
@@ -145,7 +145,7 @@ public class PlayerService : IPlayerService
         {
             await connection.OpenAsync();
 
-            var sql = "Select uid, name, playerid, cash, bankacc, cartelCredits, adminLevel, copLevel, ionLevel, medicLevel, last_seen, insert_time From players WHERE Name LIKE '%' + @search + '%' OR Aliases LIKE '%' + @search + '%' OR PlayerId = @search OR uid = @search";
+            var sql = "Select uid, name, playerid, cash, bankacc, cartelCredits, adminLevel, copLevel, ionLevel, medicLevel, last_seen, insert_time From players WHERE name LIKE '%' + @search + '%' OR aliases LIKE '%' + @search + '%' OR playerid = @search OR CAST(uid AS NVARCHAR) = @search";
 
             using var command = new SqlCommand(sql, connection);
             command.Parameters.AddWithValue("@search", search);
