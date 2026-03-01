@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import  Stats from "./features/Stats";
+import StatsPlayer from "./features/StatsPlayer";
 
 // Pages
-const Home = () => <div className='p-8 text-white'><h1>About Me & Career Timeline</h1></div>;
+const Home = () => <div className='p-8 text-white'><h1>About Me Coming Soon. Check Out Stats</h1></div>;
 // const Stats = () => <div className='p-8 text-white'><h1>Live Stats & Search</h1></div>;
-const Jobs = () => <div className='p-8 text-white'><h1>Background Worker Queue</h1></div>;
+// const Jobs = () => <div className='p-8 text-white'><h1>Background Worker Queue</h1></div>;
 
 
 export default function App() {
@@ -26,6 +28,8 @@ export default function App() {
       }
     };
     checkHealth()
+    const timer = setInterval(checkHealth, 60000);
+    return () => clearInterval(timer);
   }, []);
 
   return (
@@ -81,6 +85,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/stats" element={<Stats />} />
+          <Route path="/stats/:id" element={<StatsPlayer />} />
           <Route path="/jobs" element={<Jobs />} />
         </Routes>
       </main>
@@ -89,7 +94,7 @@ export default function App() {
   );
 };
 
-function Stats() {
+function Jobs() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-8">
       {/* Card 1: API Status */}
