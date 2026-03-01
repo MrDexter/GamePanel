@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
-import { ClipboardCheck, ClipboardCopy } from "lucide-react";
+import { ClipboardCopy } from "lucide-react"; //ClipboardCheck
 import { useParams, useNavigate  } from "react-router-dom";
-import {Input } from "@/components/ui/input"
+// import {Input } from "@/components/ui/input"
 import {Button } from "@/components/ui/button"
 import {Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
-import {copRanks, medicRanks, ionRanks, formatDate, formatMoney} from "@/lib/constants"
+import {formatDate } from "@/lib/constants" //copRanks, medicRanks, ionRanks, formatMoney
 
 const parseInventory = (inv: string) => {
   if (!inv || inv === '"[[],0]"') return "Empty";
@@ -118,7 +118,7 @@ export default function StatsPlayer() {
                                 
                                 {checkInventory(v.inventory) && (
                                 <button 
-                                    onClick={() => copyToClipboard(v.inventory)}
+                                    onClick={() => copyToClipboard(parseInventory(v.inventory))}
                                     className="text-zinc-500 hover:text-white transition-colors"
                                     title="Copy Raw Inventory">
                                     <ClipboardCopy className="h-3 w-3" />
@@ -170,7 +170,7 @@ export default function StatsPlayer() {
                                         
                                 {checkInventory(v.virtualContents) && (
                                 <button 
-                                    onClick={() => copyToClipboard(v.virtualContents)}
+                                    onClick={() => copyToClipboard(parseInventory(v.virtualContents))}
                                     className="text-zinc-500 hover:text-white transition-colors"
                                     title="Copy Raw Inventory">
                                     <ClipboardCopy className="h-3 w-3" />
@@ -188,7 +188,7 @@ export default function StatsPlayer() {
                                         
                                 {checkInventory(v.Contents) && (
                                 <button 
-                                    onClick={() => copyToClipboard(v.Contents)}
+                                    onClick={() => copyToClipboard(parseInventory(v.Contents))}
                                     className="text-zinc-500 hover:text-white transition-colors"
                                     title="Copy Raw Inventory">
                                     <ClipboardCopy className="h-3 w-3" />
