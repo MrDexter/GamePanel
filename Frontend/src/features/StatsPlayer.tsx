@@ -6,7 +6,7 @@ import {Button } from "@/components/ui/button"
 import {Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import {copRanks, medicRanks, ionRanks, formatDate, formatMoney} from "@/lib/constants"
-//
+
 const parseInventory = (inv: string) => {
   if (!inv || inv === '"[[],0]"') return "Empty";
   // Quick clean of the escaped quotes and messy Arma array nesting
