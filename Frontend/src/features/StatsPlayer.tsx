@@ -197,25 +197,25 @@ export default function StatsPlayer() {
             <div className="relative overflow-hidden bg-zinc-800/40 backdrop-blur-md border-zinc-800 rounded-xl p-6">
             {/* Row 1: Key Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                <div className="flex flex-col">
+                <div className="flex flex-col ">
                 <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Money</span>
                 <span className="text-[14px] font-mono text-emerald-500">{formatMoney((player.cash || 0) + (player.bankacc || 0))}</span>
                 </div>
-                <div className="flex flex-col border-l border-zinc-800/50 pl-8">
+                <div className="flex flex-col border-l border-zinc-700/25 pl-8">
                 <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Playtime</span>
                 <span className="text-[14px] font-mono text-zinc-100">{Math.round((player.playtime_civ + player.playtime_cop + player.playtime_nhs + player.playtime_opfor) / 60) || "0"}H</span>
                 </div>
-                <div className="flex flex-col border-l border-zinc-800/50 pl-8">
+                <div className="flex flex-col border-l border-zinc-700/25 md:pl-8">
                 <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Licenses</span>
                 <span className="text-[14px] font-mono text-zinc-100">{player.civ_licenses?.length || 0}</span>
                 </div>
-                <div className="flex flex-col border-l border-zinc-800/50 pl-8">
+                <div className="flex flex-col border-l border-zinc-700/25 pl-8">
                 <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">XP</span>
                 <span className="text-[14px] font-mono text-orange-400">{player.playerXP?.toLocaleString()}</span>
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-8 pt-6 border-t border-zinc-800/50 mt-6">
+            <div className="grid grid-cols-1 gap-8 pt-6 border-t border-zinc-700/25 mt-6">
             {/* Left: Aliases (Takes up 1 col) */}
             <div className="flex flex-col">
                 <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-2">Known Aliases</span>
@@ -225,17 +225,17 @@ export default function StatsPlayer() {
             </div>
 
             {/* Right: Total Playtime (Pushed to the edge) */}
-            <div className="flex flex-col items-end text-right">
+            {/* <div className="flex flex-col items-end text-right">
                 <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-1"></span>
                 <span className="text-xl font-mono text-zinc-100"></span>
                 <p className="text-[8px] text-zinc-600 uppercase font-bold tracking-tighter mt-1"></p>
-            </div>
+            </div> */}
             </div>
             
             </div>
 
 
-            <div className="grid grid-cols-4 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {FACTIONS.map((faction) => {
                     const mainLevel = player[faction.levelKey];
                     return(
@@ -253,13 +253,14 @@ export default function StatsPlayer() {
                             </Button>                       
                         </CardHeader>
                         <CardContent>
-                            <div className="grid grid-cols-2 space-y-2">
-                                {faction.units.map((unitKey) => { 
+                            <div className="grid grid-cols-2 space-y-2 justify-between items-center">
+                                {faction.units.map((unitKey, index) => { 
                                         const level = player[unitKey] ?? "";
                                         const unitRanks = unitRankNames[unitKey] || {}; 
                                         const rankName = unitRanks[level] ?? `${level}`;
+                                        const isEvenColumn = index % 2 !== 0;
                                         return (
-                                            <div key={unitKey} className="flex flex-col">
+                                            <div key={unitKey} className={`flex flex-col ${isEvenColumn ? "items-end text-right" : "items-start text-left"}`}>
                                             <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
                                                 {unitNames[unitKey]}
                                             </span>
@@ -272,18 +273,18 @@ export default function StatsPlayer() {
                           {/* The Faction Footer */}
                             <div className="mt-auto border-t border-zinc-800/50 bg-zinc-650/30 px-6 py-3">
                                 <div className="flex justify-between items-center">
-                                <div className="flex flex-col">
-                                    <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Last Active</span>
-                                    <span className="text-[10px] font-mono text-zinc-100">
-                                    {player[faction.login] ? formatDate(player[faction.login]) : "NEVER"}
-                                    </span>
-                                </div>
-                                <div className="flex flex-col text-right">
-                                    <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Playtime</span>
-                                    <span className="text-[10px] font-mono text-zinc-100">
-                                    {Math.round(player[faction.playtime] / 60) || 0}H
-                                    </span>
-                                </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Last Active</span>
+                                        <span className="text-[10px] font-mono text-zinc-100">
+                                        {player[faction.login] ? formatDate(player[faction.login]) : "NEVER"}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col text-right">
+                                        <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Playtime</span>
+                                        <span className="text-[10px] font-mono text-zinc-100">
+                                        {Math.round(player[faction.playtime] / 60) || 0}H
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </Card>
@@ -335,18 +336,18 @@ export default function StatsPlayer() {
                         {/* The Faction Footer */}
                         <div className="mt-auto border-t border-zinc-800/50 bg-zinc-650/30 px-6 py-3">
                             <div className="flex justify-between items-center">
-                            <div className="flex flex-col">
-                                <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Join Date</span>
-                                <span className="text-[10px] font-mono text-zinc-100">
-                                {player.insert_time ? formatDate(player.insert_time) : "NEVER"}
-                                </span>
-                            </div>
-                            <div className="flex flex-col text-right">
-                                <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Playtime</span>
-                                <span className="text-[10px] font-mono text-zinc-100">
-                                {Math.round(player.playtime_civ / 60) || 0}H
-                                </span>
-                            </div>
+                                <div className="flex flex-col">
+                                    <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Join Date</span>
+                                    <span className="text-[10px] font-mono text-zinc-100">
+                                    {player.insert_time ? formatDate(player.insert_time) : "NEVER"}
+                                    </span>
+                                </div>
+                                <div className="flex flex-col text-right">
+                                    <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Playtime</span>
+                                    <span className="text-[10px] font-mono text-zinc-100">
+                                    {Math.round(player.playtime_civ / 60) || 0}H
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </Card>
@@ -364,21 +365,25 @@ export default function StatsPlayer() {
             <div className="space-y-2">
             {player.vehicles?.length > 0 ? player.vehicles.map((v: any) => (
                 <div key={v.id} className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-lg flex justify-between items-center">
-                <Badge variant="outline" className="border-zinc-700 bg-blue-600 text-zinc-200 uppercase">{v.id}</Badge>
+                <div className="grid grid-col-1 items-center gap-1.5 shrink-0 w-fit">
+                    <Badge variant="outline" className="border-zinc-700 bg-blue-600 text-zinc-200 uppercase">{v.id}</Badge>
+                    <Badge variant="outline" className={`${typeColor[v.type] ?? 'bg-blue-600'} border-zinc-700 text-zinc-100 md:hidden`}>{v.type}</Badge>
+                    <Badge variant="outline" className={`${sideColor[v.side] ?? 'bg-zinc-800'} border-zinc-700 text-zinc-100 uppercase md:hidden`}>{v.side}</Badge>
+                </div>
 
                 <div className="flex-1 px-6">
-                    <p className="font-bold text-white text-m uppercase">{v.class} 
+                    <p className="font-bold text-white text-xs md:text-m uppercase">{v.class} 
                     </p>
-                    <div className="flex gap-4 mt-1 items-center">
+                    <div className="flex gap-2 md:gap-4 mt-1 items-center">
                         <div className="flex flex-col">
-                        <span className="text-[12px] text-zinc-400 uppercase">Plate</span>
-                        <span className="text-[14px] text-zinc-300 font-mono tracking-tighter">{v.reg}</span>
+                        <span className="text-[10px] md:text-[12px] text-zinc-400 uppercase">Plate</span>
+                        <span className="text-[12px] md:text-[14px] text-zinc-300 font-mono tracking-tighter">{v.reg}</span>
                         </div>
                         
                         <div className="flex flex-col border-l border-zinc-800 pl-4">
-                            <span className="text-[12px] text-zinc-400 uppercase">Cargo</span>
+                            <span className="text-[10px] md:text-[12px] text-zinc-400 uppercase">Cargo</span>
                             <div className="flex items-center gap-2">
-                                <span className={`text-[10px] font-bold ${checkInventory(v.inventory) ? "text-amber-500" : "text-zinc-500"}`}>
+                                <span className={`text-[12px] md:text-[14px] font-bold ${checkInventory(v.inventory) ? "text-amber-500" : "text-zinc-500"}`}>
                                 {checkInventory(v.inventory) ? "YES" : "NO"}
                                 </span>
                                 
@@ -394,14 +399,14 @@ export default function StatsPlayer() {
                         </div>
 
                         <div className="flex flex-col border-l border-zinc-800 pl-4">
-                        <span className="text-[12px] text-zinc-400 uppercase">Registered</span>
-                        <span className="text-[14px] text-zinc-300">{formatDate(v.insertTime)}</span>
+                        <span className="text-[10px] md:text-[12px] text-zinc-400 uppercase">Registered</span>
+                        <span className="text-[12px] md:text-[14px] text-zinc-300">{formatDate(v.insertTime)}</span>
                         </div>
                     </div>
                 </div>
 
 
-                <div className="grid grid-rows-2 gap-2">
+                <div className="grid grid-rows-2 gap-2 invisible md:visible">
                     <Badge variant="outline" className={`${typeColor[v.type] ?? 'bg-blue-600'} border-zinc-700 text-zinc-100`}>{v.type}</Badge>
                     <Badge variant="outline" className={`${sideColor[v.side] ?? 'bg-zinc-800'} border-zinc-700 text-zinc-100 uppercase`}>{v.side}</Badge>
                 </div>
@@ -416,21 +421,26 @@ export default function StatsPlayer() {
             <div className="space-y-2">
             {player.housing?.length > 0 ? player.housing.map((v: any) => (
                 <div key={v.id} className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-lg flex justify-between items-center">
-                <Badge variant="outline" className="border-zinc-700 bg-blue-600 text-zinc-200 uppercase">{v.id}</Badge>
+                <div className="grid grid-col-1 items-center gap-1.5 shrink-0 w-fit">
+                    <Badge variant="outline" className="border-zinc-700 bg-blue-600 text-zinc-200 uppercase">{v.id}</Badge>
+                    {v.isOrgHouse == 1 &&(
+                    <Badge variant="outline" className="bg-red-600 border-zinc-700 text-zinc-100 md:invisible">Gang</Badge>
+                    )}
+                </div>
 
                 <div className="flex-1 px-6">
-                    <p className="font-bold text-white text-m uppercase">{v.location }
+                    <p className="font-bold text-white text-xs md:text-m uppercase">{v.location.replaceAll('"', "") }
                     </p>
                     <div className="flex gap-4 mt-1 items-center">
                         <div className="flex flex-col">
-                        <span className="text-[12px] text-zinc-400 uppercase">Security</span>
-                        <span className="text-[14px] text-zinc-300 font-mono tracking-tighter">{v.securityLevel}</span>
+                        <span className="text-[10px] md:text-[12px] text-zinc-400 uppercase">Security</span>
+                        <span className="text-[12px] md:text-[14px] text-zinc-300 font-mono tracking-tighter">{v.securityLevel}</span>
                         </div>
                         
                         <div className="flex flex-col border-l border-zinc-800 pl-4">
-                            <span className="text-[12px] text-zinc-400 uppercase">Virtual</span>
+                            <span className="text-[10px] md:text-[12px] text-zinc-400 uppercase">Virtual</span>
                             <div className="flex items-center gap-2">
-                                <span className={`text-[14px] text-zinc-300 font-mono italic" ${checkVirtualInventory(v.virtualContents) ? "text-amber-500" : "text-zinc-500"}`}>
+                                <span className={`text-[12px] md:text-[14px] text-zinc-300 font-mono italic" ${checkVirtualInventory(v.virtualContents) ? "text-amber-500" : "text-zinc-500"}`}>
                                         {checkVirtualInventory(v.virtualContents) ? "YES" : "NO"}
                                 </span>
                                         
@@ -446,9 +456,9 @@ export default function StatsPlayer() {
                         </div>
 
                         <div className="flex flex-col border-l border-zinc-800 pl-4">
-                            <span className="text-[12px] text-zinc-400 uppercase">Physical</span>
+                            <span className="text-[10px] md:text-[12px] text-zinc-400 uppercase">Physical</span>
                             <div className="flex items-center gap-2">
-                                <span className={`text-[14px] text-zinc-300 font-mono italic" ${checkVirtualInventory(v.Contents) ? "text-amber-500" : "text-zinc-500"}`}>
+                                <span className={`text-[12px] md:text-[14px] text-zinc-300 font-mono italic" ${checkVirtualInventory(v.Contents) ? "text-amber-500" : "text-zinc-500"}`}>
                                         {checkVirtualInventory(v.Contents) ? "YES" : "NO"}
                                 </span>
                                         
@@ -464,13 +474,13 @@ export default function StatsPlayer() {
                         </div>
 
                         <div className="flex flex-col border-l border-zinc-800 pl-4">
-                        <span className="text-[12px] text-zinc-400 uppercase">Purchased</span>
-                        <span className="text-[14px] text-zinc-300">{formatDate(v.timeBought)}</span>
+                        <span className="text-[10px] md:text-[12px] text-zinc-400 uppercase">Purchased</span>
+                        <span className="text-[12px] md:text-[14px] text-zinc-300">{formatDate(v.timeBought)}</span>
                         </div>
                     </div>
                 </div>
                 {v.isOrgHouse == 1 &&(
-                <Badge variant="outline" className="bg-red-600 border-zinc-700 text-zinc-100">Gang</Badge>
+                <Badge variant="outline" className="bg-red-600 border-zinc-700 text-zinc-100 invisible md:visible">Gang</Badge>
                 )}
                 </div>
             )) : <p className="text-zinc-600 italic px-2">No Properties found.</p>}
