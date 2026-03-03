@@ -89,7 +89,7 @@ export default function StatsPlayer() {
         </div>   
         );
     }
-    const gangRank = player.gang.members.find((member: any) => member.id === player.playerid);
+    const gangRank = player.gang?.members.find((member: any) => member.id === player.playerid);
     return (
         <div className="max-w-5xl mx-auto py-10 px-6 space-y-8">
         {/* Top Row: Back Button & Status */}
@@ -240,7 +240,7 @@ export default function StatsPlayer() {
                     const mainLevel = player[faction.levelKey];
                     return(
                         <Card key={faction.id} className="relative overflow-hidden bg-zinc-800/40 backdrop-blur-md border-zinc-800 group h-full">
-                        <div className={`absolute top-0 left-0 w-full h-[2px] bg-linear-to-r to-transparent opacity-70 group-hover:opacity-100 transition-opacity`} />
+                        <div className={`absolute top-0 left-0 w-full h-0.5 bg-linear-to-r to-transparent opacity-70 group-hover:opacity-100 transition-opacity`} />
                         <CardHeader className="pb-3 flex flex-row items-center justify-between">
                             <CardTitle className={`text-xs font-bold uppercase tracking-widest ${faction.color}`}>
                             {faction.label}
@@ -290,17 +290,22 @@ export default function StatsPlayer() {
                         </Card>
                     );
                 })}
+                {/* Civillian / Gang Block */}                     
                     <Card className="bg-zinc-800/40 backdrop-blur-md border-zinc-800">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className={`text-xs font-bold uppercase tracking-widest text-purple-500`}>
-                        {player.gang.name}
+                        {player.gang?.name ?? "No Gang Found"}
                         <div className="text-xs text-zinc-300 uppercase leading-none">
-                        <span>Rank: {gangRank.Rank > 4 ? gangRank.rank : "Leader"}</span>
+                        {player.gang !== null &&(
+                            <span>Rank: {gangRank?.rank >= 5 ? "Leader" : (gangRank?.rank ? `Level ${gangRank.rank}` : "N/A")}</span>
+                        )}
+                        {/* <span>Rank: {gangRank?.Rank == null ? "N/A" : gangRank.Rank >= 5 ? "Leader" : `Level ${gangRank.Rank}`}</span> */}
                         </div>
                         </CardTitle>
-                        <Badge variant="outline" className="border-zinc-700 bg-purple-600 text-zinc-200 uppercase">{player.gang.id}</Badge>
+                        {/* <Badge variant="outline" className="border-zinc-700 bg-purple-600 text-zinc-200 uppercase">{player.gang.id ?? ""}</Badge> */}
                     </CardHeader>
                     <CardContent>
+                        {player.gang !== null &&(
                         <div className="grid grid-cols-2 space-y-2">
                             <div className="flex flex-col">
                             <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
@@ -332,9 +337,10 @@ export default function StatsPlayer() {
                             </p>
                             </div>
                         </div>
+                    )}; 
                     </CardContent>
                         {/* The Faction Footer */}
-                        <div className="mt-auto border-t border-zinc-800/50 bg-zinc-650/30 px-6 py-3">
+                         <div className="mt-auto border-t border-zinc-800/50 bg-zinc-650/30 px-6 py-3">
                             <div className="flex justify-between items-center">
                                 <div className="flex flex-col">
                                     <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Join Date</span>
@@ -350,11 +356,11 @@ export default function StatsPlayer() {
                                 </div>
                             </div>
                         </div>
-                    </Card>
+                    </Card>*
                 </div>
             </div>
         </CardContent>
-        </Card>
+        </Card> 
 
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
