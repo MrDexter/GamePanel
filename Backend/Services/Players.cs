@@ -107,7 +107,7 @@ public class PlayerService : IPlayerService
         var sql1 = "SELECT id, name, members, bank, leader, tag FROM organisations WHERE alive = '1' AND members LIKE '%' + @pid + '%'";
         using (var command1 = new SqlCommand(sql1, connection))
         {
-            command1.Parameters.AddWithValue("@pid", result[0]["playerid"]);
+           command1.Parameters.AddWithValue("@pid", result[0]["playerid"]);
             using var reader1 = await command1.ExecuteReaderAsync();
             var gang =  new List<Gangs>();
             while (await reader1.ReadAsync())
@@ -140,7 +140,7 @@ public class PlayerService : IPlayerService
                 );
                 gang.Add(row1);
             };
-            row["gang"] = gang[0];
+            row["gang"] = gang.FirstOrDefault();
         };
 
         // Housing
@@ -200,7 +200,7 @@ public class PlayerService : IPlayerService
         {
             await connection.OpenAsync();
 
-            var sql = "Select uid, name, playerid, cash, bankacc, cartelCredits, adminLevel, copLevel, ionLevel, medicLevel, last_seen, insert_time From players WHERE name LIKE '%' + @search + '%' OR aliases LIKE '%' + @search + '%' OR playerid = @search OR CAST(uid AS NVARCHAR) = @search";
+            var sql = "SELECT TOP 15 uid, name, playerid, cash, bankacc, cartelCredits, adminLevel, copLevel, ionLevel, medicLevel, last_seen, insert_time From players WHERE name LIKE '%' + @search + '%' OR aliases LIKE '%' + @search + '%' OR playerid = @search OR CAST(uid AS NVARCHAR) = @search";
 
             using var command = new SqlCommand(sql, connection);
             command.Parameters.AddWithValue("@search", search);
