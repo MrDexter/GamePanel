@@ -14,7 +14,10 @@ public static class PlayerEndpoints
         {
             var result = await players.GetAllPlayers(limit, offset);
             return Results.Ok(result);
-        });
+        })
+        .WithSummary("Get All Players Metadata")
+        .WithDescription("Fetches a partial profile of all player")
+        .Produces<List<Player>>(200);
 
         group.MapGet("/{id}", async (string id, IPlayerService players) =>
         {
@@ -23,7 +26,9 @@ public static class PlayerEndpoints
                 return Results.NotFound();
                 
             return Results.Ok(result);
-        });
+        })
+        .WithSummary("Get Player Metadata")
+        .WithDescription("Fetches a full profile including housing, vehicles, and gang membership using the SteamID.");
 
         group.MapGet("/search", async (string search, IPlayerService players) =>
         {
@@ -32,7 +37,10 @@ public static class PlayerEndpoints
                 return Results.NotFound();
                 
             return Results.Ok(result);
-        });
+        })
+        .WithSummary("Search and Get Matching Players Metadata")
+        .WithDescription("Fetches a partial profile of all players matching search criteria. Accepts UID, SteamID, Name and Aliases")
+        .Produces<List<Player>>(200);
 
         group.MapPost("/{id}/updaterank", [Authorize] async (HttpContext ctx, int id, string rank, string newRank, IPlayerService players, ISecurityService security) =>
         {
@@ -43,6 +51,7 @@ public static class PlayerEndpoints
                 return Results.Forbid();
             };
             var group = ctx.User.FindFirst("side")?.Value;
+            #pragma warning disable CS8600
             string column = group switch
             {
                 "police" => rank switch
@@ -68,6 +77,7 @@ public static class PlayerEndpoints
                 //Error
                 _ => null
             }; 
+            #pragma warning restore CS8600
             if (column is null) {
                 await security.AuditLog("Invalid Rank or Permissions: Rank Update", id, userName, $"{rank} - {newRank}");
                 throw new Exception(column);
@@ -81,7 +91,9 @@ public static class PlayerEndpoints
             };
             await security.AuditLog("Complete: Rank Update", id, userName, $"{rank} - {newRank}");
             return Results.Ok(result);
-        });
+        })
+        .WithSummary("Update a Specific Players Rank")
+        .WithDescription("Update a Faction related players rank. Requires ID, Rank Name, New Rank Level and a correct JWT Token");
 
         group.MapPost("/export", async (IJobService jobs) =>
         {
