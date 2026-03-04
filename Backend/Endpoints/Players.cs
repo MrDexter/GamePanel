@@ -15,7 +15,7 @@ public static class PlayerEndpoints
             var result = await players.GetAllPlayers(limit, offset);
             return Results.Ok(result);
         })
-        .WithSummary("Get All Players Metadata")
+        .WithSummary("Get All Players")
         .WithDescription("Fetches a partial profile of all player")
         .Produces<List<Player>>(200);
 
@@ -27,7 +27,7 @@ public static class PlayerEndpoints
                 
             return Results.Ok(result);
         })
-        .WithSummary("Get Player Metadata")
+        .WithSummary("Get A Player")
         .WithDescription("Fetches a full profile including housing, vehicles, and gang membership using the SteamID.");
 
         group.MapGet("/search", async (string search, IPlayerService players) =>
@@ -38,9 +38,9 @@ public static class PlayerEndpoints
                 
             return Results.Ok(result);
         })
-        .WithSummary("Search and Get Matching Players Metadata")
-        .WithDescription("Fetches a partial profile of all players matching search criteria. Accepts UID, SteamID, Name and Aliases")
-        .Produces<List<Player>>(200);
+        .WithSummary("Search Players")
+        .WithDescription("Fetches a partial profile of all players matching search criteria. Accepts UID, SteamID, Name and Aliases");
+        // .Produces<List<Player>>(200);
 
         group.MapPost("/{id}/updaterank", [Authorize] async (HttpContext ctx, int id, string rank, string newRank, IPlayerService players, ISecurityService security) =>
         {
@@ -92,20 +92,26 @@ public static class PlayerEndpoints
             await security.AuditLog("Complete: Rank Update", id, userName, $"{rank} - {newRank}");
             return Results.Ok(result);
         })
-        .WithSummary("Update a Specific Players Rank")
-        .WithDescription("Update a Faction related players rank. Requires ID, Rank Name, New Rank Level and a correct JWT Token");
+        .WithSummary("Update a Player Rank")
+        .WithDescription("Update a Faction related players rank. Requires ID, Rank Name, New Rank Level and a correct JWT Token")
+        .Produces<UpdateRank>(200);
 
         group.MapPost("/export", async (IJobService jobs) =>
         {
             var id = await jobs.CreateJobAsync("playersExport", new {});
             return Results.Accepted($"/jobs/{id}", new {id});
-        });
+        })
+        .WithSummary("Export All Player Data")
+        .WithDescription("Creates a job to export all player data into a CSV for download. Returns Job ID");
 
         group.MapPost("/{id}/export", async (string id, IJobService jobs) =>
         {
             var jobId = await jobs.CreateJobAsync("playerExport", new { playerId =  id} );
             return Results.Accepted($"/jobs/{jobId}", new {jobId});
-        });
+        })
+        .WithSummary("Export A Players Data")
+        .WithDescription("Creates a job to export a players data into a CSV for download. Returns Job ID");
+
         return app;
     }
 }

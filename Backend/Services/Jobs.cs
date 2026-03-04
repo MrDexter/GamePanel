@@ -10,6 +10,7 @@ public interface IJobService
 {
   Task<List<Job>>GetJobsAsync();
   Task<Job>GetJobAsync(string id);  
+  Task<List<Job>>GetFailedJobsAsync();
   Task<object>CreateJobAsync(string type, object? payload);
   Task StartWorker();
   Task <Job>GetWaitingJobAsync(CancellationToken stopToken);
@@ -69,7 +70,7 @@ public class JobService : IJobService
             var reader = await command.ExecuteReaderAsync();
             if (!await reader.ReadAsync())
             {
-                return null;
+                return null!;
             }
             return new Job (
                 reader["id"].ToString() ?? string.Empty,
@@ -81,6 +82,32 @@ public class JobService : IJobService
                 reader.GetDateTime(reader.GetOrdinal("updated_at"))
             );
         };
+    }
+
+    public async Task<List<Job>>GetFailedJobsAsync()
+    {
+        var result = new List<Job>();
+        using (var connection = new SqlConnection(connectionString))
+        {
+            await connection.OpenAsync();
+            var sql = @"Select * FROM jobs WHERE status = 'failed'";
+            using var command = new SqlCommand(sql, connection);
+            var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                var row = new Job (
+                    reader["id"].ToString() ?? string.Empty,
+                    reader["type"].ToString() ?? string.Empty,
+                    reader["status"].ToString() ?? string.Empty,
+                    reader["result"].ToString() ?? string.Empty,
+                    reader["payload"].ToString() ?? "{}",
+                    reader.GetDateTime(reader.GetOrdinal("created_at")),
+                    reader.GetDateTime(reader.GetOrdinal("updated_at"))
+                );
+                result.Add(row);
+            };
+        }
+        return result;
     }
 
     public async Task<object>CreateJobAsync(string type, object? payload)
@@ -115,7 +142,7 @@ public class JobService : IJobService
             using var command = new SqlCommand(sql, connection);
             using var reader = await command.ExecuteReaderAsync();
             if (!await reader.ReadAsync())
-            {return null;};
+            {return null!;};
             return new Job (
                 reader["id"].ToString() ?? string.Empty,
                 reader["type"].ToString() ?? string.Empty,

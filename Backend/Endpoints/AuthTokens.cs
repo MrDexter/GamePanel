@@ -32,7 +32,7 @@ public static class AuthEndpoints
             };
 
             var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(config["Jwt:Key"])
+                Encoding.UTF8.GetBytes(config["Jwt:Key"] ?? throw new InvalidOperationException("Missing Default JWT Key"))
                 ?? throw new InvalidOperationException("Missing Default Key"));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
@@ -47,7 +47,10 @@ public static class AuthEndpoints
             {
                 token = new JwtSecurityTokenHandler().WriteToken(token)
             });
-        }).WithTags("Security and Misc");
+        }).WithTags("Security and Misc")
+        .WithSummary("Generate a JWT Token")
+        .WithDescription("Generate a new JWT Token with specified params. Requires Auth Secret")
+        .Produces(200);
 
         return app;
     }  

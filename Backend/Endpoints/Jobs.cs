@@ -14,7 +14,9 @@ public static class JobEndpoints
         {
             var result = await jobs.GetJobsAsync();
             return Results.Ok(result);
-        });
+        })
+        .WithSummary("Get All Pending Jobs")
+        .WithDescription("Retrieve all jobs that have not been completed");
 
         group.MapGet("/{id}", async (string id, IJobService jobs) =>
         {
@@ -22,17 +24,24 @@ public static class JobEndpoints
             if (result is null)
             {return Results.NotFound();};
             return Results.Ok(result);
-        });
+        })
+        .WithSummary("Get a Job")
+        .WithDescription("Retrieve a job by ID")
+        .Produces<List<Job>>(200);
 
         group.MapGet("/failed", async (IJobService jobs) =>
         {
-           // Returned all failed, Maybe Canceled too? 
-        });
+            var result = await jobs.GetFailedJobsAsync();
+            return Results.Ok(result);
+        })
+        .WithSummary("Get All Failed Jobs")
+        .WithDescription("Get a list of all failed jobs")
+        .Produces<List<Job>>(200);
 
-        group.MapGet("/{id}/cancel", async (string id, IJobService jobs) =>
+/*         group.MapGet("/{id}/cancel", async (string id, IJobService jobs) =>
         {
             // Get Job, If Incomplete, Cancel. Add Authorization
-        });
+        }); */
 
         group.MapGet("/{id}/reset", async (string id, IJobService jobs) =>
         {
@@ -43,7 +52,10 @@ public static class JobEndpoints
             } else {
                 return Results.NotFound();
             };
-        });
+        })
+        .WithSummary("Reset / restart a Job")
+        .WithDescription("Reset a failed Job or Restart a completed job. Required Job ID.")
+        .Produces<List<Job>>(200);
 
         group.MapGet("/{id}/download", async (string id, IJobService jobs, IProcessorService processor) =>
         {
@@ -53,7 +65,9 @@ public static class JobEndpoints
             var url = await processor.GetDownloadUrl(job.Result, TimeSpan.FromMinutes(5));
             
             return Results.Redirect(url);
-        });
+        })
+        .WithSummary("Download a Jobs File")
+        .WithDescription("Download a file assosiated with a job. Required Job ID.");
 
         return app;
     }

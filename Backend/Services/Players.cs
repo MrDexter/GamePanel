@@ -79,7 +79,7 @@ public class PlayerService : IPlayerService
             using var reader = await command.ExecuteReaderAsync();
             if (!await reader.ReadAsync())
                 {
-                    return null;
+                    return null!;
                 };
                 for (int i=0; i < reader.FieldCount; i++)
                 {
@@ -87,7 +87,7 @@ public class PlayerService : IPlayerService
                 };
 
                 //Fix Licenses
-                var rawLicenses = reader["civ_licenses"].ToString();
+                var rawLicenses = reader["civ_licenses"].ToString() ?? string.Empty;
                 var clean = rawLicenses.Replace("[[", "").Replace("]]", "").Replace("\"", "");
                 var pairs = clean.Split("],[");
                 var activeLicenses = new List<string>();
@@ -140,7 +140,7 @@ public class PlayerService : IPlayerService
                 );
                 gang.Add(row1);
             };
-            row["gang"] = gang.FirstOrDefault();
+            row["gang"] = gang.FirstOrDefault()!;
         };
 
         // Housing
@@ -241,7 +241,7 @@ public class PlayerService : IPlayerService
             using var reader = await getCommand.ExecuteReaderAsync();
             if (!await reader.ReadAsync())
             {
-                return null;
+                return null!;
             };
             
             oldData = new UpdateRankGet(

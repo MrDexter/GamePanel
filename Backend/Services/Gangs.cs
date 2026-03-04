@@ -73,14 +73,14 @@ public class GangService : IGangService
         var row = new Dictionary<string, object>();
         using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
-        var sql = "Select * FROM organisations WHERE alive = 1 and id = @id";
+        var sql = "Select * FROM organisations WHERE alive = 1 and id = @id OR name LIKE '%' + @id + '%' OR  tag LIKE '%' + @id + '%'";
         using (var command = new SqlCommand(sql, connection))
         {
             command.Parameters.AddWithValue("@id", id);
             using var reader = await command.ExecuteReaderAsync();
             if(!await reader.ReadAsync())
             {
-                return null;
+                return null!;
             };
             for (int i=0; i < reader.FieldCount; i++)
             {

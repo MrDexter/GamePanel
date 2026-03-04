@@ -13,7 +13,10 @@ public static class GangEndpoints
         {
             var result = await gangs.GetAllGangs(limit, offset);
             return Results.Ok(result);
-        });
+        })
+        .WithSummary("Get All Gangs")
+        .WithDescription("Fetches all currently active gangs")
+        .Produces<List<Gangs>>(200);
 
         group.MapGet("/{id}", async (string id, IGangService gangs) =>
         {
@@ -21,19 +24,25 @@ public static class GangEndpoints
             if (result is null)
                 return Results.NotFound();
             return Results.Ok(result);
-        });
+        })
+        .WithSummary("Get a Gang")
+        .WithDescription("Fetches a full profile including housing using the Gang ID, Name or Tag.");
 
         group.MapPost("/export", async (IJobService jobs) =>
         {
             var id = await jobs.CreateJobAsync("gangsExport", new {});
             return Results.Accepted($"/jobs/{id}", new {id});
-        });
+        })
+        .WithSummary("Export All Gangs Data")
+        .WithDescription("Creates a job to export all gangs data into a CSV for download. Returns Job ID");
 
         group.MapPost("/{id}/export", async (string id, IJobService jobs) =>
         {
             var jobId = await jobs.CreateJobAsync("gangExport", new { gangId =  id} );
             return Results.Accepted($"/jobs/{jobId}", new {jobId});
-        });
+        })
+        .WithSummary("Export A Gangs Data")
+        .WithDescription("Creates a job to export a gangss data into a CSV for download. Returns Job ID");
 
         return app;
     }
