@@ -13,23 +13,30 @@ export default function Stats() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (!search.trim()) {
+
+/*         if (!search.trim()) {
             setResults([]);
             return;
-        }
+        } */
 
         const delayedSearch = setTimeout(async () => {
             setIsLoading(true);
             try {
-                const response = await apiFetch(`/players/search?search=${search}`)
+                const endpoint = search.trim() 
+                ? `/players/search?search=${search}` 
+                : `/players?limit=15`;
+
+                const response = await apiFetch(endpoint);
+                if (!response.ok) throw new Error("Fetch failed");
                 const data = await response.json();
                 setResults(data);
             } catch (error) {
                 console.error("Search Failed", error);
+                setResults([]); // Clear results on error
             } finally {
                 setIsLoading(false);
             }
-        }, 500); // Half second delay from change
+        }, search.trim() ? 500 : 0);
         return () => clearTimeout(delayedSearch)
     }, [search]);
     return (
