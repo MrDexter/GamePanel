@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react'
 import { ClipboardCopy } from "lucide-react"; //ClipboardCheck
 import { useParams, useNavigate, Link  } from "react-router-dom";
 // import {Input } from "@/components/ui/input"
-import { Pencil } from "lucide-react";
+import { Pencil, EllipsisVertical, FileJson, Key, Trash2 } from "lucide-react";
 import {Button } from "@/components/ui/button"
 import {Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import {formatDate, copRanks, medicRanks, ionRanks, unitNames, formatMoney, unitRankNames } from "@/lib/constants"
-import { apiFetch } from "@/lib/api";
+import { apiFetch, apiFetchPost } from "@/lib/api";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { toast } from "sonner"
+import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,DropdownMenuSeparator, DropdownMenuTrigger} from "@/components/ui/dropdown-menu";
 
 const parseInventory = (inv: string) => {
   if (!inv || inv === '"[[],0]"') return "Empty";
@@ -45,6 +47,34 @@ export default function StatsPlayer() {
     const navigate = useNavigate();
     const checkInventory = (inv: string) => inv && inv !== '"[[],0]"';
     const checkVirtualInventory = (inv: string) => inv && inv !== '"[[],0]"';
+
+    const handleExport = async (id: string) => {
+        try {
+            const res = await apiFetchPost(`/players/${id}/export`);
+            const data = await res.json();
+                if (res.ok) {
+                    toast.success("Background Job Queued", {
+                        description: `ID: ${data.jobId} - Exporting metadata to Azure Blob Storage.`,
+                        action: {
+                            label: "View Jobs",
+                            onClick: () => navigate("/jobs") // Not setup
+                        }
+                    });
+                } else {
+                    toast.error("Export Failed", { description: data.message ?? "API Error" });
+                }
+        } catch (error){
+            toast.error("Network Error", { description: "Check API status." });
+        };  
+    };
+
+    const handleGenerate = async () => {
+        // Generate a user account with matching SteamID
+    };
+
+    const handleRevoke = async () => {
+        // Disable any user accounts with matching steamID
+    }
 
     useEffect(() => {
         const fetchPlayer = async () => {
@@ -106,7 +136,7 @@ export default function StatsPlayer() {
         <CardHeader className="flex flex-row items-center gap-6 border-b border-zinc-800/50 pb-8">
             <div className="space-y-1">
             <CardTitle className="text-4xl font-black uppercase tracking-tighter text-zinc-300">
-                <div className="flex flex-col md:flex-row justify-betwee items-center w-full px-2 justify-between">
+                <div className="flex flex-col md:flex-row items-center w-full px-2 justify-between">
                 
                 {/* Group 1: Primary Identity */}
                 <div className="flex items-center gap-6">
@@ -164,31 +194,41 @@ export default function StatsPlayer() {
                 </div>
 
                 {/* Group 2: Quick Stats (Horizontal Row) */}
-                {/*<div className="flex gap-12 border-l border-zinc-800/50 pl-12 h-12 items-center ml-auto">
-                    <div className="flex flex-col">
-                    <span className="text-[8px] text-zinc-500 uppercase font-black tracking-widest">Total Wealth</span>
-                    <span className="text-xl font-mono text-emerald-500">
-                        {formatMoney((player.cash || 0) + (player.bankacc || 0))}
-                    </span>
-                    </div>
-                </div>
-                     <div className="flex flex-col">
-                    <span className="text-[8px] text-zinc-500 uppercase font-black tracking-widest">Steam ID</span>
-                    <span className="text-xs font-mono text-zinc-300 tracking-tighter">
-                        {player.playerid}
-                    </span>
-                    </div> */}
+                <div className="absolute top-4 right-4 z-50 flex gap-2 border-zinc-800/50 pl-12 h-12 ">
+                    <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="text-zinc-400 hover:text-white hover:bg-zinc-900">
+                        <EllipsisVertical size={28} strokeWidth={2.5}/>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    
+                    <DropdownMenuContent align="end" className="w-48 bg-zinc-950 border-zinc-800 text-zinc-300">
+                        <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-zinc-500">
+                        Admin Actions
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator className="bg-zinc-800" />
+                        
+                        <DropdownMenuItem className="text-xs gap-2 cursor-pointer focus:bg-zinc-900 focus:text-white" onClick={() => handleExport(player.uid)}>
+                        <FileJson className="h-3.5 w-3.5 text-zinc-500" />
+                        Export Metadata
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuItem className="text-xs gap-2 cursor-pointer focus:bg-zinc-900 focus:text-white" onClick={() => handleGenerate()}>
+                        <Key className="h-3.5 w-3.5 text-zinc-500" />
+                        Generate Credentials
+                        </DropdownMenuItem>
 
+                        <DropdownMenuSeparator className="bg-zinc-800" />
+                        
+                        <DropdownMenuItem className="text-xs gap-2 cursor-pointer text-red-500 focus:bg-red-500/10 focus:text-red-400" onClick={() => handleRevoke()}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Revoke Credentials
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
                 </div>
             </CardTitle>
-            {/* <div className="flex gap-3 text-[12px] font-mono text-zinc-400 uppercase">
-                <span>Staff: {player.adminlevel > 0 ? "Yes" : "No"}</span>
-                <span className="text-zinc-300">|</span>
-                <span>Donator: {player.donorlevel > 0 ? "Yes" : "No"}</span>
-                {player.donorlevel !== 0 &&(
-                    <span>Expiry: {formatDate(player.donorExpiry)}</span>
-                )}
-            </div> */}
             </div>
         </CardHeader>
         <CardContent className="pt-1">
@@ -248,8 +288,9 @@ export default function StatsPlayer() {
                             Rank: {faction.ranks[mainLevel] ?? "None"}
                             </div>
                             </CardTitle>
-                            <Button variant="ghost" size="icon" className="h-6 w-6 text-zinc-500 hover:text-white hover:bg-zinc-800/40">
-                            <Pencil className={`h-3 w-3 ${faction.color} hover:text-white hover:scale-110 transition-all cursor-pointer`} />
+                            <Button variant="ghost" size="icon" className={`${faction.color} h-6 w-6 hover:text-white hover:bg-zinc-900`} 
+                                onClick={() => toast("JWT Login & Role-Based Access is currently being created on the 'authentication' branch.", { position: "top-center" })}>
+                            <Pencil className={`h-3 w-3 hover:scale-110 transition-all cursor-pointer`} />
                             </Button>                       
                         </CardHeader>
                         <CardContent>
@@ -356,7 +397,7 @@ export default function StatsPlayer() {
                                 </div>
                             </div>
                         </div>
-                    </Card>*
+                    </Card>
                 </div>
             </div>
         </CardContent>
