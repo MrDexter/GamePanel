@@ -38,7 +38,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<IPlayerService, PlayerService>();
 builder.Services.AddScoped<IGangService, GangService>();
-builder.Services.AddScoped<ISecurityService, SecurityService>();
+builder.Services.AddScoped<ILoggingService, LoggingService>();
 builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<IProcessorService, ProcessorService>();
 // For the Azure App Service test platform, Disable this and do a manual trigger on job creation to save on resources

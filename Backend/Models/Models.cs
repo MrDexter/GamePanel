@@ -76,3 +76,8 @@ public record Job (
     DateTime CreatedAt,
     DateTime InsertTime
 );
+
+public record LoginRequest(
+    string Username, 
+    string Password
+);

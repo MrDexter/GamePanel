@@ -3,16 +3,16 @@ using DecsPage.Models;
 
 namespace DecsPage.Services;
 
-public interface ISecurityService
+public interface ILoggingService
 {
     Task AuditLog(string type, int? id, string performedBy, string details);   
 }
 
-public class SecurityService : ISecurityService
+public class LoggingService : ILoggingService
 {
     private readonly string connectionString;
-    private readonly ILogger<SecurityService> _logger;
-    public SecurityService(IConfiguration config, ILogger<SecurityService> logger)
+    private readonly ILogger<LoggingService> _logger;
+    public LoggingService(IConfiguration config, ILogger<LoggingService> logger)
     {
         connectionString = config.GetConnectionString("DefaultConnection")
         ?? throw new InvalidOperationException("Missing Default Connection");

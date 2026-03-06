@@ -1,32 +1,38 @@
-@Background_Job_Processor_HostAddress = http://localhost:5214
+@DecsPager_HostAddress = http://localhost:5214
 
-GET {{Background_Job_Processor_HostAddress}}/players?limit=1
+GET {{DecsPager_HostAddress}}/players?limit=1
 Accept: application/json
 
 ###
-GET {{Background_Job_Processor_HostAddress}}/players/76561198213433993
+GET {{DecsPager_HostAddress}}/players/76561198213433994
+#76561198213433993
 Accept: application/json
 
 ###
-GET {{Background_Job_Processor_HostAddress}}/jobs/
-Accept: application/json
-
-###
-
-GET {{Background_Job_Processor_HostAddress}}/jobs/30
+GET {{DecsPager_HostAddress}}/jobs/
 Accept: application/json
 
 ###
 
-POST {{Background_Job_Processor_HostAddress}}/players/dump
+GET {{DecsPager_HostAddress}}/jobs/30
 Accept: application/json
 
 ###
 
-GET {{Background_Job_Processor_HostAddress}}/jobs/38/download
+POST {{DecsPager_HostAddress}}/players/dump
+Accept: application/json
+
+###
+
+GET {{DecsPager_HostAddress}}/jobs/38/download
 Accept: application/json
 
 
 ###
-GET {{Background_Job_Processor_HostAddress}}/players/search?search=Tom
+GET {{DecsPager_HostAddress}}/players/search?search=Tom
 Accept: application/json
+
+###
+POST {{DecsPager_HostAddress}}/Auth/Token?name=api-client&group=police&perms=write
+X-Auth-Secret: RCONPASS1234
+Content-Type: application/json
