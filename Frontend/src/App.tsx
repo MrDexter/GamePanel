@@ -37,15 +37,15 @@ export default function App() {
 
   return (
   <BrowserRouter>
-    <div className='min-h-screen bg-zinc-800 text-zinc-100 font-sans selection:bg-blue-500/30'>
+    <div className='min-h-screen bg-background text-foreground font-sans selection:bg-blue-500/30'>
       
-      <nav className='w-full border-b border-zinc-800 bg-zinc-900/80 backdrop-blur-md sticky top-0 z-50'>
+      <nav className='w-full border-b border-border bg-card backdrop-blur-md sticky top-0 z-50'>
         <div className='px-8 h-16 flex items-center justify-between'>
 
           <div className='flex items-center gap-10 text-sm font-medium uppercase tracking-wider'>
-            <Link to="/" className='text-zinc-400 hover:text-white transition-colors'>Home</Link>
-            <Link to="/stats" className='text-zinc-400 hover:text-white transition-colors'>Stats</Link>
-            <Link to="/jobs" className='text-zinc-400 hover:text-white transition-colors'>Jobs</Link>
+            <Link to="/" className='text-muted-foreground hover:text-white transition-colors'>Home</Link>
+            <Link to="/stats" className='text-muted-foreground hover:text-white transition-colors'>Stats</Link>
+            <Link to="/jobs" className='text-muted-foreground hover:text-white transition-colors'>Jobs</Link>
           </div>
           
             <div className="flex items-center gap-3 cursor-pointer">
@@ -53,14 +53,14 @@ export default function App() {
             <Button 
               variant="ghost" 
               size="sm"
-              className="text-[10px] font-black uppercase tracking-widest text-zinc-300 bg-zinc-700/50 hover:text-white hover:bg-zinc-800/50 transition-all"
-              onClick={() => toast("JWT Login & Role-Based Access is currently being created on the 'authentication' branch.", { position: "top-center" })}>
+              className="text-[10px] font-black uppercase tracking-widest text-foreground bg-background hover:text-white hover:bg-card transition-all"
+              onClick={() => toast("JWT Login & Role-Based Access is currently being created on the 'authentication' branch.")}>
               <LogIn className="mr-2 h-3 w-3" />
               Login
             </Button>
             {/* The Health Indicator */} 
-              <div className='group relative gap-3 flex items-center border-l border-zinc-800 pl-6'>
-                <span className="text-[10px] font-bold uppercase tracking-tighter text-zinc-400 group-hover:text-white transition-colors">
+              <div className='group relative gap-3 flex items-center border-l border-border pl-6'>
+                <span className="text-[10px] font-bold uppercase tracking-tighter text-foreground group-hover:text-white transition-colors">
                 Status: {
                 {
                   "Healthy": "Online",
@@ -75,12 +75,12 @@ export default function App() {
                 
                 
                 {/* The Hover Details */}
-                <div className="absolute top-10 right-0 hidden group-hover:block bg-zinc-900 border border-zinc-800 p-3 rounded-lg shadow-2xl z-50 min-w-[140px]">
-                  <p className="text-[9px] text-zinc-500 mb-2 border-b border-zinc-800 pb-1">System Health</p>
+                <div className="absolute top-10 right-0 hidden group-hover:block bg-card border border-border p-3 rounded-lg shadow-2xl z-50 min-w-35">
+                  <p className="text-[9px] text-foreground mb-2 border-b border-border pb-1">System Health</p>
                   {health?.services?.length > 0 ? (
                     health.services.map((s: any) => (
                       <div key={s.name} className="flex justify-between text-[10px] uppercase py-0.5">
-                        <span className="text-zinc-400">{s.name}</span>
+                        <span className="text-foreground">{s.name}</span>
                         <span className={s.status === "Healthy" ? "text-green-500" : "text-red-500"}>
                           {s.status === "Healthy" ? "OK" : "ERR"}
                         </span>
@@ -103,10 +103,12 @@ export default function App() {
           <Route path="/jobs" element={<Jobs />} />
         </Routes>
       </main>
-      <Toaster 
-        theme="dark" // Forces dark mode regardless of system settings
+      <Toaster
+        theme = "dark"
+        position = "top-center"
         toastOptions={{
-          descriptionClassName: "!text-secondary-foreground",
+          // className: '!bg-background !border-border !text-foreground !shadow-2xl !p-4',
+          // descriptionClassName: '',
         }} 
       />
     </div>
@@ -120,8 +122,8 @@ function Jobs() {
       With the ability to Download, Reset and Cencel Jobs. The API is ready and viewable at api.decspage.com. Have a look at Job Management</div>
     // <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-8">
     //   {/* Card 1: API Status */}
-    //   <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl shadow-lg">
-    //     <h3 className="text-zinc-400 text-sm font-medium uppercase tracking-wider">
+    //   <div className="bg-zinc-900 border border-border p-6 rounded-xl shadow-lg">
+    //     <h3 className="text-muted-foreground text-sm font-medium uppercase tracking-wider">
     //       System Status
     //     </h3>
     //     <div className="mt-2 flex items-center gap-2">
@@ -131,7 +133,7 @@ function Jobs() {
     //   </div>
 
     //   {/* Card 2: Worker Status */}
-    //   <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl shadow-lg">
+    //   <div className="bg-zinc-900 border border-border p-6 rounded-xl shadow-lg">
     //     <h3 className="text-zinc-400 text-sm font-medium uppercase tracking-wider">
     //       Background Worker
     //     </h3>
