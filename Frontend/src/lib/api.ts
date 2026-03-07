@@ -8,6 +8,7 @@ export const apiFetchPost = (path: string, options: RequestInit = {}) => {
   const token = localStorage.getItem("token");
   return fetch(`${BASE_URL}${path}`, {
     method: "POST",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...(token ? { "Authorization": `Bearer ${token}` } : {}),

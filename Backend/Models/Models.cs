@@ -81,3 +81,31 @@ public record LoginRequest(
     string Username, 
     string Password
 );
+
+public record UserDetails(
+    int ID,
+    string UserName,
+    string PasswordHash,
+    int AdminLevel,
+    string SteamID
+);
+
+public record PlayerPerms(
+    string ID,
+    int AdminLevel,
+    int CopLevel,
+    int TfuLevel,
+    int NcaLevel,
+    int NpasLevel,
+    int MpuLevel,
+    int AcadLevel,
+    int IonLevel,
+    int DeltaLevel,
+    int UmLevel,
+    int IafLevel,
+    int IruLevel,
+    int MedicLevel,
+    int HemsLevel,
+    int HartLevel,
+    int RpLevel
+);

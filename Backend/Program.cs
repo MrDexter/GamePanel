@@ -41,6 +41,7 @@ builder.Services.AddScoped<IGangService, GangService>();
 builder.Services.AddScoped<ILoggingService, LoggingService>();
 builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<IProcessorService, ProcessorService>();
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 // For the Azure App Service test platform, Disable this and do a manual trigger on job creation to save on resources
 // builder.Services.AddHostedService<JobWorker>();
 builder.Services.AddScoped<IJobWorker, JobWorker>();
@@ -56,7 +57,7 @@ builder.Services.AddOpenApi(options => {
             new() { Name = "Player Management", Description = "Real-time player statistics" },
             new() { Name = "Gang Management", Description = "Gang analytics and management" },
             new() { Name = "Job Management", Description = "Background worker controls" },
-            new() { Name = "Security and Misc", Description = "Authentication and Authorization" }
+            new() { Name = "Security and Authentication", Description = "Security and Authentication" }
         };
         return Task.CompletedTask;
     });
@@ -66,7 +67,8 @@ builder.Services.AddCors(options => {
     options.AddDefaultPolicy(policy => {
         policy.WithOrigins("http://localhost:5173", "https://decspage.com")
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 

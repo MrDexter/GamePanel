@@ -92,6 +92,7 @@ public static class PlayerEndpoints
             await logging.AuditLog("Complete: Rank Update", id, userName, $"{rank} - {newRank}");
             return Results.Ok(result);
         })
+        // .RequireAuthorization()
         .WithSummary("Update a Player Rank")
         .WithDescription("Update a Faction related players rank. Requires ID, Rank Name, New Rank Level and a correct JWT Token")
         .Produces<UpdateRank>(200);
