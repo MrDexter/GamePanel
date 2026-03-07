@@ -1,13 +1,16 @@
-import { useState } from 'react'
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+// Pages
 import  Stats from "./features/Stats";
 import StatsPlayer from "./features/StatsPlayer";
+import changelogData from "./changelog.json"; 
+// Components
 import { apiFetch } from "@/lib/api";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { Button } from './components/ui/button';
 import { LogIn } from "lucide-react";
+import {Badge } from "@/components/ui/badge"
 
 // Pages
 const Home = () => <div className='p-8 text-white'><h1>Coming Soon. Check Out Stats</h1></div>;
@@ -46,6 +49,7 @@ export default function App() {
             <Link to="/" className='text-muted-foreground hover:text-white transition-colors'>Home</Link>
             <Link to="/stats" className='text-muted-foreground hover:text-white transition-colors'>Stats</Link>
             <Link to="/jobs" className='text-muted-foreground hover:text-white transition-colors'>Jobs</Link>
+            <Link to="/changelog" className='text-muted-foreground hover:text-white transition-colors'>Changelog</Link>
           </div>
           
             <div className="flex items-center gap-3 cursor-pointer">
@@ -101,6 +105,7 @@ export default function App() {
           <Route path="/stats" element={<Stats />} />
           <Route path="/stats/:id" element={<StatsPlayer />} />
           <Route path="/jobs" element={<Jobs />} />
+          <Route path="/changelog" element={<Changelog />} />
         </Routes>
       </main>
       <Toaster
@@ -114,7 +119,7 @@ export default function App() {
     </div>
   </BrowserRouter>
   );
-};
+}
 
 function Jobs() {
   return (
@@ -142,3 +147,44 @@ function Jobs() {
     // </div>
   );
 }
+
+function Changelog() {
+  return (
+    <div className="max-w-3xl mx-auto py-12 px-6"> {/* Added layout container */}
+      <h1 className="text-3xl font-black uppercase tracking-tighter text-foreground mb-12">
+        System Changelog
+      </h1>
+      
+      <div className="relative"> {/* Container for the timeline line */}
+        {changelogData.map((release) => (
+          <div key={release.version} className="border-l-2 border-border pl-8 pb-12 last:pb-0 relative">
+            {/* The Version Dot - use -left-[9px] to center it on a 2px border */}
+            <div className="absolute -left-2.25 top-1 h-4 w-4 rounded-full bg-card border-2 border-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.3)]" />
+            
+            <div className="flex items-center gap-3 mb-2">
+                <span className="text-[12px] font-mono text-foreground uppercase tracking-widest">{release.date}</span>
+                {/* Category Badge */}
+                <Badge className="bg-blue-600/10 text-blue-500 border-blue-500/20 text-[9px] h-4">
+                    {release.category}
+                </Badge>
+            </div>
+
+            <ul className="mt-4 space-y-3">
+              {release.changes.map((change, i) => (
+                <li key={i} className="text-[14px] text-foreground flex gap-3 items-start">
+                  {/* Type Badge (Frontend/Backend) */}
+                  <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border uppercase mt-0.5 shrink-0
+                    ${change.type === 'backend' ? 'border-emerald-500/30 text-emerald-500' : 'border-purple-500/30 text-purple-500'}`}>
+                    {change.type[0]}
+                  </span>
+                  {change.text}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+

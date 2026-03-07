@@ -1,0 +1,154 @@
+[
+  {
+    "date": "07-03-2026",
+    "version": "0.7",
+    "title": "Theme fixes and Changelog",
+    "type": "Feature",
+    "category": "Frontend",
+    "changes": [
+        { "type": "frontend", "text": "Added Theme variables across project for more consistency" },
+        { "type": "frontend", "text": "Added Changelog Tab to view changes across the whole project" }
+    ]
+  },
+  {
+    "date": "06-03-2026",
+    "version": "0.6",
+    "title": "Toast, User Management and Export Data",
+    "type": "Feature",
+    "category": "Frontend",
+    "changes": [
+        { "type": "frontend", "text": "Added Toast notification (Sonner)" },
+        { "type": "frontend", "text": "Added User Management Drop down to a Player" },
+        { "type": "frontend", "text": "Added Export Data to User Management Drop Down" },
+        { "type": "frontend", "text": "Added Login button (Teaser of soon to come Authentication" },
+        { "type": "frontend", "text": "Added Generate / Revoke Credentials to User Management (Another Teaser)" }
+    ]
+  },
+  {
+    "date": "04-03-2026",
+    "version": "0.5",
+    "title": "Show players before search",
+    "type": "Feature",
+    "category": "Frontend",
+    "changes": [
+        { "type": "frontend", "text": "Added Player List before you start Searching" }
+    ]
+  },
+  {
+    "date": "04-03-2026",
+    "version": "0.4.9",
+    "title": "Finish Documentation & Gang Searching",
+    "type": "Feature",
+    "category": "Backend",
+    "changes": [
+        { "type": "backend", "text": "Finished basic Documentation" },
+        { "type": "backend", "text": "Added Name and Tag to Get Gang Endpoint" },
+        { "type": "backend", "text": "Added Get Failed Jobs Endpoint" }
+    ]
+  },
+  {
+    "date": "02-03-2026",
+    "version": "0.4.75",
+    "title": "Documentation and Gang Fixes",
+    "type": "Bug",
+    "category": "Full",
+    "changes": [
+        { "type": "backend", "text": "Added Documentation for Player Endpoints" },
+        { "type": "backend", "text": "Fixed Get Player error if no gang is found" },
+        { "type": "frontend", "text": "Fixed Player profile not loading if not in a gang" }
+    ]
+  },
+  {
+    "date": "02-03-2026",
+    "version": "0.4.5",
+    "title": "Better resolution support",
+    "type": "Bug",
+    "category": "Full",
+    "changes": [
+        { "type": "frontend", "text": "Fixed multiple components not scaling well on smaller devices (Still WIP)" }
+    ]
+  },
+  {
+    "date": "01-03-2026",
+    "version": "0.4",
+    "title": "Add Faction Blocks and Player Data to Player Stats",
+    "type": "Feature",
+    "category": "Frontend",
+    "changes": [
+        { "type": "frontend", "text": "Added faction Blocks to Player Stats" },
+        { "type": "frontend", "text": "Added Player Data to Player Stats (Wealth, Playtime, XP, Aliases)" },
+        { "type": "frontend", "text": "Added Dev / Production API Connection for easier Testing" },
+        { "type": "frontend", "text": "Added / Fixed Navigation fallback so a refresh will work" }
+    ]
+  },
+  {
+    "date": "01-03-2026",
+    "version": "0.3.75",
+    "title": "Fix Unused Variables, SQL Query Error",
+    "type": "Feature",
+    "category": "Full",
+    "changes": [
+        { "type": "frontend", "text": "Remove unused Variables stopping deployment" },
+        { "type": "backend", "text": "Fix Variable Type issue breaking use of Id's" }
+    ]
+  },
+  {
+    "date": "28-02-2026",
+    "version": "0.3.5",
+    "title": "Start of Stats Page ",
+    "type": "Feature",
+    "category": "Frontend",
+    "changes": [
+        { "type": "frontend", "text": "Create Stats Page, With base design of Search bar, selectable blocks for players returned from search" },
+        { "type": "frontend", "text": "Create Player Stats Page, Add Housing and Vehicle Lists" }
+    ]
+  },
+  {
+    "date": "28-02-2026",
+    "version": "0.3",
+    "title": "Start of Stats Page",
+    "type": "Feature",
+    "category": "Backend",
+    "changes": [
+        { "type": "backend", "text": "Added Search Player Endpoint (/players/search)" },
+        { "type": "backend", "text": "Fix multiple connections for Get Player" },
+        { "type": "backend", "text": "Change Get Player Housing and Vehicle data handling for easier access on frontend" },
+        { "type": "backend", "text": "Add Gang properties to Get Player housing and Get Gang housing" },
+        { "type": "backend", "text": "Add House Inventory to Get Player housing and Get Gang housing" }
+    ]
+  },
+  {
+    "date": "28-02-2026",
+    "version": "0.2",
+    "title": "Start of Frontend",
+    "type": "Feature",
+    "category": "Frontend",
+    "changes": [
+        { "type": "frontend", "text": "Created Home Page, Setup BrowserRouter, Header bar, System Health status bar" }
+    ]
+  },
+  {
+    "date": "28-02-2026",
+    "version": "0.1.5",
+    "title": "Created Frontend",
+    "type": "Setup",
+    "category": "Frontend",
+    "changes": [
+        { "type": "frontend", "text": "Installed and Setup React with BrowserRouter, Tailwind and Lucide" },
+        { "type": "frontend", "text": "Setup Azure Static Web App and Deployment on Frontend change"},
+        { "type": "backend", "text": "Changed /health to Microsoft .AddHealthChecks" }
+    ]
+  },
+  {
+    "date": "22-02-2026",
+    "version": "0.1",
+    "title": "Project Started",
+    "type": "Setup",
+    "category": "Backend",
+    "changes": [
+        { "type": "backend", "text": "Merged 'Community API' and 'Background Worker' together" },
+        { "type": "backend", "text": "Converted from MySql to Sql Client" },
+        { "type": "backend", "text": "Setup Azure App Service and Deployment on Backend  change" }
+    ]
+  }
+]
