@@ -40,7 +40,8 @@ public static class JobEndpoints
 
 /*         group.MapGet("/{id}/cancel", async (string id, IJobService jobs) =>
         {
-            // Get Job, If Incomplete, Cancel. Add Authorization
+            // Get Job, If Incomplete, Mark as Cancelled.
+            // In Job check status not canclled
         }); */
 
         group.MapGet("/{id}/reset", async (string id, IJobService jobs) =>
@@ -53,7 +54,7 @@ public static class JobEndpoints
                 return Results.NotFound();
             };
         })
-        .WithSummary("Reset / restart a Job")
+        .WithSummary("Reset / Restart a Job")
         .WithDescription("Reset a failed Job or Restart a completed job. Required Job ID.")
         .Produces<List<Job>>(200);
 

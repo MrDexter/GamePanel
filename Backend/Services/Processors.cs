@@ -131,14 +131,14 @@ public class ProcessorService : IProcessorService
                     var gang = await _gangService.GetGang(data["gangId"]);
                     return await ConvertToCSV(job.Id, "gangExport", gang, stopToken);
                 default:
-                    return null;
+                    return null!;
 
             }
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, "Failed Processor");
-            return null;
+            return null!;
         }
     }
 

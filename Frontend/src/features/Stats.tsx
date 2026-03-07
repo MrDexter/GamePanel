@@ -46,9 +46,9 @@ export default function Stats() {
                 <p className="text-muted-foreground">Search for a Player</p>
             </div>
 
-            <Card className="bg-zinc-900 border-zinc-800">
+            <Card className="bg-card border-border">
                 <CardHeader>
-                <CardTitle className="text-sm font-medium uppercase text-zinc-400">Search Database</CardTitle>
+                <CardTitle className="text-sm font-medium uppercase text-foreground">Search Database</CardTitle>
                 </CardHeader>
                 <CardContent>
                 <div className="flex w-full items-center space-x-2">
@@ -56,7 +56,7 @@ export default function Stats() {
                     placeholder="Enter Name or ID..." 
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="bg-zinc-950 border-zinc-800 text-white"
+                    className="bg-zinc-950 border-border text-white"
                     />
                     {isLoading && (
                     <div className="absolute right-4 top-3 text-white animate-spin">
@@ -77,66 +77,66 @@ export default function Stats() {
                     role="button" 
                     tabIndex={0}
                     onKeyDown={(e) => e.key === 'Enter' && navigate(`/stats/${player.id}`)}
-                    className="p-4 bg-zinc-900 border border-zinc-800 rounded-lg hover:border-blue-500 transition-all cursor-pointer group">
+                    className="p-4 bg-card border border-border rounded-lg hover:border-blue-500 transition-all cursor-pointer group">
                     {/* Header: Name and ID */}
-                    <div className="flex justify-between items-start mb-4 border-b border-zinc-800 pb-3">
+                    <div className="flex justify-between items-start mb-4 border-b border-border pb-3">
                         <div>
-                        <h3 className="font-bold text-lg text-white group-hover:text-blue-400 leading-tight">
+                        <h3 className="font-bold text-lg text-foreground group-hover:text-blue-400 leading-tight">
                             {player.name}
                         </h3>
-                        <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-mono">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-mono">
                             SteamID: {player.playerId}
                         </p>
                         </div>
-                        <div className="text-[12px] px-3 py-2 bg-blue-600 rounded border border-zinc-700 text-zinc-200">
+                        <div className="text-[12px] px-3 py-2 bg-blue-600 rounded border border-border-accent text-foreground">
                         ID. {player.id ?? 1}
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-y-3 gap-x-6 text-sm">
                         <div className="flex flex-col">
-                        <span className="text-[10px] text-zinc-500 uppercase font-bold">Cash</span>
-                        <span className="text-zinc-400 font-mono">{formatMoney(player.cash?.toLocaleString())}</span>
+                        <span className="text-[10px] text-muted-foreground uppercase font-bold">Cash</span>
+                        <span className="text-foreground font-mono">{formatMoney(player.cash?.toLocaleString())}</span>
                         </div>
                         <div className="flex flex-col">
-                        <span className="text-[10px] text-zinc-500 uppercase font-bold">Bank</span>
-                        <span className="text-zinc-400 font-mono">{formatMoney(player.bankacc?.toLocaleString())}</span>
+                        <span className="text-[10px] text-muted-foreground uppercase font-bold">Bank</span>
+                        <span className="text-foreground font-mono">{formatMoney(player.bankacc?.toLocaleString())}</span>
                         </div>
                         <div className="grid grid-cols-2 gap-y-3 gap-x-6 text-sm">
                             <div className="flex flex-col">
-                            <span className="text-[10px] text-zinc-500 uppercase font-bold">Police</span>
-                            <span className={"text-zinc-400"}>
+                            <span className="text-[10px] text-muted-foreground uppercase font-bold">Police</span>
+                            <span className={"text-foreground"}>
                                 {player.copLevel > 0 ? `${copRanks[player.copLevel]}` : "None"}
                             </span>
                             </div>
                             <div className="flex flex-col">
-                            <span className="text-[10px] text-zinc-500 uppercase font-bold">Medic</span>
-                            <span className={"text-zinc-400"}>
+                            <span className="text-[10px] text-muted-foreground uppercase font-bold">Medic</span>
+                            <span className={"text-foreground"}>
                                 {player.medicLevel > 0 ? `${medicRanks[player.medicLevel]}` : "None"}
                             </span>
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-y-3 gap-x-6 text-sm">
                             <div className="flex flex-col">
-                            <span className="text-[10px] text-zinc-500 uppercase font-bold">Ion</span>
-                            <span className={"text-zinc-400"}>
+                            <span className="text-[10px] text-muted-foreground uppercase font-bold">Ion</span>
+                            <span className={"text-foreground"}>
                                 {player.ionLevel > 0 ? `${ionRanks[player.ionLevel]}` : "None"}
                             </span>
                             </div>
                             <div className="flex flex-col">
-                            <span className="text-[10px] text-zinc-500 uppercase font-bold">Staff</span>
-                            <span className={"text-zinc-400"}>
+                            <span className="text-[10px] text-muted-foreground uppercase font-bold">Staff</span>
+                            <span className={"text-foreground"}>
                                 {player.adminLevel > 0 ? "Yes" : "No"}
                             </span>
                             </div>
                         </div>
                         <div className="flex flex-col">
-                        <span className="text-[10px] text-zinc-500 uppercase font-bold">Last Seen</span>
-                        <span className={"text-zinc-400"}>{formatDate(player.lastSeen)}</span>
+                        <span className="text-[10px] text-muted-foreground uppercase font-bold">Last Seen</span>
+                        <span className={"text-foreground"}>{formatDate(player.lastSeen)}</span>
                         </div>
                         <div className="flex flex-col">
-                        <span className="text-[10px] text-zinc-500 uppercase font-bold">Join Date</span>
-                        <span className={"text-zinc-400"}>{formatDate(player.insertTime)}</span>
+                        <span className="text-[10px] text-muted-foreground uppercase font-bold">Join Date</span>
+                        <span className={"text-foreground"}>{formatDate(player.insertTime)}</span>
                         </div>
                     </div>
                 </div>
