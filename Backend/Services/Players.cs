@@ -10,6 +10,7 @@ public interface IPlayerService
     Task<List<Dictionary<string, object>>> GetPlayer(string id);
     Task<UpdateRank> UpdateRank(int id, string rank, string newRank);
     Task<List<Player>>SearchPlayersAsync(string search);
+    Task<PlayerPerms>GetPlayerPerms(string id);
 }
 
 public class PlayerService : IPlayerService
@@ -119,10 +120,10 @@ public class PlayerService : IPlayerService
                 foreach (var m in cleanMembers) {
                     var parts = m.Split(",");
                     memberList.Add(new GangMember("Jason", "123", 1));
-                    memberList.Add(new GangMember("Tom", "123", 2));
-                    memberList.Add(new GangMember("DillyDallyWatcher", "123", 2));
-                    memberList.Add(new GangMember("King Julian", "123", 3));
-                    memberList.Add(new GangMember("Top Fragger", "123", 4));
+                    memberList.Add(new GangMember("Tom", "234", 2));
+                    memberList.Add(new GangMember("DillyDallyWatcher", "567", 2));
+                    memberList.Add(new GangMember("King Julian", "891", 3));
+                    memberList.Add(new GangMember("Top Fragger", "234", 4));
                     memberList.Add(new GangMember (
                         parts[2].Replace("\"", "").Trim(),
                         parts[0].Replace("\"", "").Trim(),
@@ -268,6 +269,42 @@ public class PlayerService : IPlayerService
                 reader > 0 ? "Success" : "Failed"
             );
             return result; 
+        };
+    }
+
+    public async Task<PlayerPerms> GetPlayerPerms(string id)
+    {
+        using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        var sql = "SELECT playerid, adminlevel, coplevel, tfulevel, ncalevel, npaslevel, mpulevel, acadlevel, ionlevel, deltalevel, umlevel, iaflevel, irulevel, mediclevel, hemslevel, hartlevel, rplevel FROM players WHERE playerid = @uid";
+        using (var command = new SqlCommand(sql, connection))
+        {
+            command.Parameters.AddWithValue("@uid", id);
+            using var reader = await command.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+                {
+                    return null!;
+                };
+            return new PlayerPerms(
+                reader["playerid"].ToString() ?? string.Empty,
+                int.Parse(reader["adminlevel"].ToString() ?? string.Empty),
+                int.Parse(reader["CopLevel"].ToString() ?? string.Empty),
+                int.Parse(reader["TfuLevel"].ToString() ?? string.Empty),
+                int.Parse(reader["NcaLevel"].ToString() ?? string.Empty),
+                int.Parse(reader["NpasLevel"].ToString() ?? string.Empty),
+                int.Parse(reader["MpuLevel"].ToString() ?? string.Empty),
+                int.Parse(reader["AcadLevel"].ToString() ?? string.Empty),
+                int.Parse(reader["IonLevel"].ToString() ?? string.Empty),
+                int.Parse(reader["DeltaLevel"].ToString() ?? string.Empty),
+                int.Parse(reader["UmLevel"].ToString() ?? string.Empty),
+                int.Parse(reader["IafLevel"].ToString() ?? string.Empty),
+                int.Parse(reader["IruLevel"].ToString() ?? string.Empty),
+                int.Parse(reader["MedicLevel"].ToString() ?? string.Empty),
+                int.Parse(reader["HemsLevel"].ToString() ?? string.Empty),
+                int.Parse(reader["HartLevel"].ToString() ?? string.Empty),
+                int.Parse(reader["RpLevel"].ToString() ?? string.Empty)
+            );
         };
     }
 

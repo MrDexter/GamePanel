@@ -76,3 +76,48 @@ public record Job (
     DateTime CreatedAt,
     DateTime InsertTime
 );
+
+public record LoginRequest(
+    string Username, 
+    string Password
+);
+
+public record ResetPassword(
+    string Password,
+    string ConfirmPassword
+);
+
+public record ChangePassword(
+    string OldPassword,
+    string NewPassword,
+    string ConfirmNewPassword
+);
+
+public record UserDetails(
+    int ID,
+    string UserName,
+    string PasswordHash,
+    int AdminLevel,
+    string SteamID,
+    string ChangePassword
+);
+
+public record PlayerPerms(
+    string ID,
+    int AdminLevel,
+    int CopLevel,
+    int TfuLevel,
+    int NcaLevel,
+    int NpasLevel,
+    int MpuLevel,
+    int AcadLevel,
+    int IonLevel,
+    int DeltaLevel,
+    int UmLevel,
+    int IafLevel,
+    int IruLevel,
+    int MedicLevel,
+    int HemsLevel,
+    int HartLevel,
+    int RpLevel
+);

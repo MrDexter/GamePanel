@@ -1,23 +1,27 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 // Pages
-import  Stats from "./features/Stats";
-import StatsPlayer from "./features/StatsPlayer";
-import changelogData from "./changelog.json"; 
+import  Stats from "@/features/Stats";
+import StatsPlayer from "@/features/StatsPlayer";
+import changelogData from "@/changelog.json"; 
+import LoginModal from "@/components/modals/Login";
+import ChangePasswordModal from "@/components/modals/ChangePassword";
+import ResetPasswordModal from "@/components/modals/ResetPassword";
 // Components
-import { apiFetch } from "@/lib/api";
-import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
-import { Button } from './components/ui/button';
-import { LogIn } from "lucide-react";
+import { jwtDecode } from "jwt-decode";
 import {Badge } from "@/components/ui/badge"
+import { Button } from './components/ui/button';
+import { Toaster } from "@/components/ui/sonner";
+import { AuthContext } from "@/lib/AuthContext";
+import { LogIn, FileJson, Trash2, User, UserCircle } from "lucide-react";
+import { apiFetch, apiFetchPost, setLogoutHandler } from "@/lib/api";
+import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,DropdownMenuSeparator, DropdownMenuTrigger} from "@/components/ui/dropdown-menu";
 
 // Pages
 const Home = () => <div className='p-8 text-white'><h1>Coming Soon. Check Out Stats</h1></div>;
 
-
 export default function App() {
-  
   const [health, setHealth] = useState<any>(null);
   useEffect(() => {
     const checkHealth = async () => {
@@ -38,86 +42,195 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  return (
-  <BrowserRouter>
-    <div className='min-h-screen bg-background text-foreground font-sans selection:bg-blue-500/30'>
-      
-      <nav className='w-full border-b border-border bg-card backdrop-blur-md sticky top-0 z-50'>
-        <div className='px-8 h-16 flex items-center justify-between'>
+  const [user, setUser] = useState<any>(null);
+  useEffect(() => {
+    const globalLogout = (silent = false) => {
+      localStorage.removeItem("token");
+      setUser(null);
+      if (!silent)
+        toast.error("Session Expired - Please Log back in!");
+    };
+    setLogoutHandler(globalLogout);
 
-          <div className='flex items-center gap-10 text-sm font-medium uppercase tracking-wider'>
-            <Link to="/" className='text-muted-foreground hover:text-white transition-colors'>Home</Link>
-            <Link to="/stats" className='text-muted-foreground hover:text-white transition-colors'>Stats</Link>
-            <Link to="/jobs" className='text-muted-foreground hover:text-white transition-colors'>Jobs</Link>
-            <Link to="/changelog" className='text-muted-foreground hover:text-white transition-colors'>Changelog</Link>
-          </div>
+    const LoginStatus = async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const decodedToken = jwtDecode<any>(token);
+          if(decodedToken.exp! * 1000 > Date.now()) {
+            setUser(decodedToken);
+            if(decodedToken.ChangePassword == "True") {
+              setisResetPasswordOpen(true);
+              toast.info("Security Action Required", { 
+                  description: "Please update your temporary password." 
+              });
+            };
+            return;
+          };
+
+          var res = await apiFetchPost("/auth/refresh");
+          if (!res.ok)throw new Error("Unauthorized");
           
-            <div className="flex items-center gap-3 cursor-pointer">
-            {/* Login Button */}
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className="text-[10px] font-black uppercase tracking-widest text-foreground bg-background hover:text-white hover:bg-card transition-all"
-              onClick={() => toast("JWT Login & Role-Based Access is currently being created on the 'authentication' branch.")}>
-              <LogIn className="mr-2 h-3 w-3" />
-              Login
-            </Button>
-            {/* The Health Indicator */} 
-              <div className='group relative gap-3 flex items-center border-l border-border pl-6'>
-                <span className="text-[10px] font-bold uppercase tracking-tighter text-foreground group-hover:text-white transition-colors">
-                Status: {
-                {
-                  "Healthy": "Online",
-                  "Unhealthy": "Error",
-                  "Offline": "Offline"
-                }[health?.status as string] ?? "Checking..."}
-                </span>
-                <div className={`h-2 w-2 rounded-full ${
-                  health?.status === "Healthy" ? "bg-green-500 animate-pulse" : 
-                  health?.status === "Unhealthy" ? "bg-amber-500" : "bg-red-500"
-                }`} />
-                
-                
-                {/* The Hover Details */}
-                <div className="absolute top-10 right-0 hidden group-hover:block bg-card border border-border p-3 rounded-lg shadow-2xl z-50 min-w-35">
-                  <p className="text-[9px] text-foreground mb-2 border-b border-border pb-1">System Health</p>
-                  {health?.services?.length > 0 ? (
-                    health.services.map((s: any) => (
-                      <div key={s.name} className="flex justify-between text-[10px] uppercase py-0.5">
-                        <span className="text-foreground">{s.name}</span>
-                        <span className={s.status === "Healthy" ? "text-green-500" : "text-red-500"}>
-                          {s.status === "Healthy" ? "OK" : "ERR"}
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-[10px] text-red-400">API Unreachable</p>
-                  )}
+          var data = await res.json();
+          localStorage.setItem("token", data.token);
+          setUser(jwtDecode(data.token));
+          console.log("Session restored via refresh token.");
+        } catch (err) {
+          globalLogout(true);
+        };
+      }
+    };
+    LoginStatus()
+  }, []);
+
+    const handleLogout = async (e?: React.MouseEvent<HTMLButtonElement>) => {
+      if (e) e.preventDefault();
+      try {
+        await apiFetchPost("/auth/logout");
+      } catch {
+        console.error("Server Logout Failed clearing local session");
+      } finally {
+        localStorage.removeItem("token");
+        setUser(null);
+        toast.success("Logout Successful");
+    };
+  };
+
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isResetPasswordOpen, setisResetPasswordOpen] = useState(false);
+  const [isChangePasswordOpen, setisChangePasswordOpen] = useState(false);
+
+  return (
+ <AuthContext.Provider value={{ user, setUser, logout: handleLogout }}>
+    <BrowserRouter>
+      <div className='min-h-screen bg-background text-foreground font-sans selection:bg-blue-500/30'>
+        
+        <nav className='w-full border-b border-border bg-card backdrop-blur-md sticky top-0 z-50'>
+          <div className='px-8 h-16 flex items-center justify-between'>
+
+            <div className='flex items-center gap-10 text-sm font-medium uppercase tracking-wider'>
+              <Link to="/" className='text-muted-foreground hover:text-white transition-colors'>Home</Link>
+              <Link to="/stats" className='text-muted-foreground hover:text-white transition-colors'>Stats</Link>
+              <Link to="/jobs" className='text-muted-foreground hover:text-white transition-colors'>Jobs</Link>
+              <Link to="/changelog" className='text-muted-foreground hover:text-white transition-colors'>Changelog</Link>
+            </div>
+            
+              <div className="flex items-center gap-3 cursor-pointer">
+              {/* Login Button */}
+              {user ?  (
+                <div>
+                    <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="text-[10px] font-black uppercase tracking-widest text-foreground bg-background hover:text-white hover:bg-card transition-all">
+                        <User className="mr-2 h-3 w-3" />
+                        {user.Name}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    
+                    <DropdownMenuContent align="end" className="w-48 bg-zinc-950 border-border text-foreground">
+                        <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                        Admin Actions
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator className="bg-background" />
+                        
+                        <DropdownMenuItem className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => setisChangePasswordOpen(true)}>
+                        <FileJson className="h-3.5 w-3.5 text-muted-foreground" />
+                        Change Password
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuItem asChild>
+                        <Link 
+                          to={`/stats/${user.SteamID}`} 
+                          className="flex w-full items-center cursor-pointer">
+                          <UserCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span>View Profile</span>
+                        </Link>
+                      </DropdownMenuItem>
+
+                        <DropdownMenuSeparator className="bg-background" />
+                        
+                        <DropdownMenuItem className="text-xs gap-2 cursor-pointer text-red-500 focus:bg-red-500/10 focus:text-red-400" onClick={() => handleLogout()}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Log Out
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+              ) : (
+                <div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="text-[10px] font-black uppercase tracking-widest text-foreground bg-background hover:text-white hover:bg-card transition-all"
+                    onClick={() => setIsLoginOpen(true)}>
+                    <LogIn className="mr-2 h-3 w-3" />
+                    Login
+                  </Button>
+                </div>
+              )}
+              {/* The Health Indicator */} 
+                <div className='group relative gap-3 flex items-center border-l border-border pl-6'>
+                  <span className="text-[10px] font-bold uppercase tracking-tighter text-foreground group-hover:text-white transition-colors">
+                  Status: {
+                  {
+                    "Healthy": "Online",
+                    "Unhealthy": "Error",
+                    "Offline": "Offline"
+                  }[health?.status as string] ?? "Checking..."}
+                  </span>
+                  <div className={`h-2 w-2 rounded-full ${
+                    health?.status === "Healthy" ? "bg-green-500 animate-pulse" : 
+                    health?.status === "Unhealthy" ? "bg-amber-500" : "bg-red-500"
+                  }`} />
+                  
+                  
+                  {/* The Hover Details */}
+                  <div className="absolute top-10 right-0 hidden group-hover:block bg-card border border-border p-3 rounded-lg shadow-2xl z-50 min-w-35">
+                    <p className="text-[9px] text-foreground mb-2 border-b border-border pb-1">System Health</p>
+                    {health?.services?.length > 0 ? (
+                      health.services.map((s: any) => (
+                        <div key={s.name} className="flex justify-between text-[10px] uppercase py-0.5">
+                          <span className="text-foreground">{s.name}</span>
+                          <span className={s.status === "Healthy" ? "text-green-500" : "text-red-500"}>
+                            {s.status === "Healthy" ? "OK" : "ERR"}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-[10px] text-red-400">API Unreachable</p>
+                    )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </nav>
+        </nav>
 
-      <main className='px-8 py-10'>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/stats" element={<Stats />} />
-          <Route path="/stats/:id" element={<StatsPlayer />} />
-          <Route path="/jobs" element={<Jobs />} />
-          <Route path="/changelog" element={<Changelog />} />
-        </Routes>
-      </main>
-      <Toaster
-        theme = "dark"
-        position = "top-center"
-        toastOptions={{
-          // className: '!bg-background !border-border !text-foreground !shadow-2xl !p-4',
-          // descriptionClassName: '',
-        }} 
-      />
-    </div>
-  </BrowserRouter>
+        <main className='px-8 py-10'>
+          <ChangePasswordModal open={isChangePasswordOpen} setOpen={setisChangePasswordOpen}/>
+          <ResetPasswordModal open={isResetPasswordOpen} setOpen={setisResetPasswordOpen}/>
+          <LoginModal open={isLoginOpen} setOpen={setIsLoginOpen} setUser={setUser} setIsResetPassOpen={setisResetPasswordOpen}/>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/stats" element={<Stats />} />
+            <Route path="/stats/:id" element={<StatsPlayer />} />
+            <Route path="/jobs" element={<Jobs />} />
+            <Route path="/changelog" element={<Changelog />} />
+          </Routes>
+        </main>
+        <Toaster
+          theme = "dark"
+          position = "top-center"
+          toastOptions={{
+            // className: '!bg-background !border-border !text-foreground !shadow-2xl !p-4',
+            // descriptionClassName: '',
+          }} 
+        />
+      </div>
+    </BrowserRouter>
+  </AuthContext.Provider>
   );
 }
 

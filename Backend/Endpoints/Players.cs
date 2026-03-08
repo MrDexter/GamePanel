@@ -42,12 +42,12 @@ public static class PlayerEndpoints
         .WithDescription("Fetches a partial profile of all players matching search criteria. Accepts UID, SteamID, Name and Aliases");
         // .Produces<List<Player>>(200);
 
-        group.MapPost("/{id}/updaterank", [Authorize] async (HttpContext ctx, int id, string rank, string newRank, IPlayerService players, ISecurityService security) =>
+        group.MapPost("/{id}/updaterank", [Authorize] async (HttpContext ctx, int id, string rank, string newRank, IPlayerService players, ILoggingService logging) =>
         {
             var userName = ctx.User.Identity?.Name ?? "Unknown";
             if (!ctx.User.HasClaim("scope", "write"))
             {
-                await security.AuditLog("Access Denied: Rank Update", id, userName, $"{rank} - {newRank}");
+                await logging.AuditLog("Access Denied: Rank Update", id, userName, $"{rank} - {newRank}");
                 return Results.Forbid();
             };
             var group = ctx.User.FindFirst("side")?.Value;
@@ -79,19 +79,20 @@ public static class PlayerEndpoints
             }; 
             #pragma warning restore CS8600
             if (column is null) {
-                await security.AuditLog("Invalid Rank or Permissions: Rank Update", id, userName, $"{rank} - {newRank}");
+                await logging.AuditLog("Invalid Rank or Permissions: Rank Update", id, userName, $"{rank} - {newRank}");
                 throw new Exception(column);
             };
             var result = await players.UpdateRank(id, column, newRank);
             if (result is null)
             { 
                 
-                await security.AuditLog("Not Found: Rank Update", id, userName, $"{rank} - {newRank}");   
+                await logging.AuditLog("Not Found: Rank Update", id, userName, $"{rank} - {newRank}");   
                 return Results.NotFound();
             };
-            await security.AuditLog("Complete: Rank Update", id, userName, $"{rank} - {newRank}");
+            await logging.AuditLog("Complete: Rank Update", id, userName, $"{rank} - {newRank}");
             return Results.Ok(result);
         })
+        // .RequireAuthorization()
         .WithSummary("Update a Player Rank")
         .WithDescription("Update a Faction related players rank. Requires ID, Rank Name, New Rank Level and a correct JWT Token")
         .Produces<UpdateRank>(200);

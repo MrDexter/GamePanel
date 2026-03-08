@@ -1,16 +1,18 @@
+import { toast } from "sonner"
+import {Badge } from "@/components/ui/badge"
+import {Button } from "@/components/ui/button"
 import React, { useState, useEffect } from 'react'
+import { apiFetch, apiFetchPost } from "@/lib/api";
 import { ClipboardCopy } from "lucide-react"; //ClipboardCheck
 import { useParams, useNavigate, Link  } from "react-router-dom";
-// import {Input } from "@/components/ui/input"
-import { Pencil, EllipsisVertical, FileJson, Key, Trash2 } from "lucide-react";
-import {Button } from "@/components/ui/button"
-import {Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
-import {formatDate, copRanks, medicRanks, ionRanks, unitNames, formatMoney, unitRankNames } from "@/lib/constants"
-import { apiFetch, apiFetchPost } from "@/lib/api";
+import { Pencil, EllipsisVertical, FileJson, Key, Trash2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { toast } from "sonner"
+import {formatDate, copRanks, medicRanks, ionRanks, unitNames, formatMoney, unitRankNames } from "@/lib/constants"
 import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,DropdownMenuSeparator, DropdownMenuTrigger} from "@/components/ui/dropdown-menu";
+// import { jwtDecode } from 'jwt-decode';
+import { useAuth } from "@/lib/AuthContext";
+
 
 const parseInventory = (inv: string) => {
   if (!inv || inv === '"[[],0]"') return "Empty";
@@ -42,6 +44,7 @@ const FACTIONS = [
 ];
 
 export default function StatsPlayer() {
+    const { user } = useAuth();
     const { id } = useParams();
     const [player, setPlayer] = useState<any>(null)
     const navigate = useNavigate();
@@ -68,12 +71,104 @@ export default function StatsPlayer() {
         };  
     };
 
-    const handleGenerate = async () => {
-        // Generate a user account with matching SteamID
+    const handleGenerateCredentials = async (id: string, username: string) => {
+        const adminlevel = parseInt(user?.adminlevel ?? 0);
+        if (adminlevel < 4) {
+            toast.error("You don't have permission to create a user");
+            return;
+        }
+        try {
+            const res = await apiFetchPost(`/auth/createuser?ID=${id}&username=${username}`);
+                const data = await res.json();
+                if (res.ok) {
+                    toast.success("User Created", {
+                        description: (
+                            <div className="flex flex-col gap-1 mt-1 font-mono text-[11px]">
+                            <div className="flex border-b border-white/5 pb-1">
+                                <span className="text-zinc-500 uppercase">User:</span>
+                                <span className="text-blue-400">{username}</span>
+                            </div>
+                            <div className="flex">
+                                <span className="text-zinc-500 uppercase">Pass:</span>
+                                <span className="text-emerald-400">{data.password}</span>
+                            </div>
+                            </div>
+                        ),
+                        duration: 10000,
+                        action: {
+                            label: "Copy",
+                            onClick: () => copyToClipboard(`User: ${username}\nPass: ${data.password}`)
+                        }
+                    });
+                } else {
+                    toast.error("Conflict", { description: data.message  ?? "Failed to Create User" });
+                }
+        } catch (error){
+            toast.error("Network Error", { description: "Check API status." });
+            console.log(error);
+        };  
     };
 
-    const handleRevoke = async () => {
-        // Disable any user accounts with matching steamID
+    
+    const handleResetPassword = async (id: string, username: string) => {
+        const adminlevel = parseInt(user?.adminlevel ?? 0);
+        if (adminlevel < 4) {
+            toast.error("You don't have permission to reset a users password");
+            return;
+        }
+        try {
+            const res = await apiFetchPost(`/auth/adminResetPassword?ID=${id}`);
+                const data = await res.json();
+                if (res.ok) {
+                    toast.success("Password Reset", {
+                        description: (
+                            <div className="flex flex-col gap-1 mt-1 font-mono text-[11px]">
+                            <div className="flex border-b border-white/5 pb-1">
+                                <span className="text-zinc-500 uppercase">User:</span>
+                                <span className="text-blue-400">{username}</span>
+                            </div>
+                            <div className="flex">
+                                <span className="text-zinc-500 uppercase">Pass:</span>
+                                <span className="text-emerald-400">{data.password}</span>
+                            </div>
+                            </div>
+                        ),
+                        duration: 10000,
+                        action: {
+                            label: "Copy",
+                            onClick: () => copyToClipboard(`User: ${username}\nPass: ${data.password}`)
+                        }
+                    });
+                } else {
+                    toast.error("Error", { description: data.message  ?? "Failed to Reset User Password" });
+                }
+        } catch (error){
+            toast.error("Network Error", { description: "Check API status." });
+            console.log(error);
+        };  
+    };
+
+    const handleRevokeCredentials = async (id: string, username: string) => {
+        const adminlevel = parseInt(user?.adminlevel ?? 0);
+        if (adminlevel < 4) {
+            toast.error("You don't have permission to create a user");
+            return;
+        }
+        try {
+            const res = await apiFetchPost(`/auth/deleteuser?id=${id}`);
+                const data = await res.json();
+                if (res.ok) {
+                    toast.success("User Deleted", {
+                        description: `You have deleted the account for user: ${username}`,
+                        duration: 5000,
+                    });
+                } else {
+                    toast.error("Error", { description: data.message  ?? "Failed to Delete User" });
+                }
+        } catch (error){
+            toast.error("Network Error", { description: "Check API status." });
+            console.log(error);
+        };  
     }
 
     useEffect(() => {
@@ -152,24 +247,24 @@ export default function StatsPlayer() {
                         {player.name}
                     </h1>
                     <div className="flex gap-3 items-center mt-1">
-                        <Badge variant="outline" className="text-[10px] border-border-accent text-foreground font-mono tracking-tighter">
+                        <Badge variant="outline" className="text-[10px] border-muted-foreground text-foreground font-mono tracking-tighter">
                         UUID: {player.uid}
                         </Badge>
-                        <Badge variant="outline" className="text-[10px] border-border-accent text-foreground font-mono tracking-tighter">
+                        <Badge variant="outline" className="text-[10px] border-muted-foreground text-foreground font-mono tracking-tighter">
                         ID: {player.playerid}
                         </Badge>
                         {player.adminlevel > 0 &&(
-                            <Badge variant="outline" className="text-[10px] border-border-accent text-blue-500 font-mono tracking-tighter">
+                            <Badge variant="outline" className="text-[10px] border-blue-500 text-blue-500 font-mono tracking-tighter">
                             Staff
                             </Badge> 
                         )}
                         {player.donorlevel > 0 &&(
-                            <div className='text-[10px] border-border-accent text-red-700 font-mono tracking-tighter'>
+                            <div className='text-[10px] border-border-red-700 text-red-700 font-mono tracking-tighter'>
                                 <TooltipProvider>
                                     <Tooltip>
                                     <TooltipTrigger asChild>
                                         <div className="cursor-help"> {/* Makes the mouse a 'help' cursor */}
-                                        <Badge variant="outline" className="text-[10px] border-border-accent text-red-700 font-mono tracking-tighter bg-red-500/5">
+                                        <Badge variant="outline" className="text-[10px] border-red-700 text-red-700 font-mono tracking-tighter bg-red-500/5">
                                             Donator
                                         </Badge>
                                         </div>
@@ -213,14 +308,19 @@ export default function StatsPlayer() {
                         Export Metadata
                         </DropdownMenuItem>
                         
-                        <DropdownMenuItem className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => handleGenerate()}>
+                        <DropdownMenuItem className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => handleGenerateCredentials(player.playerid, player.name)}>
                         <Key className="h-3.5 w-3.5 text-muted-foreground" />
                         Generate Credentials
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuItem className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => handleResetPassword(player.playerid, player.name)}>
+                        <Key className="h-3.5 w-3.5 text-muted-foreground" />
+                        Reset Password
                         </DropdownMenuItem>
 
                         <DropdownMenuSeparator className="bg-background" />
                         
-                        <DropdownMenuItem className="text-xs gap-2 cursor-pointer text-red-500 focus:bg-red-500/10 focus:text-red-400" onClick={() => handleRevoke()}>
+                        <DropdownMenuItem className="text-xs gap-2 cursor-pointer text-red-500 focus:bg-red-500/10 focus:text-red-400" onClick={() => handleRevokeCredentials(player.playerid, player.name)}>
                         <Trash2 className="h-3.5 w-3.5" />
                         Revoke Credentials
                         </DropdownMenuItem>
