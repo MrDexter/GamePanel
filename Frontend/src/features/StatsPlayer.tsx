@@ -343,7 +343,9 @@ export default function StatsPlayer() {
                         {/* <span>Rank: {gangRank?.Rank == null ? "N/A" : gangRank.Rank >= 5 ? "Leader" : `Level ${gangRank.Rank}`}</span> */}
                         </div>
                         </CardTitle>
-                        {/* <Badge variant="outline" className="border-border-accent bg-purple-600 text-foreground uppercase">{player.gang.id ?? ""}</Badge> */}
+                        {player.gang?.id &&(
+                            <Badge variant="outline" className="border-border-accent bg-purple-600 text-foreground uppercase">{player.gang?.id ?? ""}</Badge>
+                        )}
                     </CardHeader>
                     <CardContent>
                         {player.gang !== null &&(
