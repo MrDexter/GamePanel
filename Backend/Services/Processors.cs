@@ -122,13 +122,13 @@ public class ProcessorService : IProcessorService
                     var players = await _playerService.GetAllPlayers(null, null);
                     return await ConvertToCSV(job.Id, "playersExport", players, stopToken);
                 case "playerExport":
-                    var player = await _playerService.GetPlayer(data["playerId"]);
+                    var player = await _playerService.GetPlayer(data!["playerId"]);
                     return await ConvertToCSV(job.Id, "playerExport", player, stopToken);
                 case "gangsExport":
                     var gangs = await _gangService.GetAllGangs(null, null);
                     return await ConvertToCSV(job.Id, "gangsExport", gangs, stopToken);
                 case "gangExport":
-                    var gang = await _gangService.GetGang(data["gangId"]);
+                    var gang = await _gangService.GetGang(data!["gangId"]);
                     return await ConvertToCSV(job.Id, "gangExport", gang, stopToken);
                 default:
                     return null!;

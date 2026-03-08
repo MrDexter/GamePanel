@@ -120,10 +120,10 @@ public class PlayerService : IPlayerService
                 foreach (var m in cleanMembers) {
                     var parts = m.Split(",");
                     memberList.Add(new GangMember("Jason", "123", 1));
-                    memberList.Add(new GangMember("Tom", "123", 2));
-                    memberList.Add(new GangMember("DillyDallyWatcher", "123", 2));
-                    memberList.Add(new GangMember("King Julian", "123", 3));
-                    memberList.Add(new GangMember("Top Fragger", "123", 4));
+                    memberList.Add(new GangMember("Tom", "234", 2));
+                    memberList.Add(new GangMember("DillyDallyWatcher", "567", 2));
+                    memberList.Add(new GangMember("King Julian", "891", 3));
+                    memberList.Add(new GangMember("Top Fragger", "234", 4));
                     memberList.Add(new GangMember (
                         parts[2].Replace("\"", "").Trim(),
                         parts[0].Replace("\"", "").Trim(),

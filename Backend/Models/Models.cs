@@ -82,12 +82,24 @@ public record LoginRequest(
     string Password
 );
 
+public record ResetPassword(
+    string Password,
+    string ConfirmPassword
+);
+
+public record ChangePassword(
+    string OldPassword,
+    string NewPassword,
+    string ConfirmNewPassword
+);
+
 public record UserDetails(
     int ID,
     string UserName,
     string PasswordHash,
     int AdminLevel,
-    string SteamID
+    string SteamID,
+    string ChangePassword
 );
 
 public record PlayerPerms(

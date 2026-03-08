@@ -11,10 +11,18 @@ namespace DecsPage.Services;
 
 public interface IAuthenticationService
 {
-    Task<string?>GenerateToken (UserDetails userDetails);
+    Task<string?>GenerateToken (HttpContext context, UserDetails userDetails);
     Task <bool> GenerateGUID (HttpContext context, string id);
+    Task <bool> DeleteGUID (HttpContext context, string guid);
+    Task<string> RefreshToken (HttpContext context, string guid);
     Task <string?> AuthenticateUser (string username, string password, HttpContext context);
-    Task <string> CreateUser (string ID, string username);
+    Task LogoutUser (HttpContext context);
+    Task <string> CreateUser (string ID, string username, HttpContext context);
+    Task<bool> DeleteUser (string id, HttpContext context);
+    Task<string> AdminResetPassword (string id, HttpContext context);
+    Task<string> ResetPassword (ResetPassword req, HttpContext context);
+    Task<bool> ChangePassword (ChangePassword req, HttpContext context);
+    Task<UserDetails> GetUserDetails (string column, string filter);
 }
 
 public class AuthenticationService : IAuthenticationService
@@ -35,14 +43,15 @@ public class AuthenticationService : IAuthenticationService
         _logger = logger;
     }
 
-    public async Task<string?> GenerateToken(UserDetails userDetails)
+    public async Task<string?> GenerateToken(HttpContext context, UserDetails userDetails)
     {
         var steamID  = userDetails.SteamID;
         var playerPerms = await player.GetPlayerPerms(steamID);
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, userDetails.UserName),
-            new Claim("SteamID", steamID)
+            new Claim("Name", userDetails.UserName),
+            new Claim("SteamID", steamID),
+            new Claim("ChangePassword", userDetails.ChangePassword)
         };
         var properties = typeof(PlayerPerms).GetProperties();
         foreach (var data in properties)
@@ -82,7 +91,7 @@ public class AuthenticationService : IAuthenticationService
         using var connection = new SqlConnection(connectionString);
         {
           await connection.OpenAsync();
-          var sql = "UPDATE users SET refreshToken = @guid, refreshTokenExpiry = @expiry WHERE steamid = @steamid";
+          var sql = "UPDATE users SET refreshToken = @guid, refreshTokenExpiry = @expiry WHERE steamid = @steamid AND isActive = 1";
           using var command = new SqlCommand(sql, connection);
           command.Parameters.AddWithValue("@guid", guid);
           command.Parameters.AddWithValue("@expiry", expiry);
@@ -104,62 +113,218 @@ public class AuthenticationService : IAuthenticationService
           return true;
         };
     }
+    public async Task<bool> DeleteGUID (HttpContext context, string guid)
+    {
+        using var connection = new SqlConnection(connectionString);
+        {
+          await connection.OpenAsync();
+          var sql = "UPDATE users SET refreshToken = null, refreshTokenExpiry = null WHERE refreshToken = @guid AND isActive = 1";
+          using var command = new SqlCommand(sql, connection);
+          command.Parameters.AddWithValue("@guid", guid);
+          int reader = await command.ExecuteNonQueryAsync();
+          if (reader == 0)
+            {
+                return false;
+            };
+            context.Response.Cookies.Delete("refreshToken", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Domain = context.Request.Host.Host.Contains("localhost") ? null : ".decspage.com",
+            });
+          return true;
+        };
+    }
+    public async Task<string> RefreshToken (HttpContext context, string guid)
+    {
+            var userDetails = await GetUserDetails("RefreshToken", guid);
+            var success = await GenerateGUID(context, userDetails.SteamID);
+            if (success)
+            {
+                var token = await GenerateToken(context, userDetails);
+                return token!;
+            };
+            return null!;
+    }
     public async Task<string?> AuthenticateUser (string username, string password, HttpContext context)
     {
-        UserDetails? userDetails = null;
-        using (var connection = new SqlConnection(connectionString))
+        var userDetails = await GetUserDetails("Username", username);
+        if (userDetails == null || !BCrypt.Net.BCrypt.Verify(password, userDetails.PasswordHash))
         {
-            await connection.OpenAsync();
-            var sql = "SELECT id, Username, PasswordHash, AdminLevel, SteamID FROM users WHERE username = @username";
-            using var command = new SqlCommand(sql, connection); 
-            command.Parameters.AddWithValue("@username", username);
-            using var reader = await command.ExecuteReaderAsync();
-            if (await reader.ReadAsync())
-            {
-                userDetails = new UserDetails(
-                    int.Parse(reader["id"].ToString() ?? string.Empty),
-                    reader["Username"].ToString() ?? string.Empty,
-                    reader["PasswordHash"].ToString() ?? string.Empty,
-                    int.Parse(reader["AdminLevel"].ToString() ?? string.Empty),
-                    reader["SteamID"].ToString() ?? string.Empty
-                );
-            };
-            if (userDetails == null || !BCrypt.Net.BCrypt.Verify(password, userDetails.PasswordHash))
-            {
-                return null!;
-            }
-        }; 
+            return null!;
+        }
 
         var success = await GenerateGUID(context, userDetails.SteamID);
         if (success)
         {
-            var token = await GenerateToken(userDetails);
+            var token = await GenerateToken(context, userDetails);
             return token;
         };
         return null;
         
     }  
-    public async Task<string> CreateUser (string ID, string username)
-    {   
+    public async Task LogoutUser(HttpContext context)
+    {
+        if (context.Request.Cookies.TryGetValue("refreshToken", out var guid))
+        {
+            await DeleteGUID(context, guid);
+        }
+    }
+    public async Task<string> CreateUser (string ID, string username, HttpContext context)
+    {
+        try {
+            var password = GenerateRandomPassword();
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(password); 
+            using (var connection = new SqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                var sql = "INSERT INTO users (UserName, PasswordHash, AdminLevel, SteamID) VALUES (@username, @passwordHash, 0, @SteamID)";
+                var command = new SqlCommand(sql, connection);
+                command.Parameters.AddWithValue("@username", username);
+                command.Parameters.AddWithValue("@passwordHash", passwordHash);
+                command.Parameters.AddWithValue("@steamID", ID);
+                await command.ExecuteNonQueryAsync();
+            };
+            return password; 
+        } catch (SqlException error) when (error.Number == 2627 || error.Number == 2601) // Duplicate Entry for Username or SteamID
+        {
+            if (error.Message.Contains("UQ_Users_SteamID"))
+                throw new InvalidOperationException("This SteamID is already linked to an account.");
+                
+            if (error.Message.Contains("UQ_Users_Username"))
+                throw new InvalidOperationException("This Username is already taken.");
+
+
+            throw new InvalidOperationException("A record with these details already exists.");
+        };
+    }
+    public async Task<bool>DeleteUser(string id, HttpContext context)
+    {
+        if (!context.Request.Cookies.TryGetValue("refreshToken", out var guid))
+        {   
+            throw new InvalidDataException("Session token not found!"); // Request not from a Logged in user
+        };
+        using (var connection = new SqlConnection(connectionString))
+        {
+            await connection.OpenAsync();
+            var sql = "UPDATE users SET isActive = 0, deletedAt = @date WHERE SteamID = @id AND isActive = 1";
+            using var command = new SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@id", id);
+            command.Parameters.AddWithValue("@date", DateTime.UtcNow);
+            int reader = await command.ExecuteNonQueryAsync();
+            if (reader > 0)
+                return true;
+        };
+        throw new InvalidDataException("User not Found");
+    }
+    public async Task<string> AdminResetPassword (string ID, HttpContext context)
+    {
+        if (!context.Request.Cookies.TryGetValue("refreshToken", out var guid))
+        {   
+            throw new InvalidDataException("Session token not found!"); // Request not from a logged in user
+        };        
         var password = GenerateRandomPassword();
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(password); 
         using (var connection = new SqlConnection(connectionString))
         {
             await connection.OpenAsync();
-            var sql = "INSERT INTO users (UserName, PasswordHash, AdminLevel, SteamID) VALUES (@username, @passwordHash, 0, @SteamID)";
+            var sql = "UPDATE users SET PasswordHash = @passwordHash, ChangePassword = 1 WHERE SteamID = @steamID AND isActive = 1";
             var command = new SqlCommand(sql, connection);
-            command.Parameters.AddWithValue("@username", username);
-            command.Parameters.AddWithValue("passwordHash", passwordHash);
+            command.Parameters.AddWithValue("@passwordHash", passwordHash);
             command.Parameters.AddWithValue("@steamID", ID);
+            int reader = await command.ExecuteNonQueryAsync();
+            if (reader > 0)
+                return password;
+        };
+        throw new InvalidDataException("Failed to Update Password"); 
+    }
+    public async Task<string> ResetPassword(ResetPassword req, HttpContext context)
+    {
+        if (!context.Request.Cookies.TryGetValue("refreshToken", out var guid))
+        {   
+            throw new InvalidDataException("Session token not found!");  
+        };
+        if (req.Password != req.ConfirmPassword)
+        {
+            throw new InvalidDataException("Passwords do not match");
+        };
+        var hashedPass = BCrypt.Net.BCrypt.HashPassword(req.Password);
+        using (var connection = new SqlConnection(connectionString))
+        {
+            await connection.OpenAsync();
+            var sql = "UPDATE users SET PasswordHash = @pass, changePassword = 0 WHERE RefreshToken = @guid AND isActive = 1";
+            using var command = new SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@pass", hashedPass);
+            command.Parameters.AddWithValue("@guid", guid);
             int reader = await command.ExecuteNonQueryAsync();
             if (reader == 0)
             {
-                return null!;
+                throw new InvalidDataException("Session not found or expired");
             };
         };
-        return password;   
+        var userDetails = await GetUserDetails("RefreshToken", guid);
+        var token = await GenerateToken(context, userDetails);
+        return token!;
     }
-
+    public async Task<bool> ChangePassword(ChangePassword req, HttpContext context)
+    {
+        if (!context.Request.Cookies.TryGetValue("refreshToken", out var guid))
+        {   
+            throw new InvalidDataException("Session token not found!");  
+        };
+        var userDetails = await GetUserDetails("RefreshToken", guid!);
+        if (userDetails == null || !BCrypt.Net.BCrypt.Verify(req.OldPassword, userDetails.PasswordHash))
+        {
+            throw new InvalidDataException("Old Password is incorrect!");
+        }        
+        if (req.NewPassword != req.ConfirmNewPassword)
+        {
+            throw new InvalidDataException("Passwords do not match");
+        };
+        var hashedPass = BCrypt.Net.BCrypt.HashPassword(req.NewPassword);
+        using (var connection = new SqlConnection(connectionString))
+        {
+            await connection.OpenAsync();
+            var sql = "UPDATE users SET PasswordHash = @pass, changePassword = 0 WHERE RefreshToken = @guid AND isActive = 1";
+            using var command = new SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@pass", hashedPass);
+            command.Parameters.AddWithValue("@guid", guid);
+            int reader = await command.ExecuteNonQueryAsync();
+            if (reader > 0)
+            {
+                return true; 
+            };
+            throw new InvalidDataException("Session not found or expired");
+        };
+    }
+    public async Task<UserDetails> GetUserDetails(string column, string filter)
+    {       
+        var allowedColumns = new[] { "Username", "SteamID", "RefreshToken" };
+        if (!allowedColumns.Contains(column)) {
+            throw new ArgumentException("Invalid search column.");
+        }
+        using (var connection = new SqlConnection(connectionString))
+        {
+            await connection.OpenAsync();
+            var sql = $"SELECT id, Username, PasswordHash, AdminLevel, SteamID, changePassword FROM users WHERE {column} = @filter AND isActive = 1";
+            using var command = new SqlCommand(sql, connection); 
+            command.Parameters.AddWithValue("@filter", filter);
+            using var reader = await command.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                return new UserDetails(
+                    int.Parse(reader["id"].ToString() ?? string.Empty),
+                    reader["Username"].ToString() ?? string.Empty,
+                    reader["PasswordHash"].ToString() ?? string.Empty,
+                    int.Parse(reader["AdminLevel"].ToString() ?? string.Empty),
+                    reader["SteamID"].ToString() ?? string.Empty,
+                    reader["changePassword"].ToString() ?? string.Empty
+                );
+            };
+            return null!;
+        };
+    }
     public string GenerateRandomPassword(int length = 12)
     {
         const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*";
@@ -169,7 +334,7 @@ public class AuthenticationService : IAuthenticationService
     }
 
     public int CanPromote(string playerRank)
-    {
+    { // Minimum level needed to have the permission to allow update rank permissions
         return playerRank switch {
             "adminlevel" => 1,
             "coplevel" => 7,

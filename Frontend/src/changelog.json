@@ -1,5 +1,24 @@
 [
   {
+    "date": "08-03-2026",
+    "version": "0.8",
+    "title": "Security, Identity, Authentication & Session Management",
+    "type": "Feature",
+    "category": "Full",
+    "changes": [
+        { "type": "backend", "text": "Added Endpoints for Login, Logout, Create User, Deactivate User, Reset Password, Change Password, and Refresh Tokens" },
+        { "type": "backend", "text": "Implemented BCrypt password hashing for secure credential storage" },
+        { "type": "backend", "text": "Added dynamic JWT claim mapping to provide permissions based on in-game ranks (Cop, Medic, and Individual Unit levels)" },
+        { "type": "backend", "text": "Implemented dual-token Auth (15-min JWT + GUID Refresh Token) with silent rotation via 401 interceptors and HttpOnly cookies" },
+        { "type": "frontend", "text": "Implemented Global Auth Context to share user identity and permissions across the entire dashboard" },
+        { "type": "frontend", "text": "Added 'System Authentication' portal with automatic session recovery on page load" },
+        { "type": "frontend", "text": "Added 'Generate Credentials' for admins (Level 4+) to provision new users from Player Stats" },
+        { "type": "frontend", "text": "Added 'Deactivate Access' for admins (Level 4+) to safely revoke user credentials via soft-delete" },
+        { "type": "frontend", "text": "Added Force-Reset Password workflow triggered by admin-generated credentials" },
+        { "type": "frontend", "text": "Added User Profile dropdown with 'Change Password' and 'View Service Record' actions" }
+    ]
+  },
+  {
     "date": "07-03-2026",
     "version": "0.7",
     "title": "Theme fixes and Changelog",
