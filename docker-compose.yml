@@ -1,0 +1,39 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
+    user: "0:0" 
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${DB_PASSWORD} # Match your appsettings.json
+    ports:
+      - "1433:1433"
+
+  api:
+    build: 
+      context: ./Backend
+      dockerfile: Dockerfile
+    ports:
+      - "5214:8080" # Maps local port 5214 to container port 8080
+    environment:
+      - ConnectionStrings__DefaultConnection=${CONNECTION_STRING}
+      - AuthTokens__ClientSecret=${AuthTokens__ClientSecret}
+      - AuthTokens__MasterToken=${AuthTokens__MasterToken}
+      - Jwt__Audience=${Jwt__Audience}
+      - Jwt__Issuer=${Jwt__Issuer}
+      - Jwt__Key=${JWT_KEY}
+      - Storage__ConnectionString=${Storage__ConnectionString}
+      - Storage__Container=${Storage__Container}
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=${VITE_API_URL}
+    depends_on:
+      - api

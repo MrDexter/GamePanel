@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 // Pages
-import  Stats from "@/features/Stats";
+import Stats from "@/features/Stats";
 import StatsPlayer from "@/features/StatsPlayer";
-import changelogData from "@/changelog.json"; 
+import Breakdown from "@/features/Breakdown";
+import changelogData from "@/features/changelog.json"; 
 import LoginModal from "@/components/modals/Login";
 import ChangePasswordModal from "@/components/modals/ChangePassword";
 import ResetPasswordModal from "@/components/modals/ResetPassword";
@@ -113,6 +114,7 @@ export default function App() {
               <Link to="/stats" className='text-muted-foreground hover:text-white transition-colors'>Stats</Link>
               <Link to="/jobs" className='text-muted-foreground hover:text-white transition-colors'>Jobs</Link>
               <Link to="/changelog" className='text-muted-foreground hover:text-white transition-colors'>Changelog</Link>
+              <Link to="/breakdown" className='text-muted-foreground hover:text-white transition-colors'>Breakdown</Link>
             </div>
             
               <div className="flex items-center gap-3 cursor-pointer">
@@ -218,6 +220,7 @@ export default function App() {
             <Route path="/stats/:id" element={<StatsPlayer />} />
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/changelog" element={<Changelog />} />
+            <Route path="/breakdown" element={<Breakdown />} />
           </Routes>
         </main>
         <Toaster
