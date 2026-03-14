@@ -26,6 +26,14 @@ services:
       - Storage__Container=${Storage__Container}
     depends_on:
       - db
+    develop:
+      watch:
+        - action: rebuild
+          path: ./api
+          # Triggers a full rebuild if you change .csproj or .sln
+        - action: sync
+          path: ./api
+          target: /src
 
   frontend:
     build:
@@ -37,3 +45,10 @@ services:
       - VITE_API_URL=${VITE_API_URL}
     depends_on:
       - api
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend
+          target: /app
+          ignore:
+            - node_modules/

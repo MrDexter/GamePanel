@@ -1,5 +1,18 @@
 [
   {
+    "date": "14-03-2026",
+    "version": "0.8.1",
+    "title": "Overview, Me and Breakdown",
+    "type": "Documentation",
+    "category": "Full",
+    "changes": [
+        { "type": "frontend", "text": "Added Breakdown page to provide more info into some of the core features and functionality" },
+        { "type": "frontend", "text": "Added Home Page including Project Overview, About Me and Timeline" },
+        { "type": "frontend", "text": "Added Docker Support" },
+        { "type": "backend", "text": "Added Docker Support" }
+    ]
+  },
+  {
     "date": "08-03-2026",
     "version": "0.8",
     "title": "Security, Identity, Authentication & Session Management",

@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import Stats from "@/features/Stats";
 import StatsPlayer from "@/features/StatsPlayer";
 import Breakdown from "@/features/Breakdown";
+import Home from "@/features/Home";
 import changelogData from "@/features/changelog.json"; 
 import LoginModal from "@/components/modals/Login";
 import ChangePasswordModal from "@/components/modals/ChangePassword";
@@ -19,8 +20,6 @@ import { LogIn, FileJson, Trash2, User, UserCircle } from "lucide-react";
 import { apiFetch, apiFetchPost, setLogoutHandler } from "@/lib/api";
 import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,DropdownMenuSeparator, DropdownMenuTrigger} from "@/components/ui/dropdown-menu";
 
-// Pages
-const Home = () => <div className='p-8 text-white'><h1>Coming Soon. Check Out Stats</h1></div>;
 
 export default function App() {
   const [health, setHealth] = useState<any>(null);
