@@ -134,7 +134,7 @@ export default function Home() {
                     <h3 className="text-sm font-bold text-white uppercase tracking-widest">Garry's Mod & Dedicated Servers</h3>
                     <p className="text-sm text-zinc-400 leading-relaxed">
                         This was my introduction to backend development. Using an existing framework, I refactored disparate scripts to function as a 
-                        <span className="text-white">unified system</span>, building a successful custom <span className="text-white italic font-bold">DarkRP community</span> from the ground up.
+                        <span className="text-white"> unified system</span>, building a successful custom <span className="text-white italic font-bold">DarkRP community</span> from the ground up.
                     </p>
                     <p className="text-sm text-zinc-400 leading-relaxed mt-2">
                         Being "on-call" 24/7 to handle live server criticals taught me the reality of <span className="text-white">production uptime</span>. 

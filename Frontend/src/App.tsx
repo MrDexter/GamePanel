@@ -9,6 +9,7 @@ import changelogData from "@/features/changelog.json";
 import LoginModal from "@/components/modals/Login";
 import ChangePasswordModal from "@/components/modals/ChangePassword";
 import ResetPasswordModal from "@/components/modals/ResetPassword";
+// import WhitelistingModal from "@/components/modals/Whitelisting";
 // Components
 import { toast } from "sonner";
 import { jwtDecode } from "jwt-decode";
@@ -99,6 +100,7 @@ export default function App() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isResetPasswordOpen, setisResetPasswordOpen] = useState(false);
   const [isChangePasswordOpen, setisChangePasswordOpen] = useState(false);
+  // const [isWhitelistingOpen, setisWhitelistingOpen] = useState(false);
 
   return (
  <AuthContext.Provider value={{ user, setUser, logout: handleLogout }}>
@@ -212,6 +214,7 @@ export default function App() {
         <main className='px-8 py-10'>
           <ChangePasswordModal open={isChangePasswordOpen} setOpen={setisChangePasswordOpen}/>
           <ResetPasswordModal open={isResetPasswordOpen} setOpen={setisResetPasswordOpen}/>
+          {/* <WhitelistingModal open={isWhitelistingOpen} setOpen={setisWhitelistingOpen}/> */}
           <LoginModal open={isLoginOpen} setOpen={setIsLoginOpen} setUser={setUser} setIsResetPassOpen={setisResetPasswordOpen}/>
           <Routes>
             <Route path="/" element={<Home />} />

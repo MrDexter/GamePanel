@@ -6,12 +6,13 @@ import { apiFetch, apiFetchPost } from "@/lib/api";
 import { ClipboardCopy } from "lucide-react"; //ClipboardCheck
 import { useParams, useNavigate, Link  } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
-import { Pencil, EllipsisVertical, FileJson, Key, Trash2 } from "lucide-react";
+import { Pencil, EllipsisVertical, FileJson, Key, Trash2 } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import {formatDate, copRanks, medicRanks, ionRanks, unitNames, formatMoney, unitRankNames } from "@/lib/constants"
-import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,DropdownMenuSeparator, DropdownMenuTrigger} from "@/components/ui/dropdown-menu";
+import {formatDate, unitNames, formatMoney, unitRankNames, FACTIONS } from "@/lib/constants"
+import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,DropdownMenuSeparator, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
 // import { jwtDecode } from 'jwt-decode';
-import { useAuth } from "@/lib/AuthContext";
+import { useAuth } from "@/lib/AuthContext"
+import WhitelistingModal from "@/components/modals/Whitelist"
 
 
 const parseInventory = (inv: string) => {
@@ -37,12 +38,6 @@ const copyToClipboard = (text: string) => {
   // Add popup or notif?
 };
 
-const FACTIONS = [
-  { id: 'cop', label: 'Police', color: 'text-blue-500', levelKey: 'coplevel', ranks: copRanks, units: ["tfuLevel", "ncaLevel", "npaslevel", "mpuLevel", "acadLevel",], login: 'cop_login', playtime: 'playtime_cop'},
-  { id: 'med', label: 'Medics', color: 'text-green-500', levelKey: 'mediclevel', ranks: medicRanks, units: ["hemslevel", "hartlevel", "rpLevel"], login: 'nhs_login', playtime: 'playtime_nhs'},
-  { id: 'admin', label: 'Ion', color: 'text-red-500', levelKey: 'ionlevel', ranks: ionRanks, units: ["deltalevel", "UmLevel", "iaflevel", "", "irulevel" ], login: 'van_login', playtime: 'playtime_opfor'},
-];
-
 export default function StatsPlayer() {
     const { user } = useAuth();
     const { id } = useParams();
@@ -50,6 +45,8 @@ export default function StatsPlayer() {
     const navigate = useNavigate();
     const checkInventory = (inv: string) => inv && inv !== '"[[],0]"';
     const checkVirtualInventory = (inv: string) => inv && inv !== '"[[],0]"';
+    const [isWhitelistingOpen, setIsWhitelistingOpen] = useState(false);
+    const [whitelistingType, setWhitelistingType] = useState<string | null>(null);
 
     const handleExport = async (id: string) => {
         try {
@@ -378,24 +375,31 @@ export default function StatsPlayer() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {FACTIONS.map((faction) => {
                     const mainLevel = player[faction.levelKey];
+                    const canWhitelist = user && (user[faction.levelKey] != null || faction.units.some(unitKey => user[unitKey ?? ""] != null));
+
                     return(
                         <Card key={faction.id} className="relative overflow-hidden bg-background/50 backdrop-blur-md border-border group h-full">
                         <div className={`absolute top-0 left-0 w-full h-0.5 bg-linear-to-r to-transparent opacity-70 group-hover:opacity-100 transition-opacity`} />
                         <CardHeader className="pb-3 flex flex-row items-center justify-between">
-                            <CardTitle className={`text-xs font-bold uppercase tracking-widest ${faction.color}`}>
+                            <CardTitle className={`text-xs font-bold uppercase tracking-widest ${faction.colorText}`}>
                             {faction.label}
                             <div className="text-xs text-foreground uppercase leading-none">
                             Rank: {faction.ranks[mainLevel] ?? "None"}
                             </div>
                             </CardTitle>
-                            <Button variant="ghost" size="icon" className={`${faction.color} h-6 w-6 hover:text-white hover:bg-card`} 
-                                onClick={() => toast("JWT Login & Role-Based Access is currently being created on the 'authentication' branch.", { position: "top-center" })}>
+                            <Button variant="ghost" size="icon" className={`${faction.colorText} h-6 w-6 hover:text-white hover:bg-card`} 
+                                onClick={() => {
+                                    if (canWhitelist) {setWhitelistingType(faction.id); setIsWhitelistingOpen(true);
+                                    } else {
+                                        toast("My G No Permissions", { position: "top-center" });
+                                    }}}>
                             <Pencil className={`h-3 w-3 hover:scale-110 transition-all cursor-pointer`} />
                             </Button>                       
                         </CardHeader>
                         <CardContent>
                             <div className="grid grid-cols-2 space-y-2 justify-between items-center">
-                                {faction.units.map((unitKey, index) => { 
+                                {faction.units.map((Key, index) => { 
+                                        const unitKey = Key ?? "";
                                         const level = player[unitKey] ?? "";
                                         const unitRanks = unitRankNames[unitKey] || {}; 
                                         const rankName = unitRanks[level] ?? `${level}`;
@@ -637,6 +641,7 @@ export default function StatsPlayer() {
         </div>
         </div>
 
+        <WhitelistingModal open={isWhitelistingOpen} setOpen={setIsWhitelistingOpen} player={player} type={whitelistingType}/>
         </div>
     )
 }

@@ -29,10 +29,10 @@ services:
     develop:
       watch:
         - action: rebuild
-          path: ./api
+          path: ./Backend
           # Triggers a full rebuild if you change .csproj or .sln
         - action: sync
-          path: ./api
+          path: ./Backend
           target: /src
 
   frontend:

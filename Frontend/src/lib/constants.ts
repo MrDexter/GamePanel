@@ -23,7 +23,7 @@ export const copRanks: Record<number, string> = {
     5: "DSGT",
     6: "INS",
     7: "DI",
-    8: "DCC",
+    8: "DCI",
     9: "CI",
     10: "SI",
     11: "CSI"
@@ -52,34 +52,40 @@ export const ionRanks: Record<number, string> = {
 };
 
 export const unitNames: Record<string, string> = {
-  "acadLevel": "Academy",
-  "tfuLevel": "TFU",
-  "ncaLevel": "NCA",
+  "acadlevel": "Academy",
+  "tfulevel": "TFU",
+  "ncalevel": "NCA",
   "npaslevel": "NPAS",
-  "mpuLevel": "MPU",
+  "mpulevel": "MPU",
   "hemslevel": "HEMS",
   "hartlevel": "HART",
   "deltalevel": "Delta",
-  "UmLevel": "UM",
+  "umlevel": "UM",
   "iaflevel": "AIR",
   "irulevel": "Academy",
-  "rpLevel": "Academy"
+  "rplevel": "Academy"
 };
 
 export const unitRankNames: Record<string, Record<number, string>> = {
   // Police
-  tfuLevel: { 0: "None", 1: "Guest", 2: "Member", 3: "Marksman", 4: "Senior", 5: "Lead" },
-  ncaLevel: { 0: "None", 1: "Guest", 2: "Member", 3: "Trained", 4: "Senior", 5: "Lead" },
+  tfulevel: { 0: "None", 1: "Guest", 2: "Member", 3: "Marksman", 4: "Senior", 5: "Lead" },
+  ncalevel: { 0: "None", 1: "Guest", 2: "Member", 3: "Trained", 4: "Senior", 5: "Lead" },
   npaslevel: { 0: "None", 1: "Tier 1", 2: "Tier 2", 3: "Tier 3", 4: "Lead" },
-  mpuLevel: { 0: "None", 1: "Basic", 2: "Advanced", 3: "Full", 4: "Lead" },
-  acadLevel: { 0: "None", 1: "Trainee", 2: "Trainer", 3: "Senior", 4: "Lead" },
+  mpulevel: { 0: "None", 1: "Basic", 2: "Advanced", 3: "Full", 4: "Lead" },
+  acadlevel: { 0: "None", 1: "Trainee", 2: "Trainer", 3: "Senior", 4: "Lead" },
   // Ion
   deltalevel: { 0: "None", 1: "Guest", 2: "Member", 3: "Advanced", 4: "Senior", 5: "Lead" },
   iaflevel: { 0: "None", 1: "Tier 1", 2: "Tier 2", 3: "Tier 3", 4: "Lead" },
-  UmLevel: { 0: "None", 1: "Basic", 2: "Advanced", 3: "Full", 4: "Lead" },
+  umlevel: { 0: "None", 1: "Basic", 2: "Advanced", 3: "Full", 4: "Lead" },
   irulevel: { 0: "None", 1: "Trainee", 2: "Trainer", 3: "Senior", 4: "Lead" },
   // Medic
   hemslevel: { 0: "None", 1: "Basic", 2: "Advanced", 3: "Full", 4: "Lead" },
   hartlevel: { 0: "None", 1: "Basic", 2: "Advanced", 3: "Full", 4: "Lead" },
-  rpLevel: { 0: "None", 1: "Trainee", 2: "Trainer", 3: "Senior", 4: "Lead" }
+  rplevel: { 0: "None", 1: "Trainee", 2: "Trainer", 3: "Senior", 4: "Lead" }
 };
+
+export const FACTIONS = [
+  { id: 'cop', label: 'Police', colorText: 'text-blue-500', colorBg: 'bg-blue-500', colorBorder: 'border-red-500', levelKey: 'coplevel', ranks: copRanks, units: ["tfulevel", "ncalevel", "npaslevel", "mpulevel", "acadlevel",], login: 'cop_login', playtime: 'playtime_cop', commandLevel: 10},
+  { id: 'med', label: 'Medics', colorText: 'text-green-500', colorBg: 'bg-green-500', colorBorder: 'border-red-500', levelKey: 'mediclevel', ranks: medicRanks, units: ["hemslevel", "hartlevel", "rplevel"], login: 'nhs_login', playtime: 'playtime_nhs', commandLevel: 7},
+  { id: 'ion', label: 'Ion', colorText: 'text-red-500', colorBg: 'bg-red-500', colorBorder: 'border-red-500', levelKey: 'ionlevel', ranks: ionRanks, units: ["deltalevel", "umlevel", "iaflevel", null, "irulevel" ], login: 'van_login', playtime: 'playtime_opfor', commandLevel: 6}, // Null for a unit filler for better layout
+];
