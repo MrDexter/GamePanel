@@ -1,4 +1,4 @@
-
+import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useAuth } from "@/lib/AuthContext"
 // import { toast } from "sonner"
@@ -13,6 +13,7 @@ export default function WhitelistingModal({open, setOpen, player, type}: {open: 
     const hasAccess = user && (masterControl || userMainLevel != null || faction.units.some(unitKey => user[unitKey ?? ""] != null));
     if (!hasAccess) return null;
     const playerMainLevel = player[faction.levelKey];
+    const [pendingChanges, setPendingChanges] = useState<Record<string, string>>({});
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -59,7 +60,21 @@ export default function WhitelistingModal({open, setOpen, player, type}: {open: 
                                 {unitNames[unitKey]}
                             </span>
                             <select className={`w-full bg-popover border border-border text-xs p-2 rounded-sm outline-none focus:ring-1 focus:${faction.colorBorder} mt-2`}
-                            defaultValue={unitLevel}>
+                            defaultValue={unitLevel}
+                            onChange = {(e) => {
+                                const newValue = e.target.value;
+
+                                if (newValue !== unitLevel) {
+                                    setPendingChanges(prev => ({ ...prev, [unitKey]: newValue }));
+                                } else {
+                                    setPendingChanges(prev => {
+                                        const next = { ...prev };
+                                        delete next[unitKey];
+                                        return next;
+                                    });
+                                }
+                            }}
+                            >
                                 {Object.entries(unitRankNames[unitKey]).map(([level, name]) => {
                                     if (level >= user[unitKey] && !masterControl) return null;
                                     return (

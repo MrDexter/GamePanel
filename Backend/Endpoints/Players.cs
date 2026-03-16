@@ -42,55 +42,41 @@ public static class PlayerEndpoints
         .WithDescription("Fetches a partial profile of all players matching search criteria. Accepts UID, SteamID, Name and Aliases");
         // .Produces<List<Player>>(200);
 
+        group.MapPost("/{id}/updateWhitelisting", [Authorize] async (HttpContext ctx, WhitelistUpdateRequest request, IPlayerService players, ILoggingService logging) =>
+        {
+            try
+            {
+                await players.UpdateWhitelisting(ctx, request);
+                return Results.Ok(); 
+            } catch (Exception ex)
+            {
+                return Results.BadRequest(new { message = ex.Message});
+            }
+        })
+        // .RequireAuthorization()
+        .WithSummary("Update a Player Rank")
+        .WithDescription("Update a Faction related players ranks. Requires table of ranks to update and a correct JWT Token")
+        .Produces(200);
+
         group.MapPost("/{id}/updaterank", [Authorize] async (HttpContext ctx, int id, string rank, string newRank, IPlayerService players, ILoggingService logging) =>
         {
+            // Add Guid check to ensure from Dashboard
             var userName = ctx.User.Identity?.Name ?? "Unknown";
-            if (!ctx.User.HasClaim("scope", "write"))
+            var userRank = ctx.User.FindFirst(rank)?.Value;
+            if (userRank == null || Int32.Parse(userRank) < Int32.Parse(newRank))
             {
-                await logging.AuditLog("Access Denied: Rank Update", id, userName, $"{rank} - {newRank}");
                 return Results.Forbid();
-            };
-            var group = ctx.User.FindFirst("side")?.Value;
-            #pragma warning disable CS8600
-            string column = group switch
-            {
-                "police" => rank switch
-                {
-                    "coplevel" or "tfuLevel" or "ncaLevel" or "npaslevel" or "mpuLevel" or "acadLevel" => rank,
-                    _ => null
-                },
-                "opfor" => rank switch
-                {
-                    "ionlevel" or "deltalevel" or "UmLevel" or "iaflevel" or "irulevel" => rank,
-                    _ => null
-                },
-                "medic" => rank switch 
-                {
-                    "mediclevel" or "hemslevel" or "hartlevel" => rank,
-                    _ => null
-                },
-                "staff" => rank switch
-                {
-                    "adminlevel" or "donorlevel" or "donorexpiry" => rank,
-                    _ => null
-                },
-                //Error
-                _ => null
-            }; 
-            #pragma warning restore CS8600
-            if (column is null) {
-                await logging.AuditLog("Invalid Rank or Permissions: Rank Update", id, userName, $"{rank} - {newRank}");
-                throw new Exception(column);
-            };
-            var result = await players.UpdateRank(id, column, newRank);
-            if (result is null)
+            };   
+            try
+            {         
+                await players.UpdateRank(id, rank, newRank);
+                await logging.AuditLog("Rank Update Success", id, userName, $"{rank} - {newRank}");
+                return Results.Ok(new { message = "Ranks Updated"});
+            } catch (InvalidDataException ex)
             { 
-                
-                await logging.AuditLog("Not Found: Rank Update", id, userName, $"{rank} - {newRank}");   
-                return Results.NotFound();
-            };
-            await logging.AuditLog("Complete: Rank Update", id, userName, $"{rank} - {newRank}");
-            return Results.Ok(result);
+                await logging.AuditLog($"Blocked: {ex.Message}", id, userName, $"{rank} - {newRank}"); 
+                return Results.BadRequest(new { error = ex.Message });
+            }
         })
         // .RequireAuthorization()
         .WithSummary("Update a Player Rank")

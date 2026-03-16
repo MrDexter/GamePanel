@@ -121,3 +121,8 @@ public record PlayerPerms(
     int HartLevel,
     int RpLevel
 );
+
+public record WhitelistUpdateRequest(
+    string SteamId, 
+    Dictionary<string, string> Updates
+);

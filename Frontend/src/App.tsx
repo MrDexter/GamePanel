@@ -100,7 +100,6 @@ export default function App() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isResetPasswordOpen, setisResetPasswordOpen] = useState(false);
   const [isChangePasswordOpen, setisChangePasswordOpen] = useState(false);
-  // const [isWhitelistingOpen, setisWhitelistingOpen] = useState(false);
 
   return (
  <AuthContext.Provider value={{ user, setUser, logout: handleLogout }}>
@@ -214,7 +213,6 @@ export default function App() {
         <main className='px-8 py-10'>
           <ChangePasswordModal open={isChangePasswordOpen} setOpen={setisChangePasswordOpen}/>
           <ResetPasswordModal open={isResetPasswordOpen} setOpen={setisResetPasswordOpen}/>
-          {/* <WhitelistingModal open={isWhitelistingOpen} setOpen={setisWhitelistingOpen}/> */}
           <LoginModal open={isLoginOpen} setOpen={setIsLoginOpen} setUser={setUser} setIsResetPassOpen={setisResetPasswordOpen}/>
           <Routes>
             <Route path="/" element={<Home />} />

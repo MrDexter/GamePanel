@@ -1,5 +1,8 @@
 using Microsoft.Data.SqlClient;
 using DecsPage.Models;
+using Microsoft.AspNetCore.Mvc;
+using Azure.Core;
+using System.Transactions;
 
 namespace DecsPage.Services;
 
@@ -9,6 +12,7 @@ public interface IPlayerService
     Task<List<Player>> GetAllPlayers(int? limit, int? offset);
     Task<List<Dictionary<string, object>>> GetPlayer(string id);
     Task<UpdateRank> UpdateRank(int id, string rank, string newRank);
+    Task UpdateWhitelisting(HttpContext ctx, WhitelistUpdateRequest request);
     Task<List<Player>>SearchPlayersAsync(string search);
     Task<PlayerPerms>GetPlayerPerms(string id);
 }
@@ -228,9 +232,63 @@ public class PlayerService : IPlayerService
         };
         return result;
     }
+            // public async Task<IActionResult> UpdateWhitelist([FromBody] WhitelistUpdateRequest request)
+            // {
+            //     using var transaction = await _context.Database.BeginTransactionAsync();
+            //     try {
+            //         foreach (var update in request.Updates) {
+            //             // 1. Verify User Permission for THIS specific unitKey again (Safety first!)
+            //             // 2. Perform SQL Update: "UPDATE players SET {update.Key} = @level WHERE steamid = @id"
+            //             // 3. Add to Audit Log: "INSERT INTO audit_logs (target, admin, action, val) VALUES (...)"
+            //         }
+            //         await transaction.CommitAsync();
+            //         return Ok(new { message = "All ranks synchronized." });
+            //     }
+            //     catch (Exception ex) {
+            //         await transaction.RollbackAsync();
+            //         throw new InvalidDataException("Bulk update failed. Integrity preserved.");
+            //     }
+            // }
+
+    public async Task UpdateWhitelisting(HttpContext ctx, WhitelistUpdateRequest request)
+    {
+        using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+        using var transaction = connection.BeginTransaction();
+        try{
+
+            foreach(var update in request.Updates)
+            {
+                string rank = update.Key;
+                string value = update.Value;
+
+                var userName = ctx.User.Identity?.Name ?? "Unknown";
+                var userRank = ctx.User.FindFirst(rank)?.Value;
+                if (userRank == null || Int32.Parse(userRank) < Int32.Parse(value))
+                {
+                    throw new UnauthorizedAccessException("Permission Violation!");
+                };   
+                var sql = $"UPDATE players set {userRank} = @value WHERE steamid = @steamid";
+                using (var command = new SqlCommand(sql, connection, transaction))
+                {
+                    command.Parameters.AddWithValue("@value", value);
+                    command.Parameters.AddWithValue("@steamid", request.SteamId);
+                    int reader = await command.ExecuteNonQueryAsync(); 
+                }
+                // Add Audit Log
+            }
+            transaction.Commit();
+        } catch (Exception)
+        {
+            transaction.Rollback();
+            throw;
+        }
+
+    }
 
     public async Task<UpdateRank> UpdateRank(int id, string column, string newRank)
     {
+        
         using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
         UpdateRankGet? oldData = null;
@@ -242,7 +300,7 @@ public class PlayerService : IPlayerService
             using var reader = await getCommand.ExecuteReaderAsync();
             if (!await reader.ReadAsync())
             {
-                return null!;
+                throw new InvalidDataException("Failed to retrive Player details");
             };
             
             oldData = new UpdateRankGet(

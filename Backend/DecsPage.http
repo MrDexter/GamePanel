@@ -36,3 +36,8 @@ Accept: application/json
 POST {{DecsPager_HostAddress}}/Auth/Token?name=api-client&group=police&perms=write
 X-Auth-Secret: RCONPASS1234
 Content-Type: application/json
+
+###
+POST {{DecsPager_HostAddress}}/players/7/updaterank?rank=deltalevel&newrank=5
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJOYW1lIjoiRGV4dGVyIiwiU3RlYW1JRCI6Ijc2NTYxMTk4MjEzNDMzOTkzIiwiQ2hhbmdlUGFzc3dvcmQiOiJGYWxzZSIsImFkbWlubGV2ZWwiOiI2IiwidGZ1bGV2ZWwiOiI1IiwiYWNhZGxldmVsIjoiNCIsImlvbmxldmVsIjoiNyIsImRlbHRhbGV2ZWwiOiI1IiwibWVkaWNsZXZlbCI6IjgiLCJleHAiOjE3NzM3MDE3MjcsImlzcyI6IkRlY3NQYWdlIiwiYXVkIjoiRGFzaGJvYXJkIn0.RYaRn1404YvlcIs8ri2LXP9Sx5SXrZZh_uOjT76tQzc
