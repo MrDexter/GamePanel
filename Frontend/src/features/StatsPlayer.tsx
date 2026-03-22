@@ -320,13 +320,13 @@ export default function StatsPlayer() {
 
                         <DropdownMenuSeparator className="bg-background" />
 
-                        <DropdownMenuItem disabled={(user?.adminlevel || 0) <= (perms?.admin?.USER_CREATE ?? 99)} 
+                        <DropdownMenuItem disabled={(user?.adminlevel || 0) < (perms?.admin?.USER_CREATE ?? 99)} 
                         className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => handleGenerateCredentials(player.playerid, player.name)}>
                         <Key className="h-3.5 w-3.5 text-muted-foreground" />
                         Generate Credentials
                         </DropdownMenuItem>
                         
-                        <DropdownMenuItem disabled={(user?.adminlevel || 0) <= (perms?.admin?.USER_RESET ?? 99)} 
+                        <DropdownMenuItem disabled={(user?.adminlevel || 0) < (perms?.admin?.USER_RESET ?? 99)} 
                         className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => handleResetPassword(player.playerid, player.name)}>
                         <Key className="h-3.5 w-3.5 text-muted-foreground" />
                         Reset Password
@@ -334,13 +334,13 @@ export default function StatsPlayer() {
 
                         <DropdownMenuSeparator className="bg-background" />
                         
-                        <DropdownMenuItem disabled={(user?.adminlevel || 0) <= (perms?.admin?.USER_DELETE ?? 99)} 
+                        <DropdownMenuItem disabled={(user?.adminlevel || 0) < (perms?.admin?.USER_DELETE ?? 99)} 
                         className="text-xs gap-2 cursor-pointer text-blue-500 focus:bg-blue-500/10 focus:text-blue-400" onClick={() => setIsViewLogsOpen(true)}>
                         <Trash2 className="h-3.5 w-3.5" />
                         View Logs
                         </DropdownMenuItem>
                         
-                        <DropdownMenuItem disabled={(user?.adminlevel || 0) <= (perms?.admin?.USER_DELETE ?? 99)} 
+                        <DropdownMenuItem disabled={(user?.adminlevel || 0) < (perms?.admin?.USER_DELETE ?? 99)} 
                         className="text-xs gap-2 cursor-pointer text-red-500 focus:bg-red-500/10 focus:text-red-400" onClick={() => handleRevokeCredentials(player.playerid, player.name)}>
                         <Trash2 className="h-3.5 w-3.5" />
                         Revoke Credentials
