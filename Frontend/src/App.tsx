@@ -49,6 +49,7 @@ export default function App() {
     const globalLogout = (silent = false) => {
       localStorage.removeItem("token");
       setUser(null);
+      setPerms(null);
       if (!silent)
         toast.error("Session Expired - Please Log back in!");
     };
@@ -77,6 +78,7 @@ export default function App() {
           var data = await res.json();
           localStorage.setItem("token", data.token);
           setUser(jwtDecode(data.token));
+          setPerms(data.permissions);
           console.log("Session restored via refresh token.");
         } catch (err) {
           globalLogout(true);
@@ -95,6 +97,7 @@ export default function App() {
       } finally {
         localStorage.removeItem("token");
         setUser(null);
+        setPerms(null);
         toast.success("Logout Successful");
     };
   };

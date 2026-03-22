@@ -86,6 +86,7 @@ export default function LoginModal({open, setOpen, setUser, setIsResetPassOpen, 
       localStorage.setItem("token", data.token);
       var decodedToken = jwtDecode<any>(data.token);
       setUser(decodedToken);
+      setPerms(data.permissions);
       toast.success("Login Successful");
       setOpen(false);
     } else {
