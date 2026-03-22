@@ -3,13 +3,20 @@ import {Input } from "@/components/ui/input"
 // import {Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import {copRanks, medicRanks, ionRanks, formatDate, formatMoney} from "@/lib/constants"
-import { useNavigate } from "react-router-dom";
-import { apiFetch } from "@/lib/api";
+import { useNavigate } from "react-router-dom"
+import { apiFetch } from "@/lib/api"
+import LoadingOverlay from "@/components/modals/Loading"
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function Stats() {
     const [search, setSearch] = useState("")
     const [results, setResults] = useState<any[]>([])
     const [isLoading, setIsLoading] = useState(false);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalRows, setTotalRows] = useState(1);
+    const itemPerPage = 12;
+    const totalPages = Math.ceil(totalRows / itemPerPage);
+    const offset = itemPerPage * currentPage;
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -24,12 +31,13 @@ export default function Stats() {
             try {
                 const endpoint = search.trim() 
                 ? `/players/search?search=${search}` 
-                : `/players?limit=15`;
+                : `/players?limit=${itemPerPage}&offset=${offset}`;
 
                 const response = await apiFetch(endpoint);
                 if (!response.ok) throw new Error("Fetch failed");
                 const data = await response.json();
-                setResults(data);
+                setTotalRows(data.totalRows);
+                setResults(data.players);
             } catch (error) {
                 console.error("Search Failed", error);
                 setResults([]); // Clear results on error
@@ -38,9 +46,9 @@ export default function Stats() {
             }
         }, search.trim() ? 500 : 0);
         return () => clearTimeout(delayedSearch)
-    }, [search]);
+    }, [search, itemPerPage, offset]);
     return (
-        <div className="max-w-4xl mx-auto py-10 space-y-8">
+        <div className="max-w-4xl lg:max-w-7xl mx-auto py-10 space-y-8">
             <div className="text-center space-y-2">
                 <h1 className="text-3xl font-bold tracking-tight">Community Stats</h1>
                 <p className="text-muted-foreground">Search for a Player</p>
@@ -58,18 +66,12 @@ export default function Stats() {
                     onChange={(e) => setSearch(e.target.value)}
                     className="bg-zinc-950 border-border text-white"
                     />
-                    {isLoading && (
-                    <div className="absolute right-4 top-3 text-white animate-spin">
-                        {/* A simple loading spinner icon or text */}
-                        ...
-                    </div>
-                    )}
                 </div>
                 </CardContent>
             </Card>
         
             {/* 4. Display Results */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {results.map((player) => (
                 <div 
                     key={player.id} 
@@ -142,6 +144,35 @@ export default function Stats() {
                 </div>
                 ))}
             </div>
+            <div className="flex items-center px-2 py-4 border-t border-white/5">
+                <div className="text-[10px] text-foreground uppercase font-bold tracking-widest">
+                    Showing {offset + 1} to {Math.min(offset + itemPerPage)} of {totalRows} People
+                </div>
+                
+                <div className="flex gap-1">
+                    <button 
+                        disabled={currentPage === 0}
+                        onClick={() => setCurrentPage(prev => prev - 1)}
+                        className="p-2 border border-border hover:bg-card disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                        <ChevronLeft className="h-4 w-4" />
+                    </button>
+
+                    {/* Optional: Page Numbers */}
+                    <div className="flex items-center px-4 text-xs font-mono">
+                        {currentPage + 1} / {totalPages}
+                    </div>
+
+                    <button 
+                        disabled={currentPage >= totalPages - 1}
+                        onClick={() => setCurrentPage(prev => prev + 1)}
+                        className="p-2 border border-border hover:bg-card disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                        <ChevronRight className="h-4 w-4" />
+                    </button>
+                </div>
+            </div>
+            <LoadingOverlay isVisible={isLoading} />
         </div>
     )
 }

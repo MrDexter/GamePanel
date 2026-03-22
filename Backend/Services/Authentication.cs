@@ -64,7 +64,7 @@ public class AuthenticationService : IAuthenticationService
                 value = Math.Max(userDetails.AdminLevel, playerPerms.AdminLevel); // Allow User Admin level to Override Player Admin Level
             }
             var neededRank = CanPromote(name);
-            if (value > neededRank)
+            if (value >= neededRank)
             {
                claims.Add(
                     new Claim(name.ToString(), value.ToString())
@@ -138,21 +138,21 @@ public class AuthenticationService : IAuthenticationService
     }
     public async Task<string> RefreshToken (HttpContext context, string guid)
     {
-            var userDetails = await GetUserDetails("RefreshToken", guid);
+            var userDetails = await GetUserDetails("RefreshToken", guid) ?? throw new UnauthorizedAccessException("User Not Found!");
             var success = await GenerateGUID(context, userDetails.SteamID);
             if (success)
             {
                 var token = await GenerateToken(context, userDetails);
                 return token!;
             };
-            return null!;
+            throw new InvalidOperationException("Failed to Generate GUID");
     }
     public async Task<string?> AuthenticateUser (string username, string password, HttpContext context)
     {
-        var userDetails = await GetUserDetails("Username", username);
-        if (userDetails == null || !BCrypt.Net.BCrypt.Verify(password, userDetails.PasswordHash))
+        var userDetails = await GetUserDetails("Username", username) ?? throw new UnauthorizedAccessException("Username Not Found!");
+        if (!BCrypt.Net.BCrypt.Verify(password, userDetails.PasswordHash))
         {
-            return null!;
+            throw new UnauthorizedAccessException("Password is Incorrect!");
         }
 
         var success = await GenerateGUID(context, userDetails.SteamID);
@@ -161,8 +161,8 @@ public class AuthenticationService : IAuthenticationService
             var token = await GenerateToken(context, userDetails);
             return token;
         };
-        return null;
         
+        throw new InvalidOperationException("GUID Failed to Generate!");
     }  
     public async Task LogoutUser(HttpContext context)
     {
@@ -273,8 +273,8 @@ public class AuthenticationService : IAuthenticationService
         {   
             throw new InvalidDataException("Session token not found!");  
         };
-        var userDetails = await GetUserDetails("RefreshToken", guid!);
-        if (userDetails == null || !BCrypt.Net.BCrypt.Verify(req.OldPassword, userDetails.PasswordHash))
+        var userDetails = await GetUserDetails("RefreshToken", guid!) ?? throw new InvalidDataException("Error Updating User");
+        if (!BCrypt.Net.BCrypt.Verify(req.OldPassword, userDetails.PasswordHash))
         {
             throw new InvalidDataException("Old Password is incorrect!");
         }        

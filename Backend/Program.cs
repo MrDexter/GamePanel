@@ -29,12 +29,20 @@ builder.Services.AddAuthentication("Bearer").AddJwtBearer("Bearer", options =>
       IssuerSigningKey = new SymmetricSecurityKey(
         Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]
         ?? throw new InvalidOperationException("Missing Default JWT Key"))
-      )
+      ),
+      ClockSkew = TimeSpan.Zero 
     };
 });
 
-builder.Services.AddAuthentication();
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Staff", policy =>
+        policy.RequireClaim("adminlevel", "3", "4", "5", "6", "7", "8"));
+
+    options.AddPolicy("SeniorStaff", policy => 
+        policy.RequireClaim("adminlevel", "5", "6", "7", "8"));
+});
+
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<IPlayerService, PlayerService>();
 builder.Services.AddScoped<IGangService, GangService>();
@@ -84,6 +92,8 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {};
 
+app.UseCors(); 
+app.UseRouting();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -94,7 +104,6 @@ app.MapAuthEndpoints();
 app.MapGangEndpoints();
 app.MapOpenApi();
 app.MapScalarApiReference();
-app.UseCors();
 
 app.MapGet("/", () => Results.Redirect("/scalar/")).ExcludeFromDescription();
 

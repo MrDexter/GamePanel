@@ -6,7 +6,6 @@ public record Player (
     string PlayerId,
     string Cash,
     string Bankacc,
-    string CartelCredits,
     string AdminLevel,
     string CopLevel,
     string IonLevel,
@@ -125,4 +124,9 @@ public record PlayerPerms(
 public record WhitelistUpdateRequest(
     string SteamId, 
     Dictionary<string, string> Updates
+);
+
+public record PaginatedRecord(
+    int TotalRows,
+    List<Player> Players
 );

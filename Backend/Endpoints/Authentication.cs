@@ -30,21 +30,30 @@ public static class AuthEndpoints
             {
                 return Results.Unauthorized(); // no token exists, user needs to log back in
             };
-            var token = await auth.RefreshToken(context, oldGuid);
-            return Results.Ok( new {token}); // Return new JWT to frontEnd
+            try {
+                var token = await auth.RefreshToken(context, oldGuid);
+                return Results.Ok( new {token}); // Return new JWT to frontEnd
+            } catch (InvalidOperationException error)
+            {
+                return Results.Json(new { message = error.Message}, statusCode: 500);
+            }
         })
-        // .RequireAuthorization()
         .WithSummary("Refresh a JWT Token")
         .WithDescription("Refresh a JWT Token. Requires JWT Token")
         .Produces(200);
 
         group.MapPost("/login", async (LoginRequest req, IAuthenticationService auth, HttpContext context) =>
         {
-           var token = await auth.AuthenticateUser(req.Username, req.Password, context);
-
-           if (token is null) return Results.NotFound(new {message = "Username or Password Incorrect"});
-
-           return Results.Ok(new { token });   
+            try {
+                var token = await auth.AuthenticateUser(req.Username, req.Password, context);
+                return Results.Ok(new { token });   
+            } catch (UnauthorizedAccessException error)
+            {
+                return Results.BadRequest(new {message = error.Message});
+            } catch (InvalidOperationException error)
+            {
+                return Results.Json(new { message = error.Message}, statusCode: 500);
+            }
         })
         .AllowAnonymous()
         .WithSummary("Login")
@@ -71,7 +80,7 @@ public static class AuthEndpoints
                 return Results.Conflict(new { message = error.Message });
             };
         })
-        // .RequireAuthorization()
+        .RequireAuthorization("Staff")
         .WithSummary("Create a User")
         .WithDescription("Create a User. Requires a Vaid JWT Token")
         .Produces(200);
@@ -85,7 +94,7 @@ public static class AuthEndpoints
                 return Results.NotFound(new {message = ex.Message}); 
             }; 
         })
-        // .RequireAuthorization()
+        .RequireAuthorization("SeniorStaff")
         .WithSummary("Delete a User")
         .WithDescription("Delete a User. Requires a Valid JWT Token")
         .Produces(200);
@@ -99,7 +108,7 @@ public static class AuthEndpoints
                 return Results.NotFound(new {message = ex.Message}); 
             };
         })
-        // .RequireAuthorization()
+        .RequireAuthorization("Staff")
         .WithSummary("Reset Users Password")
         .WithDescription("Reset a Users Password. Requires a Valid JWT Token")
         .Produces(200);
@@ -117,7 +126,7 @@ public static class AuthEndpoints
                 return Results.BadRequest(new {message = ex.Message}); 
             };
         })
-        // .RequireAuthorization()
+        .RequireAuthorization()
         .WithSummary("Reset Password")
         .WithDescription("Reset Password Without Old Password.")
         .Produces(200);
@@ -135,7 +144,7 @@ public static class AuthEndpoints
                 return Results.BadRequest(new {message = ex.Message}); 
             };
         })
-        // .RequireAuthorization()
+        .RequireAuthorization()
         .WithSummary("Change User Password")
         .WithDescription("Change a Users Password. Requires a Valid JWT Token")
         .Produces(200);

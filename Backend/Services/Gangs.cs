@@ -80,7 +80,7 @@ public class GangService : IGangService
             using var reader = await command.ExecuteReaderAsync();
             if(!await reader.ReadAsync())
             {
-                return null!;
+                throw new InvalidDataException("Group Not Found");
             };
             for (int i=0; i < reader.FieldCount; i++)
             {

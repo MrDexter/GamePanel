@@ -1,14 +1,23 @@
 [
   {
-    "date": "WIP-03-2026",
-    "version": "0.8.WIP",
+    "date": "21-03-2026",
+    "version": "0.8.5",
     "title": "Whitelisting",
     "type": "Feature",
     "category": "Full",
     "changes": [
         { "type": "frontend", "text": "Added Whitelisting modal to update a players Faction and Unit ranks" },
         { "type": "backend", "text": "Fixed updateRank Endpoint for new Permission System" },
-        { "type": "frontend", "text": "Added updateWhitelisting Endpoint for use with Whitelisting Modal" }
+        { "type": "frontend", "text": "Added updateWhitelisting Endpoint for use with Whitelisting Modal" },
+        { "type": "backend", "text": "Fixed Cors loading order to fix token refresh not wokring" },
+        { "type": "backend", "text": "Added Loading Overlay and added to multiple areas" },
+        { "type": "frontend", "text": "Fixed JWT Token Refresh (Wrong endpoint and incorrect token variable on re attempt)"},
+        { "type": "backend", "text": "Multiple Error handling changes / refeactoring null values to throw exceptions"},
+        { "type": "backend", "text": "Adding bunch of Example Players for better viewing and Range of User Accounts"},
+        { "type": "frontend", "text": "Added Pagination to Stats Search Page"},
+        { "type": "backend", "text": "Added Total Rows Count to Paginated Data Returns (Get All Players, Search Player)"},
+        { "type": "frontend", "text": "Added a range of user accounts for feature testing. Selectable on Login Popup"}
+
     ]
   },
   {

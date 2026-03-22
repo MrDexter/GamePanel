@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react'
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'
 import { apiFetchPost } from "@/lib/api";
-import { useAuth } from "@/lib/AuthContext";
+import { useAuth } from "@/lib/AuthContext"
+import LoadingOverlay from "@/components/modals/Loading"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default function ResetPasswordModal({open, setOpen}: { open: boolean; setOpen: (val: boolean) => void;}) {
@@ -21,7 +22,6 @@ export default function ResetPasswordModal({open, setOpen}: { open: boolean; set
 
   const handleResetPassword = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
     const formData = new FormData(e.currentTarget);
     const password = formData.get("password");
     const confirmPassword = formData.get("confirmPassword");
@@ -33,6 +33,8 @@ export default function ResetPasswordModal({open, setOpen}: { open: boolean; set
     if (password != confirmPassword) {
       return toast.error("The passwords do not match!")
     };
+    
+    setLoading(true);
     
     const res = await apiFetchPost("/auth/resetPassword", {
       body: JSON.stringify({
@@ -101,6 +103,7 @@ export default function ResetPasswordModal({open, setOpen}: { open: boolean; set
           </Button>
         </form>
       </DialogContent>
+      <LoadingOverlay isVisible={loading} />
     </Dialog>
   )
 }

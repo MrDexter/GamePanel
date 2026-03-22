@@ -120,7 +120,7 @@ public class ProcessorService : IProcessorService
             {
                 case "playersExport":
                     var players = await _playerService.GetAllPlayers(null, null);
-                    return await ConvertToCSV(job.Id, "playersExport", players, stopToken);
+                    return await ConvertToCSV(job.Id, "playersExport", players.Players, stopToken);
                 case "playerExport":
                     var player = await _playerService.GetPlayer(data!["playerId"]);
                     return await ConvertToCSV(job.Id, "playerExport", player, stopToken);

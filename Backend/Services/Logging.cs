@@ -5,7 +5,7 @@ namespace DecsPage.Services;
 
 public interface ILoggingService
 {
-    Task AuditLog(string type, int? id, string performedBy, string details);   
+    Task AuditLog(string type, string id, string performedBy, string details);   
 }
 
 public class LoggingService : ILoggingService
@@ -19,7 +19,7 @@ public class LoggingService : ILoggingService
         _logger = logger;
     }
 
-    public async Task AuditLog(string type, int? id, string performedBy, string details)
+    public async Task AuditLog(string type, string id, string performedBy, string details)
     {
         using var connection = new SqlConnection(connectionString);
         try 

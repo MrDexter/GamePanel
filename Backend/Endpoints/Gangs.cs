@@ -20,10 +20,14 @@ public static class GangEndpoints
 
         group.MapGet("/{id}", async (string id, IGangService gangs) =>
         {
-            var result = await gangs.GetGang(id);
-            if (result is null)
-                return Results.NotFound();
-            return Results.Ok(result);
+            try
+            {
+                var result = await gangs.GetGang(id);
+                return Results.Ok(result);
+            } catch (InvalidDataException error)
+            {
+                return Results.NotFound(new { message = error.Message});
+            };
         })
         .WithSummary("Get a Gang")
         .WithDescription("Fetches a full profile including housing using the Gang ID, Name or Tag.");
@@ -33,6 +37,7 @@ public static class GangEndpoints
             var id = await jobs.CreateJobAsync("gangsExport", new {});
             return Results.Accepted($"/jobs/{id}", new {id});
         })
+        .RequireAuthorization("Staff")
         .WithSummary("Export All Gangs Data")
         .WithDescription("Creates a job to export all gangs data into a CSV for download. Returns Job ID");
 
@@ -41,6 +46,7 @@ public static class GangEndpoints
             var jobId = await jobs.CreateJobAsync("gangExport", new { gangId =  id} );
             return Results.Accepted($"/jobs/{jobId}", new {jobId});
         })
+        .RequireAuthorization("Staff")
         .WithSummary("Export A Gangs Data")
         .WithDescription("Creates a job to export a gangss data into a CSV for download. Returns Job ID");
 

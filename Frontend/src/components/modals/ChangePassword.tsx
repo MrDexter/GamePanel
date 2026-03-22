@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from '@/components/ui/button';
 import { apiFetchPost } from "@/lib/api";
+import LoadingOverlay from "@/components/modals/Loading"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default function ChangePasswordModal({open, setOpen}: { open: boolean; setOpen: (val: boolean) => void;}) {
@@ -19,7 +20,6 @@ export default function ChangePasswordModal({open, setOpen}: { open: boolean; se
 
   const handlePasswordChange = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
     const formData = new FormData(e.currentTarget);
     const oldPassword = formData.get("oldPassword");
     const password = formData.get("password");
@@ -28,6 +28,7 @@ export default function ChangePasswordModal({open, setOpen}: { open: boolean; se
     if (oldPassword == "" || password == "" || confirmPassword == "") {
       return toast.error("You need to enter a Username and/or Password!");
     };
+    setLoading(true);
     
     const res = await apiFetchPost("/auth/changePassword", {
       body: JSON.stringify({
@@ -103,6 +104,7 @@ export default function ChangePasswordModal({open, setOpen}: { open: boolean; se
           </Button>
         </form>
       </DialogContent>
+      <LoadingOverlay isVisible={loading} />
     </Dialog>
   )
 }

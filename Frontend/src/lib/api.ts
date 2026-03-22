@@ -22,21 +22,20 @@ export const apiFetchPost = async (path: string, options: RequestInit = {}) => {
     },
   });
   if (res.status === 401) {
-    const refreshRes = await fetch(`${BASE_URL}/auth/refresh`, {
+    const refreshRes = await fetch(`${BASE_URL}/auth/refreshToken`, {
       method: "POST",
       credentials: "include"
     });
     if (refreshRes.ok) {
       const data = await refreshRes.json();
       localStorage.setItem("token", data.token);
-
       res = await fetch(`${BASE_URL}${path}`, {
         method: "POST",
         credentials: "include",
         ...options,
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+          ...(data.token ? { "Authorization": `Bearer ${data.token}` } : {}),
           ...options.headers, // Allow overriding headers if needed
         }, 
       });

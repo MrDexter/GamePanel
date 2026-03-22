@@ -38,6 +38,12 @@ X-Auth-Secret: RCONPASS1234
 Content-Type: application/json
 
 ###
-POST {{DecsPager_HostAddress}}/players/7/updaterank?rank=deltalevel&newrank=5
+POST {{DecsPager_HostAddress}}/players/76561198213433993/updateWhitelisting
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJOYW1lIjoiRGV4dGVyIiwiU3RlYW1JRCI6Ijc2NTYxMTk4MjEzNDMzOTkzIiwiQ2hhbmdlUGFzc3dvcmQiOiJGYWxzZSIsImFkbWlubGV2ZWwiOiI2IiwidGZ1bGV2ZWwiOiI1IiwiYWNhZGxldmVsIjoiNCIsImlvbmxldmVsIjoiNyIsImRlbHRhbGV2ZWwiOiI1IiwibWVkaWNsZXZlbCI6IjgiLCJleHAiOjE3NzM3MDE3MjcsImlzcyI6IkRlY3NQYWdlIiwiYXVkIjoiRGFzaGJvYXJkIn0.RYaRn1404YvlcIs8ri2LXP9Sx5SXrZZh_uOjT76tQzc
+Authorization: Bearer 
+{
+  "steamId": "76561198213433993",
+  "updates": {
+    "additionalProperty": "{ncalevel: '2'}"
+  }
+}

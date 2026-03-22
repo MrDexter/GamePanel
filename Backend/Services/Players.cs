@@ -9,11 +9,11 @@ namespace DecsPage.Services;
 
 public interface IPlayerService
 {
-    Task<List<Player>> GetAllPlayers(int? limit, int? offset);
+    Task<PaginatedRecord> GetAllPlayers(int? limit, int? offset);
     Task<List<Dictionary<string, object>>> GetPlayer(string id);
-    Task<UpdateRank> UpdateRank(int id, string rank, string newRank);
+    Task<UpdateRank> UpdateRank(string id, string rank, string newRank);
     Task UpdateWhitelisting(HttpContext ctx, WhitelistUpdateRequest request);
-    Task<List<Player>>SearchPlayersAsync(string search);
+    Task<PaginatedRecord>SearchPlayersAsync(string search, int? limit, int? offset);
     Task<PlayerPerms>GetPlayerPerms(string id);
 }
 
@@ -21,20 +21,24 @@ public class PlayerService : IPlayerService
 {
     private readonly string connectionString;
 
-    public PlayerService(IConfiguration config)
+    private readonly ILoggingService _logging;
+
+    public PlayerService(IConfiguration config, ILoggingService logging)
     {
         connectionString = config.GetConnectionString("DefaultConnection")
         ?? throw new InvalidOperationException("Missing Default Connection");
+        _logging = logging; 
     }
 
-    public async Task<List<Player>> GetAllPlayers(int? limit, int? offset)
+    public async Task<PaginatedRecord> GetAllPlayers(int? limit, int? offset)
     {
+        int totalRows = 0;
         var result = new List<Player>();
         using (var connection = new SqlConnection(connectionString))
         {
             await connection.OpenAsync();
 
-            var sql = "Select uid, name, playerid, cash, bankacc, cartelCredits, adminLevel, copLevel, ionLevel, medicLevel, last_seen, insert_time From players";
+            var sql = "Select uid, name, playerid, cash, bankacc, adminLevel, copLevel, ionLevel, medicLevel, last_seen, insert_time, COUNT(*) OVER() AS TotalRows From players";
             if (limit.HasValue || offset.HasValue)
             {
                 sql += " ORDER BY uid OFFSET @offset ROWS";
@@ -50,13 +54,16 @@ public class PlayerService : IPlayerService
 
             while (await reader.ReadAsync())
             {
+                if (totalRows == 0)
+                {
+                    totalRows = reader.GetInt32(reader.GetOrdinal("TotalRows"));
+                }
                 var row = new Player(
                     reader["uid"].ToString() ?? string.Empty,
                     reader["name"].ToString() ?? string.Empty,
                     reader["playerid"].ToString() ?? string.Empty,
                     reader["cash"].ToString() ?? string.Empty,
                     reader["bankacc"].ToString() ?? string.Empty,
-                    reader["cartelCredits"].ToString() ?? string.Empty,
                     reader["adminLevel"].ToString() ?? string.Empty,
                     reader["copLevel"].ToString() ?? string.Empty,
                     reader["ionLevel"].ToString() ?? string.Empty,
@@ -67,7 +74,11 @@ public class PlayerService : IPlayerService
                 result.Add(row);
             };
         };
-        return result;
+        var response = new PaginatedRecord(
+            totalRows,
+            result
+        );
+        return response;
     }
 
     public async Task<List<Dictionary<string, object>>> GetPlayer(string id)
@@ -84,7 +95,7 @@ public class PlayerService : IPlayerService
             using var reader = await command.ExecuteReaderAsync();
             if (!await reader.ReadAsync())
                 {
-                    return null!;
+                    throw new InvalidDataException("Player Not Found!");
                 };
                 for (int i=0; i < reader.FieldCount; i++)
                 {
@@ -123,11 +134,6 @@ public class PlayerService : IPlayerService
                 var memberList = new List<GangMember>();
                 foreach (var m in cleanMembers) {
                     var parts = m.Split(",");
-                    memberList.Add(new GangMember("Jason", "123", 1));
-                    memberList.Add(new GangMember("Tom", "234", 2));
-                    memberList.Add(new GangMember("DillyDallyWatcher", "345", 2));
-                    memberList.Add(new GangMember("King Julian", "456", 3));
-                    memberList.Add(new GangMember("Top Fragger", "567", 4)); 
                     memberList.Add(new GangMember (
                         parts[2].Replace("\"", "").Trim(),
                         parts[0].Replace("\"", "").Trim(),
@@ -198,14 +204,15 @@ public class PlayerService : IPlayerService
         return result; 
     }
 
-    public async Task<List<Player>> SearchPlayersAsync(string search)
+    public async Task<PaginatedRecord> SearchPlayersAsync(string search, int? limit, int? offset)
     {
+        var totalRows = 0;
         var result = new List<Player>();
         using (var connection = new SqlConnection(connectionString))
         {
             await connection.OpenAsync();
 
-            var sql = "SELECT TOP 15 uid, name, playerid, cash, bankacc, cartelCredits, adminLevel, copLevel, ionLevel, medicLevel, last_seen, insert_time From players WHERE name LIKE '%' + @search + '%' OR aliases LIKE '%' + @search + '%' OR playerid = @search OR CAST(uid AS NVARCHAR) = @search";
+            var sql = "SELECT TOP 15 uid, name, playerid, cash, bankacc, adminLevel, copLevel, ionLevel, medicLevel, last_seen, insert_time, COUNT(*) OVER() AS TotalRows From players WHERE name LIKE '%' + @search + '%' OR aliases LIKE '%' + @search + '%' OR playerid = @search OR CAST(uid AS NVARCHAR) = @search";
 
             using var command = new SqlCommand(sql, connection);
             command.Parameters.AddWithValue("@search", search);
@@ -213,13 +220,16 @@ public class PlayerService : IPlayerService
 
             while (await reader.ReadAsync())
             {
+                if (totalRows == 0)
+                {
+                    totalRows = reader.GetInt32(reader.GetOrdinal("TotalRows"));
+                }
                 var row = new Player(
                     reader["uid"].ToString() ?? string.Empty,
                     reader["name"].ToString() ?? string.Empty,
                     reader["playerid"].ToString() ?? string.Empty,
                     reader["cash"].ToString() ?? string.Empty,
                     reader["bankacc"].ToString() ?? string.Empty,
-                    reader["cartelCredits"].ToString() ?? string.Empty,
                     reader["adminLevel"].ToString() ?? string.Empty,
                     reader["copLevel"].ToString() ?? string.Empty,
                     reader["ionLevel"].ToString() ?? string.Empty,
@@ -230,25 +240,12 @@ public class PlayerService : IPlayerService
                 result.Add(row);
             };
         };
-        return result;
+        var response = new PaginatedRecord(
+            totalRows,
+            result
+        );
+        return response;
     }
-            // public async Task<IActionResult> UpdateWhitelist([FromBody] WhitelistUpdateRequest request)
-            // {
-            //     using var transaction = await _context.Database.BeginTransactionAsync();
-            //     try {
-            //         foreach (var update in request.Updates) {
-            //             // 1. Verify User Permission for THIS specific unitKey again (Safety first!)
-            //             // 2. Perform SQL Update: "UPDATE players SET {update.Key} = @level WHERE steamid = @id"
-            //             // 3. Add to Audit Log: "INSERT INTO audit_logs (target, admin, action, val) VALUES (...)"
-            //         }
-            //         await transaction.CommitAsync();
-            //         return Ok(new { message = "All ranks synchronized." });
-            //     }
-            //     catch (Exception ex) {
-            //         await transaction.RollbackAsync();
-            //         throw new InvalidDataException("Bulk update failed. Integrity preserved.");
-            //     }
-            // }
 
     public async Task UpdateWhitelisting(HttpContext ctx, WhitelistUpdateRequest request)
     {
@@ -256,26 +253,37 @@ public class PlayerService : IPlayerService
         await connection.OpenAsync();
         using var transaction = connection.BeginTransaction();
         try{
+            var userName = ctx.User.Identity?.Name ?? "Unknown";
+            var userId = ctx.User.FindFirst("SteamID")?.Value ?? throw new UnauthorizedAccessException("There isn't a SteamId associated with your account!");
+            var userAdmin = ctx.User.FindFirst("adminlevel")?.Value ?? "0";
+            var adminLevelCheck = Int32.Parse(userAdmin) <= 4;
 
             foreach(var update in request.Updates)
             {
                 string rank = update.Key;
                 string value = update.Value;
 
-                var userName = ctx.User.Identity?.Name ?? "Unknown";
-                var userRank = ctx.User.FindFirst(rank)?.Value;
-                if (userRank == null || Int32.Parse(userRank) < Int32.Parse(value))
+                if (!ColumnToFactionMap.TryGetValue(rank, out var actualFaction))
+                {
+                    throw new InvalidDataException("Security Violation: Invalid Column Identifier or Permissions");
+                }
+                Factions.TryGetValue(actualFaction, out var factionTabke);
+                var userRank = ctx.User.FindFirst(rank)?.Value ?? "0";
+                var userMainRank = ctx.User.FindFirst(factionTabke.Name)?.Value ?? "0";
+                var userRankToLow = Int32.Parse(userRank) < Int32.Parse(value);
+                var userCommandCheck = Int32.Parse(userMainRank) < factionTabke.CommandRank;
+                if (adminLevelCheck && userRankToLow && userCommandCheck)
                 {
                     throw new UnauthorizedAccessException("Permission Violation!");
-                };   
-                var sql = $"UPDATE players set {userRank} = @value WHERE steamid = @steamid";
+                }; 
+                var sql = $"UPDATE players SET {rank} = @value WHERE playerid = @steamid";
                 using (var command = new SqlCommand(sql, connection, transaction))
                 {
                     command.Parameters.AddWithValue("@value", value);
                     command.Parameters.AddWithValue("@steamid", request.SteamId);
                     int reader = await command.ExecuteNonQueryAsync(); 
                 }
-                // Add Audit Log
+                await _logging.AuditLog($"Complete: Rank Update", request.SteamId, userId, $"{rank} - {value}"); 
             }
             transaction.Commit();
         } catch (Exception)
@@ -286,13 +294,13 @@ public class PlayerService : IPlayerService
 
     }
 
-    public async Task<UpdateRank> UpdateRank(int id, string column, string newRank)
+    public async Task<UpdateRank> UpdateRank(string id, string column, string newRank)
     {
         
         using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
         UpdateRankGet? oldData = null;
-        var sqlGet = $"Select name, {column} FROM players WHERE uid = @id";
+        var sqlGet = $"Select name, {column} FROM players WHERE uid = @id OR playerid = @id";
         using (var getCommand = new SqlCommand(sqlGet, connection))
         {
             getCommand.Parameters.AddWithValue("@rank", column);
@@ -342,7 +350,7 @@ public class PlayerService : IPlayerService
             using var reader = await command.ExecuteReaderAsync();
             if (!await reader.ReadAsync())
                 {
-                    return null!;
+                    throw new InvalidDataException("Player Not Found For Permissions");
                 };
             return new PlayerPerms(
                 reader["playerid"].ToString() ?? string.Empty,
@@ -365,5 +373,24 @@ public class PlayerService : IPlayerService
             );
         };
     }
+
+    private static readonly Dictionary<string, string> ColumnToFactionMap = new()
+    {
+        { "coplevel", "police" }, { "tfulevel", "police" }, { "ncalevel", "police" }, { "npaslevel", "police" }, { "mpulevel", "police" }, { "acadlevel", "police" },
+        { "mediclevel", "medic" }, { "hemslevel", "medic" }, { "hartlevel", "medic" }, { "rplevel", "medic" }, 
+        { "ionlevel", "opfor" }, { "deltalevel", "opfor" }, { "umlevel", "opfor" }, { "iaflevel", "opfor" }, { "irulevel", "opfor" }
+    };
+
+    private static readonly Dictionary<string, int> CommandThresholds = new()
+    {
+        { "police", 10 }, { "opfor", 7 }, { "medic", 6 }
+    };
+
+    private static readonly Dictionary<string, (string Name, int CommandRank)> Factions = new()
+    {
+        { "police", (Name: "coplevel", CommandRank: 10) },
+        { "opfor",  (Name: "ionlevel", CommandRank:  7) },
+        { "medic",  (Name: "mediclevel", CommandRank:  6) }
+    };
 
 }

@@ -49,20 +49,25 @@ export default function StatsPlayer() {
     const [whitelistingType, setWhitelistingType] = useState<string | null>(null);
 
     const handleExport = async (id: string) => {
+        const adminlevel = parseInt(user?.adminlevel ?? 0);
+        if (adminlevel < 3) {
+            toast.error("You don't have permission to create a user");
+            return;
+        }
         try {
             const res = await apiFetchPost(`/players/${id}/export`);
             const data = await res.json();
-                if (res.ok) {
-                    toast.success("Background Job Queued", {
-                        description: `ID: ${data.jobId} - Exporting metadata to Azure Blob Storage.`,
-                        action: {
-                            label: "View Jobs",
-                            onClick: () => navigate("/jobs") // Not setup
-                        }
-                    });
-                } else {
-                    toast.error("Export Failed", { description: data.message ?? "API Error" });
-                }
+            if (res.ok) {
+                toast.success("Background Job Queued", {
+                    description: `ID: ${data.jobId} - Exporting metadata to Azure Blob Storage.`,
+                    action: {
+                        label: "View Jobs",
+                        onClick: () => navigate("/jobs") // Not setup
+                    }
+                });
+            } else {
+                toast.error("Export Failed", { description: data.message ?? "API Error" });
+            }
         } catch (error){
             toast.error("Network Error", { description: "Check API status." });
         };  
@@ -147,7 +152,7 @@ export default function StatsPlayer() {
 
     const handleRevokeCredentials = async (id: string, username: string) => {
         const adminlevel = parseInt(user?.adminlevel ?? 0);
-        if (adminlevel < 4) {
+        if (adminlevel < 5) {
             toast.error("You don't have permission to create a user");
             return;
         }
@@ -166,29 +171,33 @@ export default function StatsPlayer() {
             toast.error("Network Error", { description: "Check API status." });
             console.log(error);
         };  
-    }
+    };
+
+    const fetchPlayer = async () => {
+        try {
+            const res = await apiFetch(`/players/${id}`)
+            if (!res.ok) {
+                setPlayer("Not Found")
+            };
+            const data = await res.json();
+            setPlayer(data[0])
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        } catch (error) {
+            setPlayer("Not Found");
+            console.error("Fetch Error", error);
+            const timer = setTimeout(() => {
+                navigate(-1); // Redirect back to search
+            }, 4000);
+            return () => clearTimeout(timer);
+        }
+    };
 
     useEffect(() => {
-        const fetchPlayer = async () => {
-            try {
-                const res = await apiFetch(`/players/${id}`)
-                if (!res.ok) {
-                    setPlayer("Not Found")
-                };
-                const data = await res.json();
-                setPlayer(data[0])
-                window.scrollTo(0, 0);
-            } catch (error) {
-                setPlayer("Not Found");
-                console.error("Fetch Error", error);
-                const timer = setTimeout(() => {
-                    navigate(-1); // Redirect back to search
-                }, 4000);
-                return () => clearTimeout(timer);
-            }
-        };
         if (id) fetchPlayer();
-    }, [id, navigate]);
+    }, [id]);
 
     if (!player) {
         return(
@@ -294,30 +303,34 @@ export default function StatsPlayer() {
                         </Button>
                     </DropdownMenuTrigger>
                     
+                    {/* {user?.adminlevel > 4 && ( */}
                     <DropdownMenuContent align="end" className="w-48 bg-zinc-950 border-border text-foreground">
                         <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                        Admin Actions
+                        Player Actions
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator className="bg-background" />
                         
-                        <DropdownMenuItem className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => handleExport(player.uid)}>
+                        <DropdownMenuItem disabled={(user?.adminlevel || 0) <= 3} 
+                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => handleExport(player.uid)}>
                         <FileJson className="h-3.5 w-3.5 text-muted-foreground" />
                         Export Metadata
                         </DropdownMenuItem>
-                        
-                        <DropdownMenuItem className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => handleGenerateCredentials(player.playerid, player.name)}>
+                        <DropdownMenuItem disabled={(user?.adminlevel || 0) <= 4} 
+                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => handleGenerateCredentials(player.playerid, player.name)}>
                         <Key className="h-3.5 w-3.5 text-muted-foreground" />
                         Generate Credentials
                         </DropdownMenuItem>
                         
-                        <DropdownMenuItem className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => handleResetPassword(player.playerid, player.name)}>
+                        <DropdownMenuItem disabled={(user?.adminlevel || 0) <= 5} 
+                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => handleResetPassword(player.playerid, player.name)}>
                         <Key className="h-3.5 w-3.5 text-muted-foreground" />
                         Reset Password
                         </DropdownMenuItem>
 
                         <DropdownMenuSeparator className="bg-background" />
                         
-                        <DropdownMenuItem className="text-xs gap-2 cursor-pointer text-red-500 focus:bg-red-500/10 focus:text-red-400" onClick={() => handleRevokeCredentials(player.playerid, player.name)}>
+                        <DropdownMenuItem disabled={(user?.adminlevel || 0) <= 5} 
+                        className="text-xs gap-2 cursor-pointer text-red-500 focus:bg-red-500/10 focus:text-red-400" onClick={() => handleRevokeCredentials(player.playerid, player.name)}>
                         <Trash2 className="h-3.5 w-3.5" />
                         Revoke Credentials
                         </DropdownMenuItem>
@@ -391,7 +404,7 @@ export default function StatsPlayer() {
                                 onClick={() => {
                                     if (canWhitelist) {setWhitelistingType(faction.id); setIsWhitelistingOpen(true);
                                     } else {
-                                        toast("My G No Permissions", { position: "top-center" });
+                                        toast("You don't have the permissions to change anything!", { position: "top-center" });
                                     }}}>
                             <Pencil className={`h-3 w-3 hover:scale-110 transition-all cursor-pointer`} />
                             </Button>                       
@@ -641,7 +654,7 @@ export default function StatsPlayer() {
         </div>
         </div>
 
-        <WhitelistingModal open={isWhitelistingOpen} setOpen={setIsWhitelistingOpen} player={player} type={whitelistingType}/>
+        <WhitelistingModal open={isWhitelistingOpen} setOpen={setIsWhitelistingOpen} player={player} type={whitelistingType} onSuccess={fetchPlayer}/>
         </div>
     )
 }
