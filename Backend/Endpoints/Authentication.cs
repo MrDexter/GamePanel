@@ -45,8 +45,8 @@ public static class AuthEndpoints
         group.MapPost("/login", async (LoginRequest req, IAuthenticationService auth, HttpContext context) =>
         {
             try {
-                var token = await auth.AuthenticateUser(req.Username, req.Password, context);
-                return Results.Ok(new { token });   
+                var data = await auth.AuthenticateUser(req.Username, req.Password, context);
+                return Results.Ok(data);   
             } catch (UnauthorizedAccessException error)
             {
                 return Results.BadRequest(new {message = error.Message});

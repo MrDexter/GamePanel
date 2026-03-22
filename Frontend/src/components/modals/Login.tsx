@@ -10,7 +10,7 @@ import { apiFetchPost } from "@/lib/api"
 import LoadingOverlay from "@/components/modals/Loading"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-export default function LoginModal({open, setOpen, setUser, setIsResetPassOpen}: { open: boolean; setOpen: (val: boolean) => void; setUser: (user: any) => void; setIsResetPassOpen: (user: any) => void;}) {
+export default function LoginModal({open, setOpen, setUser, setIsResetPassOpen, setPerms}: { open: boolean; setOpen: (val: boolean) => void; setUser: (user: any) => void; setIsResetPassOpen: (user: any) => void; setPerms: (perms: any) => void;}) {
   const [isLoading, setIsLoading] = useState(false);
   const DEMO_ACCOUNTS = {
     admin:          { user: "Sam",  pass: "Sp!cnawqLYvC" },
@@ -51,6 +51,7 @@ export default function LoginModal({open, setOpen, setUser, setIsResetPassOpen}:
       localStorage.setItem("token", data.token);
       var decodedToken = jwtDecode<any>(data.token);
       setUser(decodedToken);
+      setPerms(data.permissions);
       toast.success("Login Successful");
       setOpen(false);
       if(decodedToken.ChangePassword == "True") {

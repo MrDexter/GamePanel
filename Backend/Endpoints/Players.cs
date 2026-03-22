@@ -42,8 +42,8 @@ public static class PlayerEndpoints
             return Results.Ok(result);
         })
         .WithSummary("Search Players")
-        .WithDescription("Fetches a partial profile of all players matching search criteria. Accepts UID, SteamID, Name and Aliases");
-        // .Produces<List<Player>>(200);
+        .WithDescription("Fetches a partial profile of all players matching search criteria. Accepts UID, SteamID, Name and Aliases")
+        .Produces<PaginatedRecord>(200);
 
         group.MapPost("/{id}/updateWhitelisting", async (HttpContext context, string id, WhitelistUpdateRequest request, IPlayerService players, ILoggingService logging) =>
         {

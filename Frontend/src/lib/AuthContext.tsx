@@ -5,6 +5,8 @@ interface AuthContextType {
   user: any;
   setUser: (user: any) => void;
   logout: () => void;
+  perms: any;
+  setPerms: (perms: any) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);

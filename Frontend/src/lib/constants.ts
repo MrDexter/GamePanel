@@ -15,6 +15,9 @@ export const formatMoney = (amount: number) => {
   }).format(amount);
 };
 
+export const APP_CONFIG = {
+} as const;
+
 export const copRanks: Record<number, string> = {
     1: "PCSO",
     2: "PC",

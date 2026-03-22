@@ -44,6 +44,7 @@ export default function App() {
   }, []);
 
   const [user, setUser] = useState<any>(null);
+  const [perms, setPerms] = useState<any>(null);
   useEffect(() => {
     const globalLogout = (silent = false) => {
       localStorage.removeItem("token");
@@ -60,6 +61,7 @@ export default function App() {
           const decodedToken = jwtDecode<any>(token);
           if(decodedToken.exp! * 1000 > Date.now()) {
             setUser(decodedToken);
+            setPerms(data.permissions);
             if(decodedToken.ChangePassword == "True") {
               setisResetPasswordOpen(true);
               toast.info("Security Action Required", { 
@@ -102,7 +104,7 @@ export default function App() {
   const [isChangePasswordOpen, setisChangePasswordOpen] = useState(false);
 
   return (
- <AuthContext.Provider value={{ user, setUser, logout: handleLogout }}>
+ <AuthContext.Provider value={{ user, setUser, logout: handleLogout, perms, setPerms }}>
     <BrowserRouter>
       <div className='min-h-screen bg-background text-foreground font-sans selection:bg-blue-500/30'>
         
@@ -213,7 +215,7 @@ export default function App() {
         <main className='px-8 py-10'>
           <ChangePasswordModal open={isChangePasswordOpen} setOpen={setisChangePasswordOpen}/>
           <ResetPasswordModal open={isResetPasswordOpen} setOpen={setisResetPasswordOpen}/>
-          <LoginModal open={isLoginOpen} setOpen={setIsLoginOpen} setUser={setUser} setIsResetPassOpen={setisResetPasswordOpen}/>
+          <LoginModal open={isLoginOpen} setOpen={setIsLoginOpen} setUser={setUser} setPerms={setPerms} setIsResetPassOpen={setisResetPasswordOpen}/>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/stats" element={<Stats />} />

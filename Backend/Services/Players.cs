@@ -1,5 +1,6 @@
 using Microsoft.Data.SqlClient;
 using DecsPage.Models;
+using DecsPage.Constants;
 using Microsoft.AspNetCore.Mvc;
 using Azure.Core;
 using System.Transactions;
@@ -88,7 +89,7 @@ public class PlayerService : IPlayerService
         using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        var sql = "Select * FROM players WHERE CAST(uid AS NVARCHAR) = @uid OR playerid = @uid";
+        var sql = "Select uid, name, aliases, playerid, cash, bankacc, adminLevel, donorlevel, copLevel, tfulevel, ncalevel, npaslevel, mpulevel, acadlevel, ionLevel, deltalevel, umlevel,  iaflevel, irulevel, medicLevel, hemslevel, hartlevel, rplevel, civ_licenses, insert_time, van_login, cop_login, nhs_login, last_seen, playerXP, donorExpiry, playtime_civ, playtime_cop, playtime_nhs, playtime_cop, playtime_opfor FROM players WHERE CAST(uid AS NVARCHAR) = @uid OR playerid = @uid";
         using (var command = new SqlCommand(sql, connection))
         {
             command.Parameters.AddWithValue("@uid", id);
@@ -256,18 +257,19 @@ public class PlayerService : IPlayerService
             var userName = ctx.User.Identity?.Name ?? "Unknown";
             var userId = ctx.User.FindFirst("SteamID")?.Value ?? throw new UnauthorizedAccessException("There isn't a SteamId associated with your account!");
             var userAdmin = ctx.User.FindFirst("adminlevel")?.Value ?? "0";
-            var adminLevelCheck = Int32.Parse(userAdmin) <= 4;
+            var adminWhitelistLevel = AppPermissions.GetPermission("User_Whitelist"); 
+            var adminLevelCheck = Int32.Parse(userAdmin) < adminWhitelistLevel;
 
             foreach(var update in request.Updates)
             {
                 string rank = update.Key;
                 string value = update.Value;
 
-                if (!ColumnToFactionMap.TryGetValue(rank, out var actualFaction))
+                if (!FactionPermissions.ColumnToFactionMap.TryGetValue(rank, out var actualFaction))
                 {
                     throw new InvalidDataException("Security Violation: Invalid Column Identifier or Permissions");
                 }
-                Factions.TryGetValue(actualFaction, out var factionTabke);
+                FactionPermissions.Factions.TryGetValue(actualFaction, out var factionTabke);
                 var userRank = ctx.User.FindFirst(rank)?.Value ?? "0";
                 var userMainRank = ctx.User.FindFirst(factionTabke.Name)?.Value ?? "0";
                 var userRankToLow = Int32.Parse(userRank) < Int32.Parse(value);
@@ -373,24 +375,4 @@ public class PlayerService : IPlayerService
             );
         };
     }
-
-    private static readonly Dictionary<string, string> ColumnToFactionMap = new()
-    {
-        { "coplevel", "police" }, { "tfulevel", "police" }, { "ncalevel", "police" }, { "npaslevel", "police" }, { "mpulevel", "police" }, { "acadlevel", "police" },
-        { "mediclevel", "medic" }, { "hemslevel", "medic" }, { "hartlevel", "medic" }, { "rplevel", "medic" }, 
-        { "ionlevel", "opfor" }, { "deltalevel", "opfor" }, { "umlevel", "opfor" }, { "iaflevel", "opfor" }, { "irulevel", "opfor" }
-    };
-
-    private static readonly Dictionary<string, int> CommandThresholds = new()
-    {
-        { "police", 10 }, { "opfor", 7 }, { "medic", 6 }
-    };
-
-    private static readonly Dictionary<string, (string Name, int CommandRank)> Factions = new()
-    {
-        { "police", (Name: "coplevel", CommandRank: 10) },
-        { "opfor",  (Name: "ionlevel", CommandRank:  7) },
-        { "medic",  (Name: "mediclevel", CommandRank:  6) }
-    };
-
 }

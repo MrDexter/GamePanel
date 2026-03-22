@@ -1,5 +1,21 @@
 [
   {
+    "date": "22-03-2026",
+    "version": "0.8.6",
+    "title": "Constants, Permission Fixes and Logs",
+    "type": "Refactoring",
+    "category": "Full",
+    "changes": [
+        { "type": "frontend", "text": "Fixed inconsistent Permission checking compared to backend" },
+        { "type": "backend", "text": "Added Constants and Permissions for easier updating" },
+        { "type": "backend", "text": "Added Master Constants for Admin, Faction and Other Permissions to be sent to Frontend" },
+        { "type": "backend", "text": "Added Global Permissions Variable that pulls from backend for more consistent and easier updating" },
+        { "type": "frontend", "text": "Fixed null user causing crash on Logout" },
+        { "type": "frontend", "text": "Added View Logs and Modal to View Players Logs from Profile" },
+        { "type": "backend", "text": "Added GetLogs Endpoint to retrieve a players Security related logs" }
+    ]
+  },
+  {
     "date": "21-03-2026",
     "version": "0.8.5",
     "title": "Whitelisting",

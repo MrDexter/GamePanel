@@ -1,5 +1,6 @@
 using Microsoft.Data.SqlClient;
 using DecsPage.Models;
+using DecsPage.Constants;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -11,11 +12,11 @@ namespace DecsPage.Services;
 
 public interface IAuthenticationService
 {
-    Task<string?>GenerateToken (HttpContext context, UserDetails userDetails);
+    Task<string>GenerateToken (HttpContext context, UserDetails userDetails);
     Task <bool> GenerateGUID (HttpContext context, string id);
     Task <bool> DeleteGUID (HttpContext context, string guid);
     Task<string> RefreshToken (HttpContext context, string guid);
-    Task <string?> AuthenticateUser (string username, string password, HttpContext context);
+    Task <LoginResponse> AuthenticateUser (string username, string password, HttpContext context);
     Task LogoutUser (HttpContext context);
     Task <string> CreateUser (string ID, string username, HttpContext context);
     Task<bool> DeleteUser (string id, HttpContext context);
@@ -43,7 +44,7 @@ public class AuthenticationService : IAuthenticationService
         _logger = logger;
     }
 
-    public async Task<string?> GenerateToken(HttpContext context, UserDetails userDetails)
+    public async Task<string> GenerateToken(HttpContext context, UserDetails userDetails)
     {
         var steamID  = userDetails.SteamID;
         var playerPerms = await player.GetPlayerPerms(steamID);
@@ -63,7 +64,11 @@ public class AuthenticationService : IAuthenticationService
             {
                 value = Math.Max(userDetails.AdminLevel, playerPerms.AdminLevel); // Allow User Admin level to Override Player Admin Level
             }
-            var neededRank = CanPromote(name);
+            // var neededRank = CanPromote(name);
+            if (!FactionPermissions.PromoteThresholds.TryGetValue(name, out int neededRank))
+            {
+                neededRank = 99;
+            }
             if (value >= neededRank)
             {
                claims.Add(
@@ -147,7 +152,7 @@ public class AuthenticationService : IAuthenticationService
             };
             throw new InvalidOperationException("Failed to Generate GUID");
     }
-    public async Task<string?> AuthenticateUser (string username, string password, HttpContext context)
+    public async Task<LoginResponse> AuthenticateUser (string username, string password, HttpContext context)
     {
         var userDetails = await GetUserDetails("Username", username) ?? throw new UnauthorizedAccessException("Username Not Found!");
         if (!BCrypt.Net.BCrypt.Verify(password, userDetails.PasswordHash))
@@ -159,7 +164,11 @@ public class AuthenticationService : IAuthenticationService
         if (success)
         {
             var token = await GenerateToken(context, userDetails);
-            return token;
+            var permissionsList = new Permissions(
+                AppPermissions.AdminPermissions   
+            );
+            var data = new LoginResponse(token, permissionsList);
+            return data;
         };
         
         throw new InvalidOperationException("GUID Failed to Generate!");
@@ -325,37 +334,13 @@ public class AuthenticationService : IAuthenticationService
             return null!;
         };
     }
-    public string GenerateRandomPassword(int length = 12)
+    private static string GenerateRandomPassword(int length = 12)
     {
         const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*";
         var random = new Random();
         return new string(Enumerable.Repeat(chars, length)
             .Select(s => s[random.Next(s.Length)]).ToArray());
     }
-
-    public int CanPromote(string playerRank)
-    { // Minimum level needed to have the permission to allow update rank permissions
-        return playerRank switch {
-            "adminlevel" => 1,
-            "coplevel" => 7,
-            "tfulevel" => 4,
-            "ncalevel" => 4,
-            "npaslevel" => 4,
-            "mpulevel" => 4,
-            "acadlevel" => 2,
-            "ionlevel" => 6,
-            "deltalevel" => 4,
-            "umlevel" => 4,
-            "iaflevel" => 4,
-            "irulevel" => 3,
-            "mediclevel" => 4,
-            "hemslevel" => 4,
-            "hartlevel" => 4,
-            "rplevel" => 4,
-            _ => 99,
-        };
-    }
-
 
 /*     public async Task<IResult> OldGenerateToken(UserDetails userDetails)
     {

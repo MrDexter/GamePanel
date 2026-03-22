@@ -8,11 +8,12 @@ import LoadingOverlay from "@/components/modals/Loading"
 
 
 export default function WhitelistingModal({open, setOpen, player, type, onSuccess}: {open: boolean; setOpen: (val: boolean) => void; player: any; type:any; onSuccess: any}) {
-    const { user } = useAuth();
+    const { user, perms } = useAuth();
+    if (!user) return null;
     const faction = FACTIONS.find((faction : any) => faction.id === type) || null;
     if (!faction) return null;
-    const userMainLevel = user[faction.levelKey] ?? 0;
-    const masterControl = user &&(userMainLevel >= faction.commandLevel || user.adminlevel > 4); // Faction command or Senior Staff
+    const userMainLevel = user[faction.levelKey];
+    const masterControl = user &&(userMainLevel >= faction.commandLevel || user.adminlevel > (perms?.admin?.USER_WHITELIST ?? 99)); // Faction command or Senior Staff
     const hasAccess = user && (masterControl || userMainLevel != null || faction.units.some(unitKey => user[unitKey ?? ""] != null));
     if (!hasAccess) return null;
     const playerMainLevel = player[faction.levelKey];
@@ -57,7 +58,8 @@ export default function WhitelistingModal({open, setOpen, player, type, onSucces
             setIsLoading(false);
             setPendingChanges({});
         }
-    }, [open]);
+        if (!user && open) setOpen(false);
+    }, [open, user]);
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -77,7 +79,7 @@ export default function WhitelistingModal({open, setOpen, player, type, onSucces
                         </div>
                     </div>
 
-                    {(userMainLevel != null || masterControl) &&(
+                    {(userMainLevel != null && masterControl) &&(
                         <select className={`w-full bg-popover border border-border text-xs p-2 rounded-sm outline-none focus:ring-1 focus:${faction.colorBorder}`}
                             defaultValue={playerMainLevel}
                             onChange = {(e) => {

@@ -1,3 +1,5 @@
+using DecsPage.Services;
+using DecsPage.Models;
 using Microsoft.Data.SqlClient;
 namespace DecsPage.Endpoints;
 
@@ -5,6 +7,25 @@ public static class MiscEndpoints
 {
     public static IEndpointRouteBuilder MapMiscEndpoints(this IEndpointRouteBuilder app)
     {
+
+        app.MapGet("/logging/GetLogs", async (string id, string? type, int? offset, int? limit, ILoggingService logging) =>
+        {
+            try 
+            {
+                var logs = await logging.GetLogs(id, type, offset, limit);
+                return Results.Ok(logs);
+            } catch (InvalidDataException error)
+            {
+                return Results.NotFound(new {message = error.Message});
+            };
+
+        })
+        .WithTags("Logging")
+        // .RequireAuthorization("Staff")
+        .WithSummary("Get A Players Logs")
+        .WithDescription("Get a Players Logs, Requires SteamID, Staff JWT Token and Optionaly Incoming or Outgoing Logs. Default All")
+        .Produces<PlayerLogs>(200);
+
 /*         app.MapGet("/health", async () =>
         {
             return Results.Ok("Ok");   

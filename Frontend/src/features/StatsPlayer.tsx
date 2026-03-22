@@ -13,6 +13,7 @@ import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,Drop
 // import { jwtDecode } from 'jwt-decode';
 import { useAuth } from "@/lib/AuthContext"
 import WhitelistingModal from "@/components/modals/Whitelist"
+import ViewLogsModal from "@/components/modals/ViewLogs"
 
 
 const parseInventory = (inv: string) => {
@@ -39,19 +40,20 @@ const copyToClipboard = (text: string) => {
 };
 
 export default function StatsPlayer() {
-    const { user } = useAuth();
+    const { user, perms } = useAuth();
     const { id } = useParams();
     const [player, setPlayer] = useState<any>(null)
     const navigate = useNavigate();
     const checkInventory = (inv: string) => inv && inv !== '"[[],0]"';
     const checkVirtualInventory = (inv: string) => inv && inv !== '"[[],0]"';
     const [isWhitelistingOpen, setIsWhitelistingOpen] = useState(false);
+    const [isViewLogsOpen, setIsViewLogsOpen] = useState(false);
     const [whitelistingType, setWhitelistingType] = useState<string | null>(null);
 
     const handleExport = async (id: string) => {
         const adminlevel = parseInt(user?.adminlevel ?? 0);
-        if (adminlevel < 3) {
-            toast.error("You don't have permission to create a user");
+        if (adminlevel < (perms?.admin?.EXPORT_DATA ?? 99)) {
+            toast.error("You don't have permission to export user data");
             return;
         }
         try {
@@ -75,7 +77,7 @@ export default function StatsPlayer() {
 
     const handleGenerateCredentials = async (id: string, username: string) => {
         const adminlevel = parseInt(user?.adminlevel ?? 0);
-        if (adminlevel < 4) {
+        if (adminlevel < (perms?.admin?.USER_CREATE ?? 99)) {
             toast.error("You don't have permission to create a user");
             return;
         }
@@ -114,7 +116,7 @@ export default function StatsPlayer() {
     
     const handleResetPassword = async (id: string, username: string) => {
         const adminlevel = parseInt(user?.adminlevel ?? 0);
-        if (adminlevel < 4) {
+        if (adminlevel < (perms?.admin?.USER_RESET ?? 99)) {
             toast.error("You don't have permission to reset a users password");
             return;
         }
@@ -152,8 +154,8 @@ export default function StatsPlayer() {
 
     const handleRevokeCredentials = async (id: string, username: string) => {
         const adminlevel = parseInt(user?.adminlevel ?? 0);
-        if (adminlevel < 5) {
-            toast.error("You don't have permission to create a user");
+        if (adminlevel < (perms?.admin?.USER_DELETE ?? 99)) {
+            toast.error("You don't have permission to delete a user");
             return;
         }
         try {
@@ -310,18 +312,21 @@ export default function StatsPlayer() {
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator className="bg-background" />
                         
-                        <DropdownMenuItem disabled={(user?.adminlevel || 0) <= 3} 
+                        <DropdownMenuItem disabled={(user?.adminlevel || 0) < (perms?.admin?.EXPORT_DATA ?? 99)} 
                         className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => handleExport(player.uid)}>
                         <FileJson className="h-3.5 w-3.5 text-muted-foreground" />
                         Export Metadata
                         </DropdownMenuItem>
-                        <DropdownMenuItem disabled={(user?.adminlevel || 0) <= 4} 
+
+                        <DropdownMenuSeparator className="bg-background" />
+
+                        <DropdownMenuItem disabled={(user?.adminlevel || 0) <= (perms?.admin?.USER_CREATE ?? 99)} 
                         className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => handleGenerateCredentials(player.playerid, player.name)}>
                         <Key className="h-3.5 w-3.5 text-muted-foreground" />
                         Generate Credentials
                         </DropdownMenuItem>
                         
-                        <DropdownMenuItem disabled={(user?.adminlevel || 0) <= 5} 
+                        <DropdownMenuItem disabled={(user?.adminlevel || 0) <= (perms?.admin?.USER_RESET ?? 99)} 
                         className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => handleResetPassword(player.playerid, player.name)}>
                         <Key className="h-3.5 w-3.5 text-muted-foreground" />
                         Reset Password
@@ -329,11 +334,18 @@ export default function StatsPlayer() {
 
                         <DropdownMenuSeparator className="bg-background" />
                         
-                        <DropdownMenuItem disabled={(user?.adminlevel || 0) <= 5} 
+                        <DropdownMenuItem disabled={(user?.adminlevel || 0) <= (perms?.admin?.USER_DELETE ?? 99)} 
+                        className="text-xs gap-2 cursor-pointer text-blue-500 focus:bg-blue-500/10 focus:text-blue-400" onClick={() => setIsViewLogsOpen(true)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                        View Logs
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuItem disabled={(user?.adminlevel || 0) <= (perms?.admin?.USER_DELETE ?? 99)} 
                         className="text-xs gap-2 cursor-pointer text-red-500 focus:bg-red-500/10 focus:text-red-400" onClick={() => handleRevokeCredentials(player.playerid, player.name)}>
                         <Trash2 className="h-3.5 w-3.5" />
                         Revoke Credentials
                         </DropdownMenuItem>
+                        
                     </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
@@ -388,7 +400,7 @@ export default function StatsPlayer() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {FACTIONS.map((faction) => {
                     const mainLevel = player[faction.levelKey];
-                    const canWhitelist = user && (user[faction.levelKey] != null || faction.units.some(unitKey => user[unitKey ?? ""] != null));
+                    const canWhitelist = user && (user[faction.levelKey] != null || faction.units.some(unitKey => user[unitKey ?? ""] != null) || user.adminlevel > (perms?.admin?.USER_WHITELIST ?? 99));
 
                     return(
                         <Card key={faction.id} className="relative overflow-hidden bg-background/50 backdrop-blur-md border-border group h-full">
@@ -412,19 +424,19 @@ export default function StatsPlayer() {
                         <CardContent>
                             <div className="grid grid-cols-2 space-y-2 justify-between items-center">
                                 {faction.units.map((Key, index) => { 
-                                        const unitKey = Key ?? "";
-                                        const level = player[unitKey] ?? "";
-                                        const unitRanks = unitRankNames[unitKey] || {}; 
-                                        const rankName = unitRanks[level] ?? `${level}`;
-                                        const isEvenColumn = index % 2 !== 0;
-                                        return (
-                                            <div key={unitKey} className={`flex flex-col ${isEvenColumn ? "items-end text-right" : "items-start text-left"}`}>
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                                {unitNames[unitKey]}
-                                            </span>
-                                            <span className="text-[14px] font-mono text-foreground"> {rankName}</span>
-                                            </div>
-                                        );
+                                    const unitKey = Key ?? "";
+                                    const level = player[unitKey] ?? "";
+                                    const unitRanks = unitRankNames[unitKey] || {}; 
+                                    const rankName = unitRanks[level] ?? `${level}`;
+                                    const isEvenColumn = index % 2 !== 0;
+                                    return (
+                                        <div key={unitKey} className={`flex flex-col ${isEvenColumn ? "items-end text-right" : "items-start text-left"}`}>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                            {unitNames[unitKey]}
+                                        </span>
+                                        <span className="text-[14px] font-mono text-foreground"> {rankName}</span>
+                                        </div>
+                                    );
                                 })}
                             </div>
                         </CardContent>
@@ -655,6 +667,7 @@ export default function StatsPlayer() {
         </div>
 
         <WhitelistingModal open={isWhitelistingOpen} setOpen={setIsWhitelistingOpen} player={player} type={whitelistingType} onSuccess={fetchPlayer}/>
+        <ViewLogsModal open={isViewLogsOpen} setOpen={setIsViewLogsOpen} player={player}/>
         </div>
     )
 }

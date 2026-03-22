@@ -130,3 +130,22 @@ public record PaginatedRecord(
     int TotalRows,
     List<Player> Players
 );
+
+public record LoginResponse(
+    string Token,
+    Permissions Permissions
+);
+
+public record Permissions(
+    Dictionary<string, int> Admin
+    // Dictionary<string, int> FactionCommands,
+    // Dictionary<string, int> PromoteThresholds
+);
+
+public record PlayerLogs(
+    string EventType,
+    string PlayerId,
+    string PerformedBy,
+    string Details,
+    DateTime CreatedAt
+);
