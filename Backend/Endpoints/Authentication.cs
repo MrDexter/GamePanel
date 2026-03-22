@@ -31,8 +31,8 @@ public static class AuthEndpoints
                 return Results.Unauthorized(); // no token exists, user needs to log back in
             };
             try {
-                var token = await auth.RefreshToken(context, oldGuid);
-                return Results.Ok( new {token}); // Return new JWT to frontEnd
+                var data = await auth.RefreshToken(context, oldGuid);
+                return Results.Ok(data);
             } catch (InvalidOperationException error)
             {
                 return Results.Json(new { message = error.Message}, statusCode: 500);
@@ -40,7 +40,7 @@ public static class AuthEndpoints
         })
         .WithSummary("Refresh a JWT Token")
         .WithDescription("Refresh a JWT Token. Requires JWT Token")
-        .Produces(200);
+        .Produces<LoginResponse>(200);
 
         group.MapPost("/login", async (LoginRequest req, IAuthenticationService auth, HttpContext context) =>
         {

@@ -15,7 +15,7 @@ public interface IAuthenticationService
     Task<string>GenerateToken (HttpContext context, UserDetails userDetails);
     Task <bool> GenerateGUID (HttpContext context, string id);
     Task <bool> DeleteGUID (HttpContext context, string guid);
-    Task<string> RefreshToken (HttpContext context, string guid);
+    Task<LoginResponse> RefreshToken (HttpContext context, string guid);
     Task <LoginResponse> AuthenticateUser (string username, string password, HttpContext context);
     Task LogoutUser (HttpContext context);
     Task <string> CreateUser (string ID, string username, HttpContext context);
@@ -64,7 +64,6 @@ public class AuthenticationService : IAuthenticationService
             {
                 value = Math.Max(userDetails.AdminLevel, playerPerms.AdminLevel); // Allow User Admin level to Override Player Admin Level
             }
-            // var neededRank = CanPromote(name);
             if (!FactionPermissions.PromoteThresholds.TryGetValue(name, out int neededRank))
             {
                 neededRank = 99;
@@ -141,14 +140,18 @@ public class AuthenticationService : IAuthenticationService
           return true;
         };
     }
-    public async Task<string> RefreshToken (HttpContext context, string guid)
+    public async Task<LoginResponse> RefreshToken (HttpContext context, string guid)
     {
             var userDetails = await GetUserDetails("RefreshToken", guid) ?? throw new UnauthorizedAccessException("User Not Found!");
             var success = await GenerateGUID(context, userDetails.SteamID);
             if (success)
             {
                 var token = await GenerateToken(context, userDetails);
-                return token!;
+                var permissionsList = new Permissions(
+                    AppPermissions.AdminPermissions   
+                );
+                var data = new LoginResponse(token, permissionsList);
+                return data;
             };
             throw new InvalidOperationException("Failed to Generate GUID");
     }

@@ -58,27 +58,22 @@ export default function App() {
     const LoginStatus = async () => {
       const token = localStorage.getItem("token");
       if (token) {
+        const decodedToken = jwtDecode<any>(token);
+        setUser(decodedToken);
         try {
-          const decodedToken = jwtDecode<any>(token);
-          if(decodedToken.exp! * 1000 > Date.now()) {
-            setUser(decodedToken);
-            setPerms(data.permissions);
-            if(decodedToken.ChangePassword == "True") {
-              setisResetPasswordOpen(true);
-              toast.info("Security Action Required", { 
-                  description: "Please update your temporary password." 
-              });
-            };
-            return;
-          };
-
-          var res = await apiFetchPost("/auth/refresh");
+          var res = await apiFetchPost("/auth/refreshToken");
           if (!res.ok)throw new Error("Unauthorized");
-          
           var data = await res.json();
           localStorage.setItem("token", data.token);
-          setUser(jwtDecode(data.token));
+          const newDecodedToken = jwtDecode<any>(data.token);
+          setUser(newDecodedToken);
           setPerms(data.permissions);
+          if(newDecodedToken.ChangePassword == "True") {
+            setisResetPasswordOpen(true);
+            toast.info("Security Action Required", { 
+                description: "Please update your temporary password." 
+            });
+          };
           console.log("Session restored via refresh token.");
         } catch (err) {
           globalLogout(true);
