@@ -1,6 +1,20 @@
 [
   {
     "date": "22-03-2026",
+    "version": "0.8.7",
+    "title": "Login issues and Permissions Data",
+    "type": "Hotfix",
+    "category": "Full",
+    "changes": [
+        { "type": "frontend", "text": "Fixed Admin Permissions missing for Test Users" },
+        { "type": "frontend", "text": "Fixed Some Admin Permissions check inconsistencies" },
+        { "type": "frontend", "text": "Fixed Logins being lost on refresh" },
+        { "type": "frontend", "text": "Fixed Refreshing of JWT Token failing" },
+        { "type": "backend", "text": "Added Permission Variables to Refresh Token Endpoint" }
+    ]
+  },
+  {
+    "date": "22-03-2026",
     "version": "0.8.6",
     "title": "Constants, Permission Fixes and Logs",
     "type": "Refactoring",
