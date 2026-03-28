@@ -20,27 +20,32 @@ export default function Home() {
 
             <div className="space-y-4 text-zinc-400 text-sm leading-relaxed font-medium">
             <p>
-                This project began as a deep dive into <span className="text-blue-400">C# and Backend development</span>. 
-                After building a simple AI Chatbot API, I saw how much potential there was for handling data. 
-                It also reminded me of an API system I had used years ago, so I decided to try and recreate it.
+                This project started as a way for me to learn <span className="text-blue-400">C# and backend development</span> by building a simple API. 
+                After creating a small AI chatbot API and working with SQL data, I realised I enjoyed building data-driven backend services and wanted to expand the idea into something more realistic.
             </p>
             
             <div className="bg-white/5 border border-white/10 p-4 rounded-sm">
                 <p>
-                I quickly built the <span className="text-emerald-400">Community API Project</span>. 
-                This pulls player and group data from an <span className="text-white">SQL Database </span> 
-                to be viewed and managed through the API.
+                The result became the <span className="text-emerald-400">Community API Project</span>. 
+                This API pulls player and group data from a <span className="text-white">SQL Database</span> and exposes it through endpoints so it can be viewed and managed programmatically.
                 </p>
             </div>
 
             <p>
-                I then wanted to try something different, so I built a <Link to="/jobs" className="text-blue-400 underline hover:text-blue-300">Background Worker</Link> as a job processor. 
-                I merged these two ideas together and decided to host them properly to show the code actually working. This is where I took a dive into <span className="text-white">Azure</span> I launched an App Service, configured a custom domain, and got the project live.
+                I then built a <Link to="/jobs" className="text-blue-400 underline hover:text-blue-300">Background Worker</Link> to
+                act as a job processor for long-running or automated tasks. This introduced job queues, status tracking, and background services into the system. 
+                At this point I merged the API and worker into a single system and decided to host it properly to show the project running in a live environment.
             </p>
 
             <p>
-                My final step was to build a dashboard to view and test everything. I had seen <span className="text-blue-400">React</span> and 
-                wanted to check it out; with the help of some AI for the initial design, the <Link to="/stats" className="text-blue-400 underline hover:text-blue-300">Stats Page</Link> was born.
+                This is where I took a dive into <span className="text-white">Azure</span> deploying an App Service, configuring a custom domain, 
+                and getting the system running in the cloud rather than just locally.
+            </p>
+
+            <p>
+                The final stage was building a dashboard to interact with everything. I wanted to learn <span className="text-blue-400">React</span>, 
+                so I built a dashboard for viewing player stats, logs, permissions, and background jobs. 
+                This turned the project from just an API into a full <span className="text-white">full-stack system</span>.
             </p>
             </div>
             <Link to="/breakdown" className="text-[10px] font-black uppercase tracking-widest text-emerald-500 underline underline-offset-4 hover:text-emerald-400 transition-colors">
@@ -59,15 +64,15 @@ export default function Home() {
             </div>
             <div className="space-y-6 text-zinc-300 leading-relaxed mt-8">
                 <p>
-                    Hi, I'm <span className="text-white font-bold italic text-lg">Declan</span>. I’m a 25-year-old self-taught developer who prefers 
-                    getting stuck in and building over talking. I learn by getting hands-on with unfamiliar codebases and shipping 
-                    functional, data-driven tools.
+                Hi, I'm <span className="text-white font-bold italic text-lg">Declan</span>. 
+                I'm a self-taught developer who prefers building systems and solving problems hands-on rather than just reading about them. 
+                I learn best by working with unfamiliar codebases, reverse engineering systems, and shipping functional, data-driven tools.
                 </p>
 
                 <div className="bg-white/5 border border-white/10 p-4 rounded-sm italic text-zinc-400">
-                    "I’ve always had a drive for engineering. Whether it's dismantling a McLaren door card in an Andorra hotel car park 
+                    "I’ve always had a drive for engineering. Whether it's dismantling a McLaren door card in a hotel car park in Andorra 
                     to fix a failed window regulator or reverse-engineering a legacy SQL framework at 3 AM, I apply that same 
-                    <span className="text-white"> 'strip it down to fix it' </span> approach to every system I touch."
+                    <span className="text-white"> 'strip it down to fix it' </span> approach to every system I work on."
                 </div>
 
                 <p>
@@ -85,6 +90,11 @@ export default function Home() {
 
                 <p className="text-sm font-medium border-l-2 border-blue-600 pl-4 bg-blue-600/5 py-2">
                     I am now focused on expanding the <span className="text-white font-bold">DecsPage</span> project while transitioning my career into a <span className="text-blue-400 font-bold">Backend-focused Full Stack</span> position.
+                </p>
+
+                <p className="text-sm text-zinc-400 italic border-l-2 border-zinc-700 pl-4">
+                    This timeline shows my progression from running game servers as a teenager to building backend systems, APIs, 
+                    background services, and full-stack applications.
                 </p>
             </div>
 
@@ -137,8 +147,8 @@ export default function Home() {
                         <span className="text-white"> unified system</span>, building a successful custom <span className="text-white italic font-bold">DarkRP community</span> from the ground up.
                     </p>
                     <p className="text-sm text-zinc-400 leading-relaxed mt-2">
-                        Being "on-call" 24/7 to handle live server criticals taught me the reality of <span className="text-white">production uptime</span>. 
-                        Everything was managed manually via <span className="text-white">FTP</span>—a far cry from the modern <span className="text-blue-400">CI/CD pipelines</span> I use today—but it formed the foundation of my technical discipline.
+                        Being effectively "on-call" to handle live server issues taught me early lessons about 
+                        <span className="text-white"> production uptime</span>, stability, and the importance of fixing issues quickly in live environments.
                     </p>          
 {/*                     <Popover>
                         <PopoverTrigger asChild>
@@ -190,7 +200,7 @@ export default function Home() {
                 <div className="absolute -left-1.25 top-1 h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981]" />
                 <div className="flex flex-col gap-1">
                     <span className="text-xs font-mono font-black text-emerald-500 uppercase tracking-tighter">
-                        2021 - The Confidence
+                        2021 - Systems Development
                     </span>
                     <h3 className="text-sm font-bold text-white uppercase tracking-widest">FiveM Development & System Logic</h3>
                     <p className="text-sm text-zinc-400 leading-relaxed">
@@ -234,7 +244,9 @@ export default function Home() {
                     
                     <div className="text-sm text-zinc-400 leading-relaxed space-y-4">
                         <p>
-                            I was <span className="text-white font-bold">recommended</span> to this community as a developer and quickly took ownership of the framework. I specialized in resolving critical issues caused by <span className="text-white">merged architectures</span> and legacy technical debt. This involved <span className="text-white">reverse engineering</span> complex logic to build optimized <span className="text-emerald-400">SQL Procedures</span> and refactoring database structures for long-term stability.
+                            I was <span className="text-white font-bold">recommended</span> to this community as a developer and quickly took ownership of the framework. 
+                            I specialised in resolving critical issues caused by merged architectures and legacy technical debt, 
+                            which involved reverse engineering complex logic, writing optimised SQL procedures, and restructuring database systems for long-term stability.
                         </p>
                         <p className="border-l-2 border-white/5 pl-4 italic">
                             I became the primary 'escalation' developer—handling everything from mentoring others to <span className="text-white">3am emergency patches</span> for live production issues. Balancing this with a full-time career taught me the reality of <span className="text-white">High-Availability</span>. While I still hold a Lead position, I have stepped back to focus on the professional <span className="text-blue-400 font-bold underline">C# & React pivot</span> seen on this dashboard.
@@ -253,7 +265,8 @@ export default function Home() {
                 <h3 className="text-sm font-bold text-white uppercase tracking-widest">Dotnet, C# and React</h3>
                 <div className="text-sm text-zinc-300 leading-relaxed space-y-4">
                     <p>
-                        After working on personal projects and reflecting on my technical interests, I decided to dive into <span className="text-blue-400 font-bold">C#</span>. 
+                        After working on personal projects and reflecting on where my technical interests were heading, 
+                        I decided to focus on <span className="text-blue-400 font-bold">C# and backend development</span>.
                         I quickly got comfortable with the language, and building the <span className="text-white font-bold italic underline decoration-white/20">Community API</span> introduced me to 
                         <Link to="/breakdown#security" className="text-blue-400 underline hover:text-blue-300 transition-all ml-1">JWT Security</Link>, 
                         <Link to="/breakdown#sql" className="text-blue-400 underline  hover:text-blue-300 transition-all ml-1">SQL Performance</Link>, 
@@ -269,6 +282,24 @@ export default function Home() {
                 </div>
                 </div>
             </div>
+
+            <div className="relative pl-8 border-l border-zinc-800 pb-5">
+                <div className="absolute -left-1.25 top-1 h-2 w-2 rounded-full bg-blue-500 shadow-[0_0_10px_#3b82f6]" />
+                <div className="flex flex-col gap-1">
+                    <span className="text-xs font-mono font-black text-blue-400 uppercase tracking-tighter">
+                    Next Step
+                    </span>
+                    <h3 className="text-sm font-bold text-white uppercase tracking-widest">
+                    Backend Engineering Career
+                    </h3>
+                    <p className="text-sm text-zinc-400 leading-relaxed">
+                    My current focus is moving into a professional backend engineering role, continuing to build systems using 
+                    <span className="text-white"> C#, .NET, SQL, React, and Cloud Infrastructure</span>, and expanding the 
+                    <span className="text-white"> DecsPage </span> project into a larger platform.
+                    </p>
+                </div>
+            </div>
+
             </div>
         </section>
         </div>
