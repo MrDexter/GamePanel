@@ -1,5 +1,19 @@
 [
   {
+    "date": "28-03-2026",
+    "version": "0.8.8",
+    "title": "Log Formatting, Pagination and Search",
+    "type": "Feature",
+    "category": "Full",
+    "changes": [
+        { "type": "frontend", "text": "Added better formatting to the Logs Display and Variable Setup for Rank Updating" },
+        { "type": "frontend", "text": "Added a search to the Logs Display" },
+        { "type": "backend", "text": "Added Search Param to GetLogs Endpoint" },
+        { "type": "backend", "text": "Added Player Names to Logs Endpoint via a JOIN" },
+        { "type": "frontend", "text": "Added Search and Pagination to Logs Display" }
+    ]
+  },
+  {
     "date": "22-03-2026",
     "version": "0.8.7",
     "title": "Login issues and Permissions Data",

@@ -27,7 +27,7 @@ export default function Stats() {
         } */
 
         const delayedSearch = setTimeout(async () => {
-            setIsLoading(true);
+            // setIsLoading(true);
             try {
                 const endpoint = search.trim() 
                 ? `/players/search?search=${search}` 
@@ -146,7 +146,7 @@ export default function Stats() {
             </div>
             <div className="flex items-center px-2 py-4 border-t border-white/5">
                 <div className="text-[10px] text-foreground uppercase font-bold tracking-widest">
-                    Showing {offset + 1} to {Math.min(offset + itemPerPage)} of {totalRows} People
+                    Showing {totalRows === 0 ? 0 : offset + 1} to {Math.min(offset + itemPerPage, totalRows)} of {totalRows} People
                 </div>
                 
                 <div className="flex gap-1">
@@ -158,7 +158,6 @@ export default function Stats() {
                         <ChevronLeft className="h-4 w-4" />
                     </button>
 
-                    {/* Optional: Page Numbers */}
                     <div className="flex items-center px-4 text-xs font-mono">
                         {currentPage + 1} / {totalPages}
                     </div>

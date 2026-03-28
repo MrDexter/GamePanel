@@ -126,9 +126,14 @@ public record WhitelistUpdateRequest(
     Dictionary<string, string> Updates
 );
 
-public record PaginatedRecord(
+public record PaginatedPlayerRecord(
     int TotalRows,
     List<Player> Players
+);
+
+public record PaginatedLogRecord(
+    int TotalRows,
+    List<PlayerLogs> Logs
 );
 
 public record LoginResponse(
@@ -142,10 +147,13 @@ public record Permissions(
     // Dictionary<string, int> PromoteThresholds
 );
 
-public record PlayerLogs(
-    string EventType,
-    string PlayerId,
-    string PerformedBy,
-    string Details,
-    DateTime CreatedAt
-);
+public record PlayerLogs
+{
+    public string EventType { get; init; } = "";
+    public string PlayerId { get; init; } = "";
+    public string PerformedBy { get; init; } = "";
+    public string TargetName { get; init; } = "";
+    public string PerformedByName { get; init; } = "";
+    public string Details { get; init; } = "";
+    public DateTime CreatedAt { get; init; }
+}

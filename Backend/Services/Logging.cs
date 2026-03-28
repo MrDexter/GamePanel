@@ -6,7 +6,7 @@ namespace DecsPage.Services;
 public interface ILoggingService
 {
     Task AuditLog(string type, string id, string performedBy, string details);   
-    Task<List<PlayerLogs>> GetLogs(string id, string? tpye, int? offset, int? limit);
+    Task<PaginatedLogRecord> GetLogs(string id, string? search, string? tpye, int? offset, int? limit);
 }
 
 public class LoggingService : ILoggingService
@@ -41,19 +41,33 @@ public class LoggingService : ILoggingService
         } 
     }
 
-    public async Task<List<PlayerLogs>> GetLogs(string id, string? type, int? offset, int? limit)
+    public async Task<PaginatedLogRecord> GetLogs(string id, string? search, string? type, int? offset, int? limit)
     {
+        var totalRows = 0;
         var results = new List<PlayerLogs>();
         using (var connection = new SqlConnection(connectionString))
         {
            await connection.OpenAsync();
-           var sql = "SELECT event_type, player_id, performed_by, details, created_at FROM audit_log ";
+           var sql = "SELECT a.event_type, a.player_id, a.performed_by, a.details, a.created_at, target.name AS target_name, performer.name AS performer_name, COUNT(*) OVER() AS TotalRows FROM audit_log a LEFT JOIN players target ON target.playerid = a.player_id LEFT JOIN players performer ON performer.playerid = a.performed_by ";
             sql += type switch
             {
-                "incoming" => "WHERE player_id = @steamid ",
-                "outgoing" => "WHERE performed_by = @steamid ",
-                _          => "WHERE player_id = @steamid OR performed_by = @steamid "
+                "incoming" => "WHERE (player_id = @steamid) ",
+                "outgoing" => "WHERE (performed_by = @steamid) ",
+                _          => "WHERE (player_id = @steamid OR performed_by = @steamid) "
             };
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                sql += @"
+                    AND (
+                        a.event_type LIKE '%' + @search + '%'
+                        OR a.player_id LIKE '%' + @search + '%'
+                        OR a.performed_by LIKE '%' + @search + '%'
+                        OR a.details LIKE '%' + @search + '%'
+                        OR target.name LIKE '%' + @search + '%'
+                        OR performer.name LIKE '%' + @search + '%'
+                    )
+                ";
+            }
            sql += "ORDER BY created_at DESC ";
             if (limit.HasValue || offset.HasValue)
             {
@@ -67,19 +81,31 @@ public class LoggingService : ILoggingService
             command.Parameters.AddWithValue("@steamid", id);
             command.Parameters.AddWithValue("@offset", offset ?? 0);
             command.Parameters.AddWithValue("@limit", limit ?? 0);
+            command.Parameters.AddWithValue("@search", search ?? "");
             using var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
-                var row =  new PlayerLogs(
-                    reader["event_type"].ToString() ?? string.Empty,
-                    reader["player_id"].ToString() ?? string.Empty,
-                    reader["performed_by"].ToString() ?? string.Empty,
-                    reader["details"].ToString() ?? string.Empty,
-                    reader.GetDateTime(reader.GetOrdinal("created_at"))
-                );
+                if (totalRows == 0)
+                {
+                    totalRows = reader.GetInt32(reader.GetOrdinal("TotalRows"));
+                }
+                var row = new PlayerLogs
+                {
+                    EventType = reader["event_type"].ToString() ?? string.Empty,
+                    PlayerId = reader["player_id"].ToString() ?? string.Empty,
+                    PerformedBy = reader["performed_by"].ToString() ?? string.Empty,
+                    TargetName = reader["target_name"].ToString() ?? string.Empty,
+                    PerformedByName = reader["performer_name"].ToString() ?? string.Empty,
+                    Details = reader["details"].ToString() ?? string.Empty,
+                    CreatedAt = reader.GetDateTime(reader.GetOrdinal("created_at"))
+                };
                 results.Add(row);
             }
-            return results;
-        }
+        };
+        var response = new PaginatedLogRecord(
+            totalRows,
+            results
+        );
+        return response;
     }
 }

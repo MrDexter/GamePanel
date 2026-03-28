@@ -43,7 +43,7 @@ public static class PlayerEndpoints
         })
         .WithSummary("Search Players")
         .WithDescription("Fetches a partial profile of all players matching search criteria. Accepts UID, SteamID, Name and Aliases")
-        .Produces<PaginatedRecord>(200);
+        .Produces<PaginatedPlayerRecord>(200);
 
         group.MapPost("/{id}/updateWhitelisting", async (HttpContext context, string id, WhitelistUpdateRequest request, IPlayerService players, ILoggingService logging) =>
         {
@@ -76,7 +76,7 @@ public static class PlayerEndpoints
             try
             {         
                 await players.UpdateRank(id, rank, newRank);
-                await logging.AuditLog("Rank Update Success", id, userName, $"{rank} - {newRank}");
+                await logging.AuditLog("Rank Update", id, userName, $"{rank} - {newRank}");
                 return Results.Ok(new { message = "Ranks Updated"});
             } catch (InvalidDataException ex)
             { 

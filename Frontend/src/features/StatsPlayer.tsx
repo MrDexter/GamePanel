@@ -496,7 +496,7 @@ export default function StatsPlayer() {
                                 Members
                             </span>
                             <p className="text-[10px] text-muted-foreground leading-relaxed">
-                                {player.gang.members.map((member : any , index : any) => (
+                                {player.gang.members.map((member : any , index : number) => (
                                 <React.Fragment key={member.id}>
                                     <Link 
                                     to={`/stats/${member.id}`} 

@@ -10,11 +10,11 @@ namespace DecsPage.Services;
 
 public interface IPlayerService
 {
-    Task<PaginatedRecord> GetAllPlayers(int? limit, int? offset);
+    Task<PaginatedPlayerRecord> GetAllPlayers(int? limit, int? offset);
     Task<List<Dictionary<string, object>>> GetPlayer(string id);
     Task<UpdateRank> UpdateRank(string id, string rank, string newRank);
     Task UpdateWhitelisting(HttpContext ctx, WhitelistUpdateRequest request);
-    Task<PaginatedRecord>SearchPlayersAsync(string search, int? limit, int? offset);
+    Task<PaginatedPlayerRecord>SearchPlayersAsync(string search, int? limit, int? offset);
     Task<PlayerPerms>GetPlayerPerms(string id);
 }
 
@@ -31,7 +31,7 @@ public class PlayerService : IPlayerService
         _logging = logging; 
     }
 
-    public async Task<PaginatedRecord> GetAllPlayers(int? limit, int? offset)
+    public async Task<PaginatedPlayerRecord> GetAllPlayers(int? limit, int? offset)
     {
         int totalRows = 0;
         var result = new List<Player>();
@@ -75,7 +75,7 @@ public class PlayerService : IPlayerService
                 result.Add(row);
             };
         };
-        var response = new PaginatedRecord(
+        var response = new PaginatedPlayerRecord(
             totalRows,
             result
         );
@@ -205,7 +205,7 @@ public class PlayerService : IPlayerService
         return result; 
     }
 
-    public async Task<PaginatedRecord> SearchPlayersAsync(string search, int? limit, int? offset)
+    public async Task<PaginatedPlayerRecord> SearchPlayersAsync(string search, int? limit, int? offset)
     {
         var totalRows = 0;
         var result = new List<Player>();
@@ -241,7 +241,7 @@ public class PlayerService : IPlayerService
                 result.Add(row);
             };
         };
-        var response = new PaginatedRecord(
+        var response = new PaginatedPlayerRecord(
             totalRows,
             result
         );
@@ -285,7 +285,7 @@ public class PlayerService : IPlayerService
                     command.Parameters.AddWithValue("@steamid", request.SteamId);
                     int reader = await command.ExecuteNonQueryAsync(); 
                 }
-                await _logging.AuditLog($"Complete: Rank Update", request.SteamId, userId, $"{rank} - {value}"); 
+                await _logging.AuditLog($"Rank Update", request.SteamId, userId, $"{rank} - {value}"); 
             }
             transaction.Commit();
         } catch (Exception)

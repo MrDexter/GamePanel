@@ -66,7 +66,10 @@ export const unitNames: Record<string, string> = {
   "umlevel": "UM",
   "iaflevel": "AIR",
   "irulevel": "Academy",
-  "rplevel": "Academy"
+  "rplevel": "Academy",
+  "ionlevel": "Ion",
+  "coplevel": "Police",
+  "mediclevel": "NHS"
 };
 
 export const unitRankNames: Record<string, Record<number, string>> = {
@@ -84,7 +87,11 @@ export const unitRankNames: Record<string, Record<number, string>> = {
   // Medic
   hemslevel: { 0: "None", 1: "Basic", 2: "Advanced", 3: "Full", 4: "Lead" },
   hartlevel: { 0: "None", 1: "Basic", 2: "Advanced", 3: "Full", 4: "Lead" },
-  rplevel: { 0: "None", 1: "Trainee", 2: "Trainer", 3: "Senior", 4: "Lead" }
+  rplevel: { 0: "None", 1: "Trainee", 2: "Trainer", 3: "Senior", 4: "Lead" },
+
+  coplevel: copRanks,
+  mediclevel: medicRanks,
+  ionlevel: ionRanks
 };
 
 export const FACTIONS = [

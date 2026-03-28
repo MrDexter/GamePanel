@@ -8,11 +8,11 @@ public static class MiscEndpoints
     public static IEndpointRouteBuilder MapMiscEndpoints(this IEndpointRouteBuilder app)
     {
 
-        app.MapGet("/logging/GetLogs", async (string id, string? type, int? offset, int? limit, ILoggingService logging) =>
+        app.MapGet("/logging/GetLogs", async (string id, string? search, string? type, int? offset, int? limit, ILoggingService logging) =>
         {
             try 
             {
-                var logs = await logging.GetLogs(id, type, offset, limit);
+                var logs = await logging.GetLogs(id, search, type, offset, limit);
                 return Results.Ok(logs);
             } catch (InvalidDataException error)
             {
