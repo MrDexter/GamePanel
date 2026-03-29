@@ -37,7 +37,7 @@ export default function Stats() {
                 if (!response.ok) throw new Error("Fetch failed");
                 const data = await response.json();
                 setTotalRows(data.totalRows);
-                setResults(data.players);
+                setResults(data.data);
             } catch (error) {
                 console.error("Search Failed", error);
                 setResults([]); // Clear results on error

@@ -1,25 +1,26 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 // Pages
-import Stats from "@/features/Stats";
-import StatsPlayer from "@/features/StatsPlayer";
-import Breakdown from "@/features/Breakdown";
-import Home from "@/features/Home";
-import changelogData from "@/features/changelog.json"; 
-import LoginModal from "@/components/modals/Login";
-import ChangePasswordModal from "@/components/modals/ChangePassword";
-import ResetPasswordModal from "@/components/modals/ResetPassword";
+import Stats from "@/features/Stats"
+import StatsPlayer from "@/features/StatsPlayer"
+import Breakdown from "@/features/Breakdown"
+import Home from "@/features/Home"
+import Jobs from "@/features/Jobs"
+import changelogData from "@/features/changelog.json";
+import LoginModal from "@/components/modals/Login"
+import ChangePasswordModal from "@/components/modals/ChangePassword"
+import ResetPasswordModal from "@/components/modals/ResetPassword"
 // import WhitelistingModal from "@/components/modals/Whitelisting";
 // Components
-import { toast } from "sonner";
-import { jwtDecode } from "jwt-decode";
+import { toast } from "sonner"
+import { jwtDecode } from "jwt-decode"
 import {Badge } from "@/components/ui/badge"
-import { Button } from './components/ui/button';
-import { Toaster } from "@/components/ui/sonner";
-import { AuthContext } from "@/lib/AuthContext";
-import { LogIn, FileJson, Trash2, User, UserCircle } from "lucide-react";
-import { apiFetch, apiFetchPost, setLogoutHandler } from "@/lib/api";
-import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,DropdownMenuSeparator, DropdownMenuTrigger} from "@/components/ui/dropdown-menu";
+import { Button } from './components/ui/button'
+import { Toaster } from "@/components/ui/sonner"
+import { AuthContext } from "@/lib/AuthContext"
+import { LogIn, FileJson, Trash2, User, UserCircle } from "lucide-react"
+import { apiFetch, apiFetchPost, setLogoutHandler } from "@/lib/api"
+import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,DropdownMenuSeparator, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
 
 
 export default function App() {
@@ -237,32 +238,32 @@ export default function App() {
   );
 }
 
-function Jobs() {
-  return (
-    <div>This page is coming soon and will host the controls and information around the background worker. Including, Pending, In Progress, Completed, Failed and Cancelled Job. 
-      With the ability to Download, Reset and Cencel Jobs. The API is ready and viewable at api.decspage.com. Have a look at Job Management</div>
-    // <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-8">
-    //   {/* Card 1: API Status */}
-    //   <div className="bg-zinc-900 border border-border p-6 rounded-xl shadow-lg">
-    //     <h3 className="text-muted-foreground text-sm font-medium uppercase tracking-wider">
-    //       System Status
-    //     </h3>
-    //     <div className="mt-2 flex items-center gap-2">
-    //       <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse" />
-    //       <span className="text-2xl font-bold text-white">API Online</span>
-    //     </div>
-    //   </div>
+// function Jobs() {
+//   return (
+//     <div>This page is coming soon and will host the controls and information around the background worker. Including, Pending, In Progress, Completed, Failed and Cancelled Job. 
+//       With the ability to Download, Reset and Cencel Jobs. The API is ready and viewable at api.decspage.com. Have a look at Job Management</div>
+//     // <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-8">
+//     //   {/* Card 1: API Status */}
+//     //   <div className="bg-zinc-900 border border-border p-6 rounded-xl shadow-lg">
+//     //     <h3 className="text-muted-foreground text-sm font-medium uppercase tracking-wider">
+//     //       System Status
+//     //     </h3>
+//     //     <div className="mt-2 flex items-center gap-2">
+//     //       <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse" />
+//     //       <span className="text-2xl font-bold text-white">API Online</span>
+//     //     </div>
+//     //   </div>
 
-    //   {/* Card 2: Worker Status */}
-    //   <div className="bg-zinc-900 border border-border p-6 rounded-xl shadow-lg">
-    //     <h3 className="text-zinc-400 text-sm font-medium uppercase tracking-wider">
-    //       Background Worker
-    //     </h3>
-    //     <p className="mt-2 text-2xl font-bold text-white">Idle</p>
-    //   </div>
-    // </div>
-  );
-}
+//     //   {/* Card 2: Worker Status */}
+//     //   <div className="bg-zinc-900 border border-border p-6 rounded-xl shadow-lg">
+//     //     <h3 className="text-zinc-400 text-sm font-medium uppercase tracking-wider">
+//     //       Background Worker
+//     //     </h3>
+//     //     <p className="mt-2 text-2xl font-bold text-white">Idle</p>
+//     //   </div>
+//     // </div>
+//   );
+// }
 
 function Changelog() {
   return (

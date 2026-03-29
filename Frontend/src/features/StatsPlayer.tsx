@@ -313,7 +313,7 @@ export default function StatsPlayer() {
                         <DropdownMenuSeparator className="bg-background" />
                         
                         <DropdownMenuItem disabled={(user?.adminlevel || 0) < (perms?.admin?.EXPORT_DATA ?? 99)} 
-                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => handleExport(player.uid)}>
+                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => handleExport(player.playerid)}>
                         <FileJson className="h-3.5 w-3.5 text-muted-foreground" />
                         Export Metadata
                         </DropdownMenuItem>

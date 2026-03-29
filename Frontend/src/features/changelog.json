@@ -1,5 +1,19 @@
 [
   {
+    "date": "29-03-2026",
+    "version": "0.9.0",
+    "title": "The Jobs Page",
+    "type": "Feature",
+    "category": "Full",
+    "changes": [
+        { "type": "frontend", "text": "Added Jobs page layout (Similar to Stats), Data setup and Search / Pagination" },
+        { "type": "frontend", "text": "Changed Job Download endpoint to include a direct param for download to allow better error handling on frontend" },
+        { "type": "backend", "text": "Changed Jobs Endpoint to return all jobs and allow, searching, pagination and status filters" },
+        { "type": "backend", "text": "Added Job Endpoints for Cancel, Toggle Priority and Duplicate" },
+        { "type": "backend", "text": "Added better error handling for Background Worker" }
+    ]
+  },
+  {
     "date": "28-03-2026",
     "version": "0.8.8",
     "title": "Log Formatting, Pagination and Search",

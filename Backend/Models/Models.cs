@@ -71,9 +71,10 @@ public record Job (
     string Type,
     string Status,
     string Result,
-    object Payload,
+    string Payload,
+    bool Priority,
     DateTime CreatedAt,
-    DateTime InsertTime
+    DateTime UpdatedAt
 );
 
 public record LoginRequest(
@@ -126,14 +127,9 @@ public record WhitelistUpdateRequest(
     Dictionary<string, string> Updates
 );
 
-public record PaginatedPlayerRecord(
+public record PaginatedRecord<T>(
     int TotalRows,
-    List<Player> Players
-);
-
-public record PaginatedLogRecord(
-    int TotalRows,
-    List<PlayerLogs> Logs
+    IEnumerable<T> Data
 );
 
 public record LoginResponse(

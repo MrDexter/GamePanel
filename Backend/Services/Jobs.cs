@@ -8,14 +8,13 @@ namespace DecsPage.Services;
 
 public interface IJobService
 {
-  Task<List<Job>>GetJobsAsync();
+  Task<PaginatedRecord<Job>>GetJobsAsync(string? search, string? statuses, int? limit, int? offset);
   Task<Job>GetJobAsync(string id);  
-  Task<List<Job>>GetFailedJobsAsync();
   Task<object>CreateJobAsync(string type, object? payload);
   Task StartWorker();
   Task <Job>GetWaitingJobAsync(CancellationToken stopToken);
-  Task<String>UpdateJobStatusAsync(string id, string status, string result);
-  Task<bool>ResetJobState(string id);
+  Task<String>UpdateJobStatusAsync(string id, string status, string? result);
+  Task<bool>TogglePriority(string id, bool toggle);
 
 };
 
@@ -33,30 +32,68 @@ public class JobService : IJobService
         _jobWorker = jobWorker;
     }
 
-    public async Task<List<Job>>GetJobsAsync() // Add Param for Failed?
+    public async Task<PaginatedRecord<Job>>GetJobsAsync(string? search, string? statuses, int? limit, int? offset)
     {
+        var totalRows = 0;
         var result = new List<Job>();
         using (var connection = new SqlConnection(connectionString))
         {
             await connection.OpenAsync();
-            var sql = @"Select * FROM jobs WHERE status !='complete'";
+            var sql = @"Select id, type, status, payload, result, created_at, updated_at, priority, COUNT(*) OVER() AS TotalRows FROM jobs WHERE 1=1 ";
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                sql += @"
+                    AND (
+                        id LIKE '%' + @search + '%'
+                        OR type LIKE '%' + @search + '%'
+                        OR status LIKE '%' + @search + '%'
+                        OR payload LIKE '%' + @search + '%'
+                    )
+                ";
+            };
+            if (!string.IsNullOrWhiteSpace(statuses))
+            {
+                sql += "AND (status IN (SELECT TRIM(value) FROM STRING_SPLIT(@statuses, ','))) ";
+            };
+           sql += " ORDER BY created_at DESC ";
+            if (limit.HasValue || offset.HasValue)
+            {
+                sql += " OFFSET @offset ROWS";
+                if (limit.HasValue)
+                {
+                    sql += " FETCH NEXT @limit ROWS ONLY";
+                }
+            };
             using var command = new SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@statuses", statuses ?? "");
+            command.Parameters.AddWithValue("@offset", offset ?? 0);
+            command.Parameters.AddWithValue("@limit", limit ?? 0);
+            command.Parameters.AddWithValue("@search", search ?? "");
             var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
+                if (totalRows == 0)
+                {
+                    totalRows = reader.GetInt32(reader.GetOrdinal("TotalRows"));
+                }
                 var row = new Job (
                     reader["id"].ToString() ?? string.Empty,
                     reader["type"].ToString() ?? string.Empty,
                     reader["status"].ToString() ?? string.Empty,
                     reader["result"].ToString() ?? string.Empty,
                     reader["payload"].ToString() ?? "{}",
+                    Convert.ToBoolean(reader["priority"] ?? false),
                     reader.GetDateTime(reader.GetOrdinal("created_at")),
                     reader.GetDateTime(reader.GetOrdinal("updated_at"))
                 );
                 result.Add(row);
             };
         }
-        return result;
+        var response = new PaginatedRecord<Job>(
+            totalRows,
+            result
+        );
+        return response;
     }
 
     public async Task<Job>GetJobAsync(string id)
@@ -64,7 +101,7 @@ public class JobService : IJobService
         using (var connection = new SqlConnection(connectionString))
         {
             await connection.OpenAsync();
-            var sql = @"Select * FROM jobs where id = @id";
+            var sql = @"Select id, type, status, payload, result, created_at, updated_at, priority FROM jobs where id = @id";
             using var command = new SqlCommand(sql, connection);
             command.Parameters.AddWithValue("@id", id);  
             var reader = await command.ExecuteReaderAsync();
@@ -78,36 +115,11 @@ public class JobService : IJobService
                 reader["status"].ToString() ?? string.Empty,
                 reader["result"].ToString() ?? string.Empty,
                 reader["payload"].ToString() ?? "{}",
+                Convert.ToBoolean(reader["priority"] ?? false),
                 reader.GetDateTime(reader.GetOrdinal("created_at")),
                 reader.GetDateTime(reader.GetOrdinal("updated_at"))
             );
         };
-    }
-
-    public async Task<List<Job>>GetFailedJobsAsync()
-    {
-        var result = new List<Job>();
-        using (var connection = new SqlConnection(connectionString))
-        {
-            await connection.OpenAsync();
-            var sql = @"Select * FROM jobs WHERE status = 'failed'";
-            using var command = new SqlCommand(sql, connection);
-            var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                var row = new Job (
-                    reader["id"].ToString() ?? string.Empty,
-                    reader["type"].ToString() ?? string.Empty,
-                    reader["status"].ToString() ?? string.Empty,
-                    reader["result"].ToString() ?? string.Empty,
-                    reader["payload"].ToString() ?? "{}",
-                    reader.GetDateTime(reader.GetOrdinal("created_at")),
-                    reader.GetDateTime(reader.GetOrdinal("updated_at"))
-                );
-                result.Add(row);
-            };
-        }
-        return result;
     }
 
     public async Task<object>CreateJobAsync(string type, object? payload)
@@ -138,7 +150,7 @@ public class JobService : IJobService
         using (var connection = new SqlConnection(connectionString))
         {
             await connection.OpenAsync();
-            var sql = "WITH cte AS (SELECT TOP (1) * FROM jobs WHERE status = 'incomplete' ORDER BY created_at ASC) UPDATE cte SET status = 'processing', updated_at = GETDATE() OUTPUT INSERTED.*;";
+            var sql = "WITH cte AS (SELECT TOP (1) * FROM jobs WHERE status = 'incomplete' ORDER BY created_at ASC) UPDATE cte SET status = 'Processing', updated_at = GETDATE() OUTPUT INSERTED.*;";
             using var command = new SqlCommand(sql, connection);
             using var reader = await command.ExecuteReaderAsync();
             if (!await reader.ReadAsync())
@@ -149,13 +161,14 @@ public class JobService : IJobService
                 reader["status"].ToString() ?? string.Empty,
                 reader["result"].ToString() ?? string.Empty,
                 reader["payload"].ToString() ?? "{}",
+                Convert.ToBoolean(reader["priority"] ?? false),
                 reader.GetDateTime(reader.GetOrdinal("created_at")),
                 reader.GetDateTime(reader.GetOrdinal("updated_at"))
             );
         };
     }
 
-    public async Task<string>UpdateJobStatusAsync(string id, string status, string result)
+    public async Task<string>UpdateJobStatusAsync(string id, string status, string? result)
     {
         using (var connection = new SqlConnection(connectionString))
         {
@@ -164,32 +177,34 @@ public class JobService : IJobService
             using var command = new SqlCommand(sql, connection);
             command.Parameters.AddWithValue("@status", status);
             command.Parameters.AddWithValue("@id", id);
-            command.Parameters.AddWithValue("@result", result);
+            command.Parameters.AddWithValue("@result", result ?? "");
             int reader = await command.ExecuteNonQueryAsync();
             if (reader == 0)
             {
-                return "Failed";
+                throw new InvalidDataException("Failed to Update Job!");
             }
-            return "Seuccess";
+            // Manual Trigger Worker loop on job create
+            if (status == "Incomplete")
+                _ = StartWorker();
+            return "Success";
         }
     }
 
-    public async Task<bool>ResetJobState(string id)
+    public async Task<bool>TogglePriority(string id, bool toggle)
     {
-       using (var connection = new SqlConnection(connectionString))
+        using (var connection = new SqlConnection(connectionString))
         {
             await connection.OpenAsync();
-            var sql = $"UPDATE jobs SET status = 'Incomplete' WHERE id = @id";
+            var sql = $"UPDATE jobs SET priority = @toggle WHERE id = @id";
             using var command = new SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@toggle", toggle);
             command.Parameters.AddWithValue("@id", id);
             int reader = await command.ExecuteNonQueryAsync();
             if (reader == 0)
-            {
-                return false;
-            };
-            // Manual Trigger Worker loop on job create
-            _ = StartWorker();
+                throw new InvalidDataException("Failed to Set to Priority");
             return true;
-        } 
+        }
     }
+
+
 };

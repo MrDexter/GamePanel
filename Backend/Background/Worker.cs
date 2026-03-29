@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using DecsPage.Services;
+using DecsPage.Models;
 
 namespace DecsPage.Background;
 
@@ -32,14 +33,16 @@ public class JobWorker : IJobWorker //BackgroundService
 
         while (!stopToken.IsCancellationRequested)
         {
+            IJobService? _jobService = null;
+            Job? job = null;
             try
             {
                 using var scope = _serviceProvider.CreateScope();
 
-                var _jobService = scope.ServiceProvider.GetRequiredService<IJobService>();
+                _jobService = scope.ServiceProvider.GetRequiredService<IJobService>();
                 var _processorService = scope.ServiceProvider.GetRequiredService<IProcessorService>();
 
-                var job = await _jobService.GetWaitingJobAsync(stopToken);
+                job = await _jobService.GetWaitingJobAsync(stopToken);
                 if (job is null)
                 {
                     // No job found, wait
@@ -47,28 +50,25 @@ public class JobWorker : IJobWorker //BackgroundService
                     await Task.Delay(TimeSpan.FromSeconds(5), stopToken);
                     continue;
                 }
-                _logger.LogInformation("Job Found Starting Processing");
-
-                // var status = await _jobService.UpdateJobStatusAsync(job.Id, "Processing", "Processing");
+                _logger.LogInformation("Job Found ID: " + job.Id);
 
                 // Perform Process
                 var result = await _processorService.GetJobProcessorAsync(job, stopToken);
 
-                if (result is null)
-                {
-                    _logger.LogInformation("Processing Failed, Processor Not Found");
-                    await _jobService.UpdateJobStatusAsync(job.Id, "Failed", "No Processor Found");
-                    continue;
-                }
-                _logger.LogInformation("Processing Complete");
+                _logger.LogInformation("Job Complete ID: " + job.Id);
                 await _jobService.UpdateJobStatusAsync(job.Id, "Complete", result);
             }
-            catch (OperationCanceledException) // Canceled
+            catch (OperationCanceledException error) // Canceled
             {
+                if (_jobService is not null && job is not null)
+                    await _jobService!.UpdateJobStatusAsync(job.Id, "Cancelled", error.Message);
+                _logger.LogInformation(error.Message);
             }
-            catch (Exception exception)// Job Failed
+            catch (Exception error)// Job Failed
             {
-                _logger.LogError(exception, "Failed Processing");
+                if (_jobService is not null && job is not null)
+                    await _jobService!.UpdateJobStatusAsync(job.Id, "Failed", error.Message);
+                _logger.LogError(error.Message);
             }
         }
     }

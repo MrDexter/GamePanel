@@ -6,7 +6,7 @@ namespace DecsPage.Services;
 public interface ILoggingService
 {
     Task AuditLog(string type, string id, string performedBy, string details);   
-    Task<PaginatedLogRecord> GetLogs(string id, string? search, string? tpye, int? offset, int? limit);
+    Task<PaginatedRecord<PlayerLogs>> GetLogs(string id, string? search, string? tpye, int? offset, int? limit);
 }
 
 public class LoggingService : ILoggingService
@@ -41,7 +41,7 @@ public class LoggingService : ILoggingService
         } 
     }
 
-    public async Task<PaginatedLogRecord> GetLogs(string id, string? search, string? type, int? offset, int? limit)
+    public async Task<PaginatedRecord<PlayerLogs>> GetLogs(string id, string? search, string? type, int? offset, int? limit)
     {
         var totalRows = 0;
         var results = new List<PlayerLogs>();
@@ -102,7 +102,7 @@ public class LoggingService : ILoggingService
                 results.Add(row);
             }
         };
-        var response = new PaginatedLogRecord(
+        var response = new PaginatedRecord<PlayerLogs>(
             totalRows,
             results
         );

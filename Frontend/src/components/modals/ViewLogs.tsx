@@ -63,7 +63,7 @@ export default function ViewLogsModal({open, setOpen, player}: {open: boolean; s
                 const res = await apiFetch(`/logging/GetLogs?id=${player.playerid}&search=${search}&limit=${itemPerPage}&offset=${offset}&type=${activeTab}`);
                 const data = await res.json();
                 if (res.ok) {
-                    setLogs(data.logs);
+                    setLogs(data.data);
                     setTotalRows(data.totalRows);
                 } else {
                     toast.error("Failed to Fetch Logs", { description: data.message ?? "API Error" });

@@ -9,7 +9,8 @@ public static class AppPermissions
         {"USER_RESET", 4},
         {"USER_WHITELIST", 4},
         {"USER_DELETE", 5},
-        {"EXPORT_DATA", 3}
+        {"EXPORT_DATA", 3},
+        {"JOB_MANAGEMENT", 4}
     };
 
     public static int GetPermission(string key) => 

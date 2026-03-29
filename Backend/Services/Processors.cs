@@ -25,8 +25,9 @@ public class ProcessorService : IProcessorService
     private readonly IWebHostEnvironment _env;
     private readonly IPlayerService _playerService;
     private readonly IGangService _gangService;
+    private readonly IJobService _jobService;
 
-    public ProcessorService(IConfiguration config, ILogger<ProcessorService> logger, IWebHostEnvironment env, IPlayerService playerService, IGangService gangService)
+    public ProcessorService(IConfiguration config, ILogger<ProcessorService> logger, IWebHostEnvironment env, IPlayerService playerService, IGangService gangService, IJobService jobService)
     {
         connectionString = config.GetConnectionString("DefaultConnection")
         ?? throw new Exception("No Default Connection");
@@ -43,6 +44,7 @@ public class ProcessorService : IProcessorService
         _env = env;
         _playerService = playerService;
         _gangService = gangService;
+        _jobService = jobService;
     }
 
     public async Task<string>UploadBlobAsync(string name, string content, CancellationToken stopToken)
@@ -57,6 +59,11 @@ public class ProcessorService : IProcessorService
     {
         var blob = _blobContainer.GetBlobClient(name);
 
+        if (!await blob.ExistsAsync())
+        {
+            throw new InvalidDataException("Export file not found.");
+        }
+
         var url = blob.GenerateSasUri(BlobSasPermissions.Read, DateTime.UtcNow.Add(expiry));
 
         return url.ToString();
@@ -64,7 +71,7 @@ public class ProcessorService : IProcessorService
 
     public async Task<string>ConvertToCSV<T>(string id, string type, IEnumerable<T> data, CancellationToken stopToken)
     {
-         var sb = new StringBuilder();
+        var sb = new StringBuilder();
 
         if (data.FirstOrDefault() is IDictionary<string, object> firstRow)
         {
@@ -97,6 +104,9 @@ public class ProcessorService : IProcessorService
  
         var filename = $"{type}_{id}_{DateTime.UtcNow:ddMMyyyyHHmmss}.csv";
 
+        var job = await _jobService.GetJobAsync(id);
+        if (job.Status == "Cancel")
+            throw new OperationCanceledException("Cancel Requested!");
         if (_env.IsDevelopment())
         {
             var folder = Path.Combine(Directory.GetCurrentDirectory(), "exports");
@@ -120,7 +130,7 @@ public class ProcessorService : IProcessorService
             {
                 case "playersExport":
                     var players = await _playerService.GetAllPlayers(null, null);
-                    return await ConvertToCSV(job.Id, "playersExport", players.Players, stopToken);
+                    return await ConvertToCSV(job.Id, "playersExport", players.Data, stopToken);
                 case "playerExport":
                     var player = await _playerService.GetPlayer(data!["playerId"]);
                     return await ConvertToCSV(job.Id, "playerExport", player, stopToken);
@@ -131,14 +141,14 @@ public class ProcessorService : IProcessorService
                     var gang = await _gangService.GetGang(data!["gangId"]);
                     return await ConvertToCSV(job.Id, "gangExport", gang, stopToken);
                 default:
-                    return null!;
+                    throw new InvalidDataException("Processor not found");
 
             }
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, "Failed Processor");
-            return null!;
+            throw new InvalidOperationException("An Error Occured trying get Processor");
         }
     }
 
