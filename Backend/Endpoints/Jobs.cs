@@ -23,10 +23,15 @@ public static class JobEndpoints
 
         group.MapGet("/{id}", async (string id, IJobService jobs) =>
         {
-            var result = await jobs.GetJobAsync(id);
-            if (result is null)
-            {return Results.NotFound();};
-            return Results.Ok(result);
+            try
+            {
+                var result = await jobs.GetJobAsync(id);
+                return Results.Ok(result);
+                
+            } catch (InvalidDataException error)
+            {
+                return Results.NotFound(new { message = error.Message });
+            };
         })
         .WithSummary("Get a Job")
         .WithDescription("Retrieve a job by ID")
@@ -41,9 +46,9 @@ public static class JobEndpoints
                     return Results.NotFound(new { message = "Job not found!" });
 
                 var payloadObject = JsonSerializer.Deserialize<Dictionary<string, object>>(job.Payload);
-                var newId = await jobs.CreateJobAsync(job.Type, payloadObject);
+                var jobId = await jobs.CreateJobAsync(job.Type, payloadObject);
                 
-                return Results.Accepted($"/jobs/{newId}", new {newId});
+                return Results.Accepted($"/jobs/{jobId}", new {jobId});
             } catch (InvalidDataException error)
             {
                 return Results.BadRequest(new {message = error.Message});
@@ -85,7 +90,7 @@ public static class JobEndpoints
                 if (job.Status != "Failed")
                     return Results.BadRequest(new { message = "The job has not Failed!"});
                 await jobs.UpdateJobStatusAsync(id, "Incomplete", "");
-                return Results.Ok("Job has been reset!");
+                return Results.Ok(new {message = "Job has been reset!"});
             } catch (InvalidDataException error)
             {
                 return Results.NotFound(new {message = error.Message});

@@ -107,7 +107,7 @@ public class JobService : IJobService
             var reader = await command.ExecuteReaderAsync();
             if (!await reader.ReadAsync())
             {
-                return null!;
+                throw new InvalidDataException("Job not found!");
             }
             return new Job (
                 reader["id"].ToString() ?? string.Empty,

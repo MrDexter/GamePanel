@@ -29,7 +29,7 @@ public class LoggingService : ILoggingService
             var sql = @"Insert INTO audit_log (event_type, player_id, performed_by, details) VALUES (@type, @id, @performedBy, @details)";
             using var command = new SqlCommand(sql, connection);
             command.Parameters.AddWithValue("@type", type);
-            command.Parameters.AddWithValue("@id", id);
+            command.Parameters.AddWithValue("@id", id ?? "");
             command.Parameters.AddWithValue("@performedBy", performedBy);
             command.Parameters.AddWithValue("@details", details);
 

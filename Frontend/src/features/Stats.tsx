@@ -3,22 +3,38 @@ import {Input } from "@/components/ui/input"
 // import {Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import {copRanks, medicRanks, ionRanks, formatDate, formatMoney} from "@/lib/constants"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { apiFetch } from "@/lib/api"
 import LoadingOverlay from "@/components/modals/Loading"
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function Stats() {
-    const [search, setSearch] = useState("")
+    const [searchParams, setSearchParams] = useSearchParams();
+    const search = searchParams.get("search") ?? ""
     const [results, setResults] = useState<any[]>([])
     const [isLoading, setIsLoading] = useState(false);
-    const [currentPage, setCurrentPage] = useState(0);
+    const currentPage = Number(searchParams.get("page") ?? 1);
     const [totalRows, setTotalRows] = useState(1);
     const itemPerPage = 12;
-    const totalPages = Math.ceil(totalRows / itemPerPage);
-    const offset = itemPerPage * currentPage;
+    const totalPages = Math.max(1, Math.ceil(totalRows / itemPerPage));
+    const offset = Math.max(0, (itemPerPage * (currentPage - 1)));
     const navigate = useNavigate();
 
+    const updateParams = (params: any) => {
+        setSearchParams(prev => {
+            const newParams = new URLSearchParams(prev);
+
+            Object.keys(params).forEach(key => {
+            if (params[key] === "" || params[key] === null) {
+                newParams.delete(key);
+            } else {
+                newParams.set(key, params[key]);
+            }
+            });
+
+            return newParams;
+        });
+    };
     useEffect(() => {
 
 /*         if (!search.trim()) {
@@ -37,7 +53,12 @@ export default function Stats() {
                 if (!response.ok) throw new Error("Fetch failed");
                 const data = await response.json();
                 setTotalRows(data.totalRows);
-                setResults(data.data);
+                setResults(data.data);            
+                const totalPages = Math.max(1, Math.ceil(data.totalRows / itemPerPage));
+                const safePage = Math.min(Math.max(currentPage, 1), totalPages);
+                if (safePage !== currentPage) {
+                    updateParams({ page: safePage });
+                }
             } catch (error) {
                 console.error("Search Failed", error);
                 setResults([]); // Clear results on error
@@ -46,7 +67,7 @@ export default function Stats() {
             }
         }, search.trim() ? 500 : 0);
         return () => clearTimeout(delayedSearch)
-    }, [search, itemPerPage, offset]);
+    }, [search, currentPage]);
     return (
         <div className="max-w-4xl lg:max-w-7xl mx-auto py-10 space-y-8">
             <div className="text-center space-y-2">
@@ -63,7 +84,7 @@ export default function Stats() {
                     <Input 
                     placeholder="Enter Name or ID..." 
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    onChange={(e) =>  updateParams({ search: e.target.value, page: 1})}
                     className="bg-zinc-950 border-border text-white"
                     />
                 </div>
@@ -151,20 +172,20 @@ export default function Stats() {
                 
                 <div className="flex gap-1">
                     <button 
-                        disabled={currentPage === 0}
-                        onClick={() => setCurrentPage(prev => prev - 1)}
+                        disabled={currentPage <= 1}
+                        onClick={() => updateParams({ page: currentPage - 1})}
                         className="p-2 border border-border hover:bg-card disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     >
                         <ChevronLeft className="h-4 w-4" />
                     </button>
 
                     <div className="flex items-center px-4 text-xs font-mono">
-                        {currentPage + 1} / {totalPages}
+                        {currentPage > totalPages ? "1" : currentPage } / {totalPages}
                     </div>
 
                     <button 
-                        disabled={currentPage >= totalPages - 1}
-                        onClick={() => setCurrentPage(prev => prev + 1)}
+                        disabled={currentPage >= totalPages}
+                        onClick={() =>  updateParams({ page: currentPage + 1 })}
                         className="p-2 border border-border hover:bg-card disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     >
                         <ChevronRight className="h-4 w-4" />

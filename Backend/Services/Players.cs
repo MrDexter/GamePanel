@@ -4,6 +4,7 @@ using DecsPage.Constants;
 using Microsoft.AspNetCore.Mvc;
 using Azure.Core;
 using System.Transactions;
+using System.Text.Json;
 
 namespace DecsPage.Services;
 
@@ -89,7 +90,7 @@ public class PlayerService : IPlayerService
         using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        var sql = "Select uid, name, aliases, playerid, cash, bankacc, adminLevel, donorlevel, copLevel, tfulevel, ncalevel, npaslevel, mpulevel, acadlevel, ionLevel, deltalevel, umlevel,  iaflevel, irulevel, medicLevel, hemslevel, hartlevel, rplevel, civ_licenses, insert_time, van_login, cop_login, nhs_login, last_seen, playerXP, donorExpiry, playtime_civ, playtime_cop, playtime_nhs, playtime_cop, playtime_opfor FROM players WHERE CAST(uid AS NVARCHAR) = @uid OR playerid = @uid";
+        var sql = "Select uid, name, aliases, playerid, cash, bankacc, adminlevel, donorlevel, coplevel, tfulevel, ncalevel, npaslevel, mpulevel, acadlevel, ionlevel, deltalevel, umlevel, iaflevel, irulevel, mediclevel, hemslevel, hartlevel, rplevel, civ_licenses, insert_time, van_login, cop_login, nhs_login, last_seen, playerXP, donorExpiry, playtime_civ, playtime_cop, playtime_nhs, playtime_cop, playtime_opfor FROM players WHERE CAST(uid AS NVARCHAR) = @uid OR playerid = @uid";
         using (var command = new SqlCommand(sql, connection))
         {
             command.Parameters.AddWithValue("@uid", id);
@@ -129,17 +130,31 @@ public class PlayerService : IPlayerService
             var gang =  new List<Gangs>();
             while (await reader1.ReadAsync())
             {
-                var rawMembers = reader1["members"].ToString() ?? string.Empty;
-                var cleanMembers = rawMembers.Replace("[[", "").Replace("]]", "").Replace("\"", "").Split("],[");
-
+                var rawMembers = reader1["members"]?.ToString();
                 var memberList = new List<GangMember>();
-                foreach (var m in cleanMembers) {
-                    var parts = m.Split(",");
-                    memberList.Add(new GangMember (
-                        parts[2].Replace("\"", "").Trim(),
-                        parts[0].Replace("\"", "").Trim(),
-                        int.Parse(parts[1])
-                    ));
+
+                if (!string.IsNullOrWhiteSpace(rawMembers))
+                {
+                    var fixedMembers = rawMembers.Replace("\"\"", "\"").Trim();
+
+                    if (fixedMembers.StartsWith("\"") && fixedMembers.EndsWith("\""))
+                    {
+                        fixedMembers = fixedMembers[1..^1];
+                    }
+
+                    var members = JsonSerializer.Deserialize<List<object[]>>(fixedMembers);
+
+                    if (members is not null)
+                    {
+                        foreach (var m in members)
+                        {
+                            memberList.Add(new GangMember(
+                                m[2]?.ToString() ?? "",
+                                m[0]?.ToString() ?? "",
+                                int.Parse(m[1]?.ToString() ?? "1")
+                            ));
+                        }
+                    }
                 };
 
                 var row1 = new Gangs(
@@ -213,7 +228,7 @@ public class PlayerService : IPlayerService
         {
             await connection.OpenAsync();
 
-            var sql = "SELECT TOP 15 uid, name, playerid, cash, bankacc, adminLevel, copLevel, ionLevel, medicLevel, last_seen, insert_time, COUNT(*) OVER() AS TotalRows From players WHERE name LIKE '%' + @search + '%' OR aliases LIKE '%' + @search + '%' OR playerid = @search OR CAST(uid AS NVARCHAR) = @search";
+            var sql = "SELECT TOP 15 uid, name, playerid, cash, bankacc, adminlevel, coplevel, ionlevel, mediclevel, last_seen, insert_time, COUNT(*) OVER() AS TotalRows From players WHERE name LIKE '%' + @search + '%' OR aliases LIKE '%' + @search + '%' OR playerid = @search OR CAST(uid AS NVARCHAR) = @search";
 
             using var command = new SqlCommand(sql, connection);
             command.Parameters.AddWithValue("@search", search);

@@ -263,7 +263,7 @@ export default function StatsPlayer() {
                         </Badge>
                         {player.adminlevel > 0 &&(
                             <Badge variant="outline" className="text-[10px] border-blue-500 text-blue-500 font-mono tracking-tighter">
-                            Staff
+                            {player.adminlevel > 4 ? "Staff Lead" : "Staff"}
                             </Badge> 
                         )}
                         {player.donorlevel > 0 &&(

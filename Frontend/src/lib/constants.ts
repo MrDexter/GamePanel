@@ -1,9 +1,13 @@
-export const formatDate = (dateString: string) => {
+export const formatDate = (dateString: string, includeTime: boolean = false) => {
   if (!dateString) return "N/A";
-  return new Date(dateString).toLocaleDateString("en-GB", {
+  return new Date(dateString).toLocaleString("en-GB", {
     day: "2-digit",
     month: "2-digit",
-    year: "numeric"
+    year: "numeric",
+    ...(includeTime && {
+      hour: "2-digit",
+      minute: "2-digit"
+    })
   });
 };
 

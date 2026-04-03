@@ -51,10 +51,10 @@ public class JobWorker : IJobWorker //BackgroundService
                     continue;
                 }
                 _logger.LogInformation("Job Found ID: " + job.Id);
-
+                await Task.Delay(TimeSpan.FromSeconds(5), stopToken); // Delay added to be able to view process live
                 // Perform Process
                 var result = await _processorService.GetJobProcessorAsync(job, stopToken);
-
+                await Task.Delay(TimeSpan.FromSeconds(5), stopToken); // Delay added to be able to view process live
                 _logger.LogInformation("Job Complete ID: " + job.Id);
                 await _jobService.UpdateJobStatusAsync(job.Id, "Complete", result);
             }

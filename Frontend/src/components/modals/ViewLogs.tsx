@@ -214,7 +214,7 @@ export default function ViewLogsModal({open, setOpen, player}: {open: boolean; s
                 </button>
 
                 <div className="flex items-center px-4 text-xs font-mono">
-                    {currentPage + 1} / {totalPages}
+                    {(currentPage + 1) > totalPages ? "1" : (currentPage + 1) } / {totalPages}
                 </div>
 
                 <button 

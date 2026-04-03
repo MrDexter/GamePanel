@@ -1,5 +1,23 @@
 [
   {
+    "date": "03-04-2026",
+    "version": "0.9.1",
+    "title": "Finalizing the Jobs page",
+    "type": "Feature",
+    "category": "Full",
+    "changes": [
+      { "type": "frontend", "text": "Added live job monitoring with automatic refresh (7.5s idle / 2.5s when jobs are active)." },
+      { "type": "frontend", "text": "Added 'Load New Jobs' button to prevent job list reordering while monitoring active jobs." },
+      { "type": "frontend", "text": "Fixed capitalization issue causing some permissions to not display correctly on user profiles." },
+      { "type": "backend", "text": "Added temporary 10 second delay to job processing to allow visible active job monitoring on frontend." },
+      { "type": "frontend", "text": "Fixed pagination issue where current page could exceed total page count." },
+      { "type": "frontend", "text": "Added URL parameters for pagination and search to support refresh persistence, page sharing, and navigation." },
+      { "type": "backend", "text": "Fixed group member parsing issue where only the first member was being handled correctly." },
+      { "type": "frontend", "text": "Added optional time parameter to FormatDate for HH:MM display." },
+      { "type": "backend", "text": "Added audit logging to admin user management actions." }
+    ]
+  },
+  {
     "date": "29-03-2026",
     "version": "0.9.0",
     "title": "The Jobs Page",
@@ -10,7 +28,7 @@
         { "type": "frontend", "text": "Changed Job Download endpoint to include a direct param for download to allow better error handling on frontend" },
         { "type": "backend", "text": "Changed Jobs Endpoint to return all jobs and allow, searching, pagination and status filters" },
         { "type": "backend", "text": "Added Job Endpoints for Cancel, Toggle Priority and Duplicate" },
-        { "type": "backend", "text": "Added better error handling for Background Worker" }
+        { "type": "backend", "text": "Added better error handling for Background Worker and Cancel Check" }
     ]
   },
   {

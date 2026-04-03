@@ -4,26 +4,47 @@ import { toast } from "sonner"
 // import {Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import {formatDate} from "@/lib/constants"
-import { useNavigate, Link } from "react-router-dom"
+import { useNavigate, Link, useSearchParams } from "react-router-dom"
 import { apiFetch, apiFetchPost } from "@/lib/api"
 import LoadingOverlay from "@/components/modals/Loading"
-import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react"
+import { ChevronLeft, ChevronRight, ChevronDown, RefreshCw  } from "lucide-react"
 import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,DropdownMenuSeparator, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
 import { Button } from '@/components/ui/button'
 import { useAuth } from "@/lib/AuthContext"
 
 export default function Stats() {
+    const navigate = useNavigate();
     const { user, perms } = useAuth();
-    const [search, setSearch] = useState("")
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [newResults, setNewResults] = useState(false);
+    const [oldTotalRows, setOldTotalRows] = useState(0);
+    const [maxId, setMaxId] = useState(0);
+    const [pendingJobs, setPendingJobs] = useState(false);
+    const statuses = searchParams.get("statuses") ?? "";
     const [results, setResults] = useState<any[]>([])
     const [isLoading, setIsLoading] = useState(false);
-    const [currentPage, setCurrentPage] = useState(0);
     const [totalRows, setTotalRows] = useState(1);
+    const search = searchParams.get("search") ?? ""
+    const currentPage = Number(searchParams.get("page") ?? 1);
     const itemPerPage = 12;
-    const totalPages = Math.ceil(totalRows / itemPerPage);
-    const offset = itemPerPage * currentPage;
-    const navigate = useNavigate();
-    const [statuses, setStatuses] = useState("");
+    const totalPages = Math.max(1, Math.ceil(totalRows / itemPerPage));
+    const offset = Math.max(0, (itemPerPage * (currentPage - 1)));
+
+    const updateParams = (params: any) => {
+        setSearchParams(prev => {
+            const newParams = new URLSearchParams(prev);
+
+            Object.keys(params).forEach(key => {
+            if (params[key] === "" || params[key] === null) {
+                newParams.delete(key);
+            } else {
+                newParams.set(key, params[key]);
+            }
+            });
+
+            return newParams;
+        });
+    };
 
     const downloadJob = async (id : number) => {
         try {
@@ -48,41 +69,78 @@ export default function Stats() {
                         description: `ID: ${data.jobId} - Job Duplicated`,
                         action: {
                             label: "View Jobs",
-                            onClick: () => navigate("/jobs")
+                            onClick: () => navigate("/jobs?search=" + data.jobId)
                         }
                     });
                 } else {
                     toast.success(data.message);
-                    setStatuses("");
                 }
             }
         } catch (error : any) {
-            toast.success(error.message);
+            toast.error(error.message);
             console.error(error);
         
         }
     }
 
-
+    const fetchData = async () => {
+        try {
+            const response = await apiFetch(`/jobs?search=${search}&limit=${itemPerPage}&offset=${offset}&statuses=${statuses}`);
+            if (!response.ok) throw new Error("Fetch failed");
+            const data = await response.json();
+            setTotalRows(data.totalRows);
+            if (oldTotalRows != 0 && data.totalRows > oldTotalRows) {
+                setNewResults(true);
+            };
+            if (oldTotalRows === 0) {
+                setOldTotalRows(data.totalRows);
+            }
+                const results = data.data;
+            if (maxId === 0) {
+                const calcMaxId = results.length > 0 ? results[0].id : 0;
+                setMaxId(Number(calcMaxId));
+            }
+            const hasActiveJobs = results.some(
+                (j: { status: string }) => j.status === "Pending" || j.status === "Processing"
+            );
+            setPendingJobs(hasActiveJobs);
+            setResults(data.data);
+            const totalPages = Math.max(1, Math.ceil(data.totalRows / itemPerPage));
+            const safePage = Math.min(Math.max(currentPage, 1), totalPages);
+            if (safePage !== currentPage) {
+                updateParams({ page: safePage });
+            }
+        } catch (error) {
+            console.error("Search Failed", error);
+            setResults([]); // Clear results on error
+            setNewResults(false);
+            setTotalRows(0);
+            setOldTotalRows(0);
+            setMaxId(0);
+        } finally {
+            setIsLoading(false);
+        }
+    }
 
     useEffect(() => {
         const delayedSearch = setTimeout(async () => {
             // setIsLoading(true);
-            try {
-                const response = await apiFetch(`/jobs?search=${search}&limit=${itemPerPage}&offset=${offset}&statuses=${statuses}`);
-                if (!response.ok) throw new Error("Fetch failed");
-                const data = await response.json();
-                setTotalRows(data.totalRows);
-                setResults(data.data);
-            } catch (error) {
-                console.error("Search Failed", error);
-                setResults([]); // Clear results on error
-            } finally {
-                setIsLoading(false);
-            }
+            setNewResults(false);
+            setMaxId(0);
+            setOldTotalRows(0);
+            fetchData()
         }, search.trim() ? 500 : 0);
         return () => clearTimeout(delayedSearch)
-    }, [search, itemPerPage, offset]);
+    }, [search, currentPage, statuses, totalPages]);
+
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            fetchData();
+        }, pendingJobs ? 2500 : 7500);
+        return () => clearInterval(interval);
+    }, [maxId, oldTotalRows, newResults, pendingJobs, search, currentPage, statuses]);
+    
+    // updateParams({ page: currentPage }); // Just updates URL if someone tries to go for a non existent page
     return (
         <div className="max-w-4xl lg:max-w-7xl mx-auto py-10 space-y-8">
             <div className="text-center space-y-2">
@@ -99,19 +157,24 @@ export default function Stats() {
                     <Input 
                     placeholder="Enter Name, ID or Details..." 
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    onChange={(e) =>  updateParams({ search: e.target.value, page: 1})}
                     className="bg-zinc-950 border-border text-white"
                     />
                 </div>
                 </CardContent>
             </Card>
-        
+            {newResults == true &&(
+                <Button onClick={() => {setMaxId(0); setNewResults(false); setOldTotalRows(totalRows);}}
+                className="text-[9px] px-1 py-1 bg-blue-600 rounded border border-border-accent text-foreground hover:bg-blue-800">
+                    Load new Results <RefreshCw className="h-4 w-4" />
+                </Button>
+            )}
             {/* 4. Display Results */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {results.map((data) => {
                 const payload = JSON.parse(data?.payload ?? "{}");
                 const statusClass = data.status === "Complete"? "text-emerald-500": data.status === "Failed"? "text-red-500": data.status === "Processing"? "text-blue-500": "text-zinc-400";
-
+                if (data.id > maxId && maxId != 0) {return null}
                 return (
                 <div
                     key={data.id}
@@ -130,7 +193,7 @@ export default function Stats() {
 
                     <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="text-[12px] px-3 py-2 bg-blue-600 rounded border border-border-accent text-foreground">
+                        <Button className="text-[12px] px-3 py-2 bg-blue-600 rounded border border-border-accent text-foreground hover:bg-blue-800">
                             ID. {data.id} <ChevronDown className="h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -187,8 +250,7 @@ export default function Stats() {
                                             {key === "playerId" ? (
                                                 <Link
                                                     to={`/stats/${value}`}
-                                                    className="text-foreground underline hover:text-blue-400"
-                                                >
+                                                    className="text-foreground underline hover:text-blue-400">
                                                     {String(value)}
                                                 </Link>
                                             ) : (
@@ -219,10 +281,10 @@ export default function Stats() {
                                 Dates
                             </span>
                             <span className="text-foreground">
-                                Updated: {formatDate(data.updatedAt)}
+                                Updated: {formatDate(data.updatedAt, true)}
                             </span>
                             <span className="text-foreground">
-                                Created: {formatDate(data.createdAt)}
+                                Created: {formatDate(data.createdAt, true)}
                             </span>
                         </div>
                     </div>
@@ -237,20 +299,20 @@ export default function Stats() {
                 
                 <div className="flex gap-1">
                     <button 
-                        disabled={currentPage === 0}
-                        onClick={() => setCurrentPage(prev => prev - 1)}
+                        disabled={currentPage <= 1}
+                        onClick={() => updateParams({ page: currentPage - 1})}
                         className="p-2 border border-border hover:bg-card disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     >
                         <ChevronLeft className="h-4 w-4" />
                     </button>
 
                     <div className="flex items-center px-4 text-xs font-mono">
-                        {currentPage + 1} / {totalPages}
+                        {(currentPage) > totalPages ? "1" : (currentPage) } / {totalPages}
                     </div>
 
                     <button 
-                        disabled={currentPage >= totalPages - 1}
-                        onClick={() => setCurrentPage(prev => prev + 1)}
+                        disabled={currentPage >= totalPages}
+                        onClick={() =>  updateParams({ page: currentPage + 1 })}
                         className="p-2 border border-border hover:bg-card disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     >
                         <ChevronRight className="h-4 w-4" />

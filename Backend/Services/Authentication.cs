@@ -33,7 +33,8 @@ public class AuthenticationService : IAuthenticationService
     public readonly SecurityKey key;
     public readonly IPlayerService player;
     private readonly ILogger<AuthenticationService> _logger;
-    public AuthenticationService(IConfiguration config, ILogger<AuthenticationService> logger, IPlayerService playerService)
+    public readonly ILoggingService logging;
+    public AuthenticationService(IConfiguration config, ILogger<AuthenticationService> logger, IPlayerService playerService, ILoggingService loggingService)
     {
         connectionString = config.GetConnectionString("DefaultConnection")
         ?? throw new InvalidOperationException("Missing Default Connection");
@@ -42,6 +43,7 @@ public class AuthenticationService : IAuthenticationService
             Encoding.UTF8.GetBytes(config["Jwt:Key"] ?? throw new InvalidOperationException("Missing Default JWT Key")));
         player = playerService;        
         _logger = logger;
+        logging = loggingService;
     }
 
     public async Task<string> GenerateToken(HttpContext context, UserDetails userDetails)
@@ -171,6 +173,7 @@ public class AuthenticationService : IAuthenticationService
                 AppPermissions.AdminPermissions   
             );
             var data = new LoginResponse(token, permissionsList);
+            await logging.AuditLog("Logged In", null!, userDetails.SteamID, "");
             return data;
         };
         
@@ -185,6 +188,11 @@ public class AuthenticationService : IAuthenticationService
     }
     public async Task<string> CreateUser (string ID, string username, HttpContext context)
     {
+        if (!context.Request.Cookies.TryGetValue("refreshToken", out var guid))
+        {   
+            throw new InvalidDataException("Session token not found!"); // Request not from a Logged in user
+        };
+        var userDetails = await GetUserDetails("RefreshToken", guid!) ?? throw new InvalidDataException("Error Fetching user details");
         try {
             var password = GenerateRandomPassword();
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(password); 
@@ -198,6 +206,7 @@ public class AuthenticationService : IAuthenticationService
                 command.Parameters.AddWithValue("@steamID", ID);
                 await command.ExecuteNonQueryAsync();
             };
+            await logging.AuditLog("User Create", ID, userDetails.SteamID, "");
             return password; 
         } catch (SqlException error) when (error.Number == 2627 || error.Number == 2601) // Duplicate Entry for Username or SteamID
         {
@@ -211,21 +220,23 @@ public class AuthenticationService : IAuthenticationService
             throw new InvalidOperationException("A record with these details already exists.");
         };
     }
-    public async Task<bool>DeleteUser(string id, HttpContext context)
+    public async Task<bool>DeleteUser(string ID, HttpContext context)
     {
         if (!context.Request.Cookies.TryGetValue("refreshToken", out var guid))
         {   
             throw new InvalidDataException("Session token not found!"); // Request not from a Logged in user
         };
+        var userDetails = await GetUserDetails("RefreshToken", guid!) ?? throw new InvalidDataException("Error Fetching user details");
         using (var connection = new SqlConnection(connectionString))
         {
             await connection.OpenAsync();
             var sql = "UPDATE users SET isActive = 0, deletedAt = @date WHERE SteamID = @id AND isActive = 1";
             using var command = new SqlCommand(sql, connection);
-            command.Parameters.AddWithValue("@id", id);
+            command.Parameters.AddWithValue("@id", ID);
             command.Parameters.AddWithValue("@date", DateTime.UtcNow);
             int reader = await command.ExecuteNonQueryAsync();
             if (reader > 0)
+                await logging.AuditLog("User Delete", ID, userDetails.SteamID, "");
                 return true;
         };
         throw new InvalidDataException("User not Found");
@@ -235,7 +246,8 @@ public class AuthenticationService : IAuthenticationService
         if (!context.Request.Cookies.TryGetValue("refreshToken", out var guid))
         {   
             throw new InvalidDataException("Session token not found!"); // Request not from a logged in user
-        };        
+        };    
+        var userDetails = await GetUserDetails("RefreshToken", guid!) ?? throw new InvalidDataException("Error Fetching user details");    
         var password = GenerateRandomPassword();
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(password); 
         using (var connection = new SqlConnection(connectionString))
@@ -247,6 +259,7 @@ public class AuthenticationService : IAuthenticationService
             command.Parameters.AddWithValue("@steamID", ID);
             int reader = await command.ExecuteNonQueryAsync();
             if (reader > 0)
+                await logging.AuditLog("User Password Reset", ID, userDetails.SteamID, "");
                 return password;
         };
         throw new InvalidDataException("Failed to Update Password"); 
@@ -275,8 +288,9 @@ public class AuthenticationService : IAuthenticationService
                 throw new InvalidDataException("Session not found or expired");
             };
         };
-        var userDetails = await GetUserDetails("RefreshToken", guid);
+        var userDetails = await GetUserDetails("RefreshToken", guid!) ?? throw new InvalidDataException("Error Fetching user details");
         var token = await GenerateToken(context, userDetails);
+        await logging.AuditLog("Password Reset", null!, userDetails.SteamID, "");
         return token!;
     }
     public async Task<bool> ChangePassword(ChangePassword req, HttpContext context)
@@ -305,6 +319,7 @@ public class AuthenticationService : IAuthenticationService
             int reader = await command.ExecuteNonQueryAsync();
             if (reader > 0)
             {
+                await logging.AuditLog("Password Change", null!, userDetails.SteamID, "");
                 return true; 
             };
             throw new InvalidDataException("Session not found or expired");
