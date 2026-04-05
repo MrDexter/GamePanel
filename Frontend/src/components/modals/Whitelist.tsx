@@ -2,23 +2,48 @@ import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useAuth } from "@/lib/AuthContext"
 import { toast } from "sonner"
-import { apiFetchPost } from "@/lib/api"
-import {unitNames, unitRankNames, FACTIONS } from "@/lib/constants"
+import { apiFetch } from "@/lib/api"
+import {unitNames, unitRankNames, FACTIONS, useQueryParams } from "@/lib/constants"
+import { ChevronDown } from "lucide-react"
 import LoadingOverlay from "@/components/modals/Loading"
 
 
 export default function WhitelistingModal({open, setOpen, player, type, onSuccess}: {open: boolean; setOpen: (val: boolean) => void; player: any; type:any; onSuccess: any}) {
-    const { user, perms } = useAuth();
-    if (!user) return null;
-    const faction = FACTIONS.find((faction : any) => faction.id === type) || null;
-    if (!faction) return null;
-    const userMainLevel = user[faction.levelKey];
-    const masterControl = user &&(userMainLevel >= faction.commandLevel || user.adminlevel > (perms?.admin?.USER_WHITELIST ?? 99)); // Faction command or Senior Staff
-    const hasAccess = user && (masterControl || userMainLevel != null || faction.units.some(unitKey => user[unitKey ?? ""] != null));
-    if (!hasAccess) return null;
-    const playerMainLevel = player[faction.levelKey];
+    const { searchParams, updateParams } = useQueryParams();
+    const isViewWhitelistOpen = searchParams.get("whitelist") !== null;
     const [pendingChanges, setPendingChanges] = useState<Record<string, string>>({});
     const [isLoading, setIsLoading] = useState(false);
+    const { user, perms } = useAuth();
+    const faction = FACTIONS.find((faction: any) => faction.id === type) ?? null;
+    const userMainLevel = faction && user ? user[faction.levelKey] : null;
+    const isAdminOverride = !!user && user.adminlevel > (perms?.admin?.USER_WHITELIST ?? 99);
+    const isFactionCommand = !!faction && !!user && userMainLevel != null && userMainLevel >= faction.commandLevel;
+    const isUnitCommand = !!faction && !!user && faction.units.some((unitKey) => unitKey && user[unitKey] != null);
+    const hasAccess = !!faction && !!user && (isAdminOverride || isFactionCommand || isUnitCommand);
+
+    const masterControl = isAdminOverride || isFactionCommand; // Used to bypass check if user is a higher rank / correct rank to whitelist.
+
+    useEffect(() => {
+        // Reset pending changes on close
+        if (!open) {
+            setIsLoading(false);
+            setPendingChanges({});
+        }
+        if (!user && open) setOpen(false);
+    }, [open, user]);
+
+    useEffect(() => {
+        if (!isViewWhitelistOpen) return;
+        if (hasAccess) return;
+
+        toast.error("You don't have permission to whitelist.");
+        updateParams({ whitelist: null });
+    }, [isViewWhitelistOpen, hasAccess, updateParams]);  
+
+    if (!faction) return null;
+    if (!hasAccess) return null;
+
+    const playerMainLevel = player[faction.levelKey];
     function delay(ms: number) {return new Promise( resolve => setTimeout(resolve, ms) );};
 
     const handleWhitelist = async () => {
@@ -26,7 +51,7 @@ export default function WhitelistingModal({open, setOpen, player, type, onSucces
             const changeCount = Object.keys(pendingChanges).length;
             if (changeCount === 0) return toast("No changes were detected!");
             setIsLoading(true)
-            const res = await apiFetchPost(`/players/${player.playerid}/updateWhitelisting`, {
+            const res = await apiFetch("POST", `/players/${player.playerid}/updateWhitelisting`, {
                 body: JSON.stringify({
                     SteamId: player.playerid,
                     Updates: pendingChanges,
@@ -52,14 +77,6 @@ export default function WhitelistingModal({open, setOpen, player, type, onSucces
         };  
     };
 
-    useEffect(() => {
-        // Reset pending changes on close
-        if (!open) {
-            setIsLoading(false);
-            setPendingChanges({});
-        }
-        if (!user && open) setOpen(false);
-    }, [open, user]);
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -80,7 +97,8 @@ export default function WhitelistingModal({open, setOpen, player, type, onSucces
                     </div>
 
                     {(userMainLevel != null && masterControl) &&(
-                        <select className={`w-full bg-popover border border-border text-xs p-2 rounded-sm outline-none focus:ring-1 focus:${faction.colorBorder}`}
+                        <div className="relative">
+                        <select className={`w-full bg-popover border border-border text-xs pl-2 pr-8 py-2 rounded-sm outline-none focus:ring-1 appearance-none focus:${faction.colorBorder}`}
                             defaultValue={playerMainLevel}
                             onChange = {(e) => {
                                 const newValue = e.target.value;
@@ -104,6 +122,10 @@ export default function WhitelistingModal({open, setOpen, player, type, onSucces
                                 )             
                             })}
                         </select>
+                        <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-foreground">
+                            <ChevronDown className="h-4 w-4" />
+                        </div>
+                    </div>
                     )}
                     <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] ${faction.colorText} mt-6 mb-2 border-b border-white/5 pb-1`}>
                         Specialist Units
@@ -118,7 +140,8 @@ export default function WhitelistingModal({open, setOpen, player, type, onSucces
                             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                                 {unitNames[unitKey]}
                             </span>
-                            <select className={`w-full bg-popover border border-border text-xs p-2 rounded-sm outline-none focus:ring-1 focus:${faction.colorBorder} mt-2`}
+                            <div className="relative w-full mt-2">
+                            <select className={`w-full bg-popover border border-border text-xs pl-2 pr-8 py-2 rounded-sm outline-none focus:ring-1 appearance-none focus:${faction.colorBorder}`}
                                 defaultValue={unitLevel}
                                 onChange = {(e) => {
                                     const newValue = e.target.value;
@@ -143,6 +166,10 @@ export default function WhitelistingModal({open, setOpen, player, type, onSucces
                                     )                  
                                 })}
                             </select>
+                            <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-foreground">
+                                <ChevronDown className="h-4 w-4" />
+                            </div>
+                            </div>
                             </div>
                         );
                     })}

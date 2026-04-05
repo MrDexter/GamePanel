@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from '@/components/ui/button';
-import { apiFetchPost } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 import LoadingOverlay from "@/components/modals/Loading"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
@@ -30,7 +30,7 @@ export default function ChangePasswordModal({open, setOpen}: { open: boolean; se
     };
     setLoading(true);
     
-    const res = await apiFetchPost("/auth/changePassword", {
+    const res = await apiFetch("POST", "/auth/changePassword", {
       body: JSON.stringify({
         oldPassword: oldPassword,
         newPassword: password,

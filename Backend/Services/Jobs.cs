@@ -128,7 +128,7 @@ public class JobService : IJobService
         using (var connection = new SqlConnection(connectionString))
         {
             await connection.OpenAsync();
-            var sql = "INSERT INTO jobs (type, status, payload, result) OUTPUT INSERTED.id VALUES (@type, 'Incomplete', @payload, NULL);";
+            var sql = "INSERT INTO jobs (type, status, payload, result) OUTPUT INSERTED.id VALUES (@type, 'Pending', @payload, NULL);";
             using var command = new SqlCommand(sql, connection);
             command.Parameters.AddWithValue("@type", type);
             command.Parameters.AddWithValue("@payload", JsonPayload);
@@ -150,7 +150,7 @@ public class JobService : IJobService
         using (var connection = new SqlConnection(connectionString))
         {
             await connection.OpenAsync();
-            var sql = "WITH cte AS (SELECT TOP (1) * FROM jobs WHERE status = 'incomplete' ORDER BY created_at ASC) UPDATE cte SET status = 'Processing', updated_at = GETDATE() OUTPUT INSERTED.*;";
+            var sql = "WITH cte AS (SELECT TOP (1) * FROM jobs WHERE status = 'Pending' ORDER BY created_at ASC) UPDATE cte SET status = 'Processing', updated_at = GETDATE() OUTPUT INSERTED.*;";
             using var command = new SqlCommand(sql, connection);
             using var reader = await command.ExecuteReaderAsync();
             if (!await reader.ReadAsync())
@@ -184,7 +184,7 @@ public class JobService : IJobService
                 throw new InvalidDataException("Failed to Update Job!");
             }
             // Manual Trigger Worker loop on job create
-            if (status == "Incomplete")
+            if (status == "Pending")
                 _ = StartWorker();
             return "Success";
         }

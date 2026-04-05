@@ -5,11 +5,12 @@ public static class AppPermissions
 {
     public static readonly Dictionary<string, int> AdminPermissions = new ()
     {
-        {"USER_CREATE", 5},
-        {"USER_RESET", 4},
-        {"USER_WHITELIST", 4},
-        {"USER_DELETE", 5},
+        {"USER_LOGS", 3},
         {"EXPORT_DATA", 3},
+        {"USER_WHITELIST", 4},
+        {"USER_RESET", 4},
+        {"USER_CREATE", 5},
+        {"USER_DELETE", 5},
         {"JOB_MANAGEMENT", 4}
     };
 

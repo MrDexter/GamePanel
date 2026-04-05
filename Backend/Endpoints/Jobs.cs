@@ -89,7 +89,7 @@ public static class JobEndpoints
                     return Results.NotFound(new { message = "Job not found!" });
                 if (job.Status != "Failed")
                     return Results.BadRequest(new { message = "The job has not Failed!"});
-                await jobs.UpdateJobStatusAsync(id, "Incomplete", "");
+                await jobs.UpdateJobStatusAsync(id, "Pending", "");
                 return Results.Ok(new {message = "Job has been reset!"});
             } catch (InvalidDataException error)
             {

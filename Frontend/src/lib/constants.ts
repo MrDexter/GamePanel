@@ -1,3 +1,39 @@
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+
+export function useQueryParams() {
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const updateParams = (
+    params: Record<string, string | number | null | boolean | undefined>,
+    replace = false
+  ) => {
+    const newParams = new URLSearchParams(searchParams);
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value === null || value === undefined || value === "") {
+        newParams.delete(key);
+      } else {
+        newParams.set(key, String(value));
+      }
+    });
+
+    navigate(
+      {
+        pathname: location.pathname,
+        search: newParams.toString() ? `?${newParams.toString()}` : "",
+      },
+      {
+        replace,
+        state: location.state,
+      }
+    );
+  };
+
+  return { searchParams, updateParams };
+}
+
 export const formatDate = (dateString: string, includeTime: boolean = false) => {
   if (!dateString) return "N/A";
   return new Date(dateString).toLocaleString("en-GB", {
@@ -99,7 +135,7 @@ export const unitRankNames: Record<string, Record<number, string>> = {
 };
 
 export const FACTIONS = [
-  { id: 'cop', label: 'Police', colorText: 'text-blue-500', colorBg: 'bg-blue-500', colorBorder: 'border-red-500', levelKey: 'coplevel', ranks: copRanks, units: ["tfulevel", "ncalevel", "npaslevel", "mpulevel", "acadlevel",], login: 'cop_login', playtime: 'playtime_cop', commandLevel: 10},
-  { id: 'med', label: 'Medics', colorText: 'text-green-500', colorBg: 'bg-green-500', colorBorder: 'border-red-500', levelKey: 'mediclevel', ranks: medicRanks, units: ["hemslevel", "hartlevel", "rplevel"], login: 'nhs_login', playtime: 'playtime_nhs', commandLevel: 7},
+  { id: 'police', label: 'Police', colorText: 'text-blue-500', colorBg: 'bg-blue-500', colorBorder: 'border-red-500', levelKey: 'coplevel', ranks: copRanks, units: ["tfulevel", "ncalevel", "npaslevel", "mpulevel", "acadlevel",], login: 'cop_login', playtime: 'playtime_cop', commandLevel: 10},
+  { id: 'medic', label: 'Medics', colorText: 'text-green-500', colorBg: 'bg-green-500', colorBorder: 'border-red-500', levelKey: 'mediclevel', ranks: medicRanks, units: ["hemslevel", "hartlevel", "rplevel"], login: 'nhs_login', playtime: 'playtime_nhs', commandLevel: 7},
   { id: 'ion', label: 'Ion', colorText: 'text-red-500', colorBg: 'bg-red-500', colorBorder: 'border-red-500', levelKey: 'ionlevel', ranks: ionRanks, units: ["deltalevel", "umlevel", "iaflevel", null, "irulevel" ], login: 'van_login', playtime: 'playtime_opfor', commandLevel: 6}, // Null for a unit filler for better layout
 ];

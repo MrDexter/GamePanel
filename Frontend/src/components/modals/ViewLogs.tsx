@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-// import { useAuth } from "@/lib/AuthContext"
+import { useAuth } from "@/lib/AuthContext"
 import { toast } from "sonner"
 import { apiFetch } from "@/lib/api"
 import LoadingOverlay from "@/components/modals/Loading"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Link  } from "react-router-dom"
-import {unitNames, unitRankNames} from "@/lib/constants"
+import {unitNames, unitRankNames, useQueryParams} from "@/lib/constants"
 import {Input } from "@/components/ui/input"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import type { AuditLog } from "@/types/modals"
@@ -15,16 +15,53 @@ import type { AuditLog } from "@/types/modals"
 
 export default function ViewLogsModal({open, setOpen, player}: {open: boolean; setOpen: (val: boolean) => void; player: any;}) {
     if (!player) return null;
-    // const { user, perms } = useAuth();
+    const { searchParams, updateParams } = useQueryParams();
+    const isViewLogsOpen = searchParams.get("viewlogs") === "true";
+    const { user, perms } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [activeTab, setActiveTab] = useState("all");
     const [logs, setLogs] = useState<any>([]);
     const [currentPage, setCurrentPage] = useState(0);
     const [totalRows, setTotalRows] = useState(1);
+    const [search, setSearch] = useState("")
+    const hasAccess = !!user && (user.adminlevel > (perms?.admin?.USER_WHITELIST ?? 99));
+
     const itemPerPage = 50;
     const totalPages = Math.ceil(totalRows / itemPerPage);
     const offset = itemPerPage * currentPage;
     const selectedId = player.playerid;
+
+    useEffect(() => {
+        const fetchLogs = setTimeout(async () => {
+        if (!open) return null;
+        if (!hasAccess) return null;
+            try {
+                const res = await apiFetch("GET", `/logging/GetLogs?id=${player.playerid}&search=${search}&limit=${itemPerPage}&offset=${offset}&type=${activeTab}`);
+                const data = await res.json();
+                if (res.ok) {
+                    setLogs(data.data);
+                    setTotalRows(data.totalRows);
+                } else {
+                    toast.error("Failed to Fetch Logs", { description: data.message ?? "API Error" });
+                }
+            } catch (error : any){
+                setIsLoading(false);
+                toast.error("Error", { description: error.message ?? "Check API status." });
+            };  
+        }, search.trim() ? 500 : 0);
+         return () => clearTimeout(fetchLogs);
+    }, [activeTab, player, search, itemPerPage, offset, open, hasAccess]);
+
+    useEffect(() => {
+        if (!isViewLogsOpen) return;
+        if (hasAccess) return;
+
+        toast.error("You don't have permission to view logs.");
+        updateParams({ viewlogs: null });
+    }, [isViewLogsOpen, hasAccess, updateParams]);  
+
+    if (!hasAccess) return null;
+
 
     const formatLogDate = (dateString: string) => {
         const date = new Date(dateString);
@@ -56,25 +93,8 @@ export default function ViewLogsModal({open, setOpen, player}: {open: boolean; s
             minute: "2-digit",
         });
     };
-    const [search, setSearch] = useState("")
-    useEffect(() => {
-        const fetchLogs = setTimeout(async () => {
-            try {
-                const res = await apiFetch(`/logging/GetLogs?id=${player.playerid}&search=${search}&limit=${itemPerPage}&offset=${offset}&type=${activeTab}`);
-                const data = await res.json();
-                if (res.ok) {
-                    setLogs(data.data);
-                    setTotalRows(data.totalRows);
-                } else {
-                    toast.error("Failed to Fetch Logs", { description: data.message ?? "API Error" });
-                }
-            } catch (error : any){
-                setIsLoading(false);
-                toast.error("Error", { description: error.message ?? "Check API status." });
-            };  
-        }, search.trim() ? 500 : 0);
-         return () => clearTimeout(fetchLogs);
-    }, [activeTab, player, search, itemPerPage, offset]);
+
+
 
     const eventFormatters: Record<string, (log: AuditLog) => string> = {
         "Rank Update": (log) => {

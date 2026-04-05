@@ -90,7 +90,9 @@ public class PlayerService : IPlayerService
         using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        var sql = "Select uid, name, aliases, playerid, cash, bankacc, adminlevel, donorlevel, coplevel, tfulevel, ncalevel, npaslevel, mpulevel, acadlevel, ionlevel, deltalevel, umlevel, iaflevel, irulevel, mediclevel, hemslevel, hartlevel, rplevel, civ_licenses, insert_time, van_login, cop_login, nhs_login, last_seen, playerXP, donorExpiry, playtime_civ, playtime_cop, playtime_nhs, playtime_cop, playtime_opfor FROM players WHERE CAST(uid AS NVARCHAR) = @uid OR playerid = @uid";
+        var sql = "SELECT p.uid, p.name, p.aliases, p.playerid, p.cash, p.bankacc, p.adminlevel, p.donorlevel, p.coplevel, p.tfulevel, p.ncalevel, p.npaslevel, p.mpulevel, p.acadlevel, p.ionlevel, p.deltalevel, p.umlevel, p.iaflevel, p.irulevel, p.mediclevel, p.hemslevel, p.hartlevel, p.rplevel, p.civ_licenses, p.insert_time, p.van_login, p.cop_login, p.nhs_login, p.last_seen, p.playerXP, p.donorExpiry, p.playtime_civ, p.playtime_cop, p.playtime_nhs, p.playtime_opfor, u.username AS accountUsername, u.isActive AS accountActive FROM players p LEFT JOIN users u ON u.steamid = p.playerid WHERE CAST(p.uid AS NVARCHAR) = @uid OR p.playerid = @uid";
+        
+        
         using (var command = new SqlCommand(sql, connection))
         {
             command.Parameters.AddWithValue("@uid", id);
@@ -101,7 +103,7 @@ public class PlayerService : IPlayerService
                 };
                 for (int i=0; i < reader.FieldCount; i++)
                 {
-                    row[reader.GetName(i)] = reader.GetValue(i);
+                    row[reader.GetName(i)] = reader.IsDBNull(i) ? null! : reader.GetValue(i);
                 };
 
                 //Fix Licenses

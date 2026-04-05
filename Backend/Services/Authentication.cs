@@ -211,10 +211,10 @@ public class AuthenticationService : IAuthenticationService
         } catch (SqlException error) when (error.Number == 2627 || error.Number == 2601) // Duplicate Entry for Username or SteamID
         {
             if (error.Message.Contains("UQ_Users_SteamID"))
-                throw new InvalidOperationException("This SteamID is already linked to an account.");
+                throw new ApiException("This Steam ID already exists", "STEAMID_EXISTS");
                 
             if (error.Message.Contains("UQ_Users_Username"))
-                throw new InvalidOperationException("This Username is already taken.");
+                throw new ApiException("This Username already exists", "USERNAME_EXISTS");
 
 
             throw new InvalidOperationException("A record with these details already exists.");
@@ -253,13 +253,13 @@ public class AuthenticationService : IAuthenticationService
         using (var connection = new SqlConnection(connectionString))
         {
             await connection.OpenAsync();
-            var sql = "UPDATE users SET PasswordHash = @passwordHash, ChangePassword = 1 WHERE SteamID = @steamID AND isActive = 1";
+            var sql = "UPDATE users SET PasswordHash = @passwordHash, ChangePassword = 1, isActive = 1 WHERE SteamID = @steamID";
             var command = new SqlCommand(sql, connection);
             command.Parameters.AddWithValue("@passwordHash", passwordHash);
             command.Parameters.AddWithValue("@steamID", ID);
             int reader = await command.ExecuteNonQueryAsync();
             if (reader > 0)
-                await logging.AuditLog("User Password Reset", ID, userDetails.SteamID, "");
+                await logging.AuditLog("User Account Reset", ID, userDetails.SteamID, "");
                 return password;
         };
         throw new InvalidDataException("Failed to Update Password"); 
@@ -334,12 +334,14 @@ public class AuthenticationService : IAuthenticationService
         using (var connection = new SqlConnection(connectionString))
         {
             await connection.OpenAsync();
-            var sql = $"SELECT id, Username, PasswordHash, AdminLevel, SteamID, changePassword FROM users WHERE {column} = @filter AND isActive = 1";
+            var sql = $"SELECT id, Username, PasswordHash, AdminLevel, SteamID, changePassword, isActive FROM users WHERE {column} = @filter";
             using var command = new SqlCommand(sql, connection); 
             command.Parameters.AddWithValue("@filter", filter);
             using var reader = await command.ExecuteReaderAsync();
             if (await reader.ReadAsync())
             {
+                Console.WriteLine(reader["isActive"]);
+                if (!Convert.ToBoolean(reader["isActive"])) throw new UnauthorizedAccessException("Account is disabled!");
                 return new UserDetails(
                     int.Parse(reader["id"].ToString() ?? string.Empty),
                     reader["Username"].ToString() ?? string.Empty,
@@ -349,7 +351,7 @@ public class AuthenticationService : IAuthenticationService
                     reader["changePassword"].ToString() ?? string.Empty
                 );
             };
-            return null!;
+            throw new UnauthorizedAccessException(column + " cannot be found!");
         };
     }
     private static string GenerateRandomPassword(int length = 12)

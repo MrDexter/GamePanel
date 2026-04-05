@@ -1,5 +1,31 @@
 [
   {
+    "date": "05-04-2026",
+    "version": "0.9.2",
+    "title": "URL Params, Confirm box and QOL Fixes",
+    "type": "Feature",
+    "category": "Full",
+    "changes": [
+      { "type": "frontend", "text": "Added URL Param for showing Login modal (?login=true)" },
+      { "type": "frontend", "text": "Added URL Param for showing Whitelisting panel on Player page (?whitelist=police)" },
+      { "type": "frontend", "text": "Added URL Param handling for View Logs on Player page (?viewlogs=true)" },
+      { "type": "frontend", "text": "Added frontend permission checks for View Logs. Limited to Admin Level 3+" },
+      { "type": "backend", "text": "Added backend permission checks to View Logs endpoint. Limited to Admin Level 3+" },
+      { "type": "frontend", "text": "Improved error handling for Whitelisting and View Logs modals" },
+      { "type": "frontend", "text": "Fixed 'Back to Search' button not always returning to Search" },
+      { "type": "frontend", "text": "Updated 'Back to Search' to remember search params like Search, Page Number and Filters" },
+      { "type": "frontend", "text": "Updated ApiFetch to support GET and POST with JWT handling and token refresh" },
+      { "type": "frontend", "text": "Added reusable Input Modal component" },
+      { "type": "frontend", "text": "Added reusable Confirm Modal component" },
+      { "type": "frontend", "text": "Added username input prompt when generating credentials if username already exists" },
+      { "type": "frontend", "text": "Added Confirm modals to Logout, User Management controls and Job controls" },
+      { "type": "backend", "text": "Added accountUsername and accountActive to GetPlayer endpoint for account management info" },
+      { "type": "frontend", "text": "Added User Management logic to show only available actions (Generate, Disable, Reset)" },
+      { "type": "frontend", "text": "Added badge to show account username and active/disabled status on Player page" },
+      { "type": "frontend", "text": "Added Status filter buttons to Jobs page" }
+    ]
+  },
+  {
     "date": "03-04-2026",
     "version": "0.9.1",
     "title": "Finalizing the Jobs page",

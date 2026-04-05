@@ -21,7 +21,7 @@ public static class MiscEndpoints
 
         })
         .WithTags("Logging")
-        // .RequireAuthorization("Staff")
+        .RequireAuthorization("Staff")
         .WithSummary("Get A Players Logs")
         .WithDescription("Get a Players Logs, Requires SteamID, Staff JWT Token and Optionaly Incoming or Outgoing Logs. Default All")
         .Produces<PlayerLogs>(200);

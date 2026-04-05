@@ -3,24 +3,25 @@ import {Input } from "@/components/ui/input"
 import { toast } from "sonner"
 // import {Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
-import {formatDate} from "@/lib/constants"
-import { useNavigate, Link, useSearchParams } from "react-router-dom"
-import { apiFetch, apiFetchPost } from "@/lib/api"
+import {formatDate, useQueryParams} from "@/lib/constants"
+import { useNavigate, Link } from "react-router-dom"
+import { apiFetch } from "@/lib/api"
 import LoadingOverlay from "@/components/modals/Loading"
 import { ChevronLeft, ChevronRight, ChevronDown, RefreshCw  } from "lucide-react"
 import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,DropdownMenuSeparator, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
 import { Button } from '@/components/ui/button'
 import { useAuth } from "@/lib/AuthContext"
+import ConfirmModal from "@/components/modals/Confirm"
+import type { Job } from "@/types/modals"
 
 export default function Stats() {
     const navigate = useNavigate();
     const { user, perms } = useAuth();
-    const [searchParams, setSearchParams] = useSearchParams();
+    const { searchParams, updateParams } = useQueryParams();
     const [newResults, setNewResults] = useState(false);
     const [oldTotalRows, setOldTotalRows] = useState(0);
     const [maxId, setMaxId] = useState(0);
     const [pendingJobs, setPendingJobs] = useState(false);
-    const statuses = searchParams.get("statuses") ?? "";
     const [results, setResults] = useState<any[]>([])
     const [isLoading, setIsLoading] = useState(false);
     const [totalRows, setTotalRows] = useState(1);
@@ -29,26 +30,48 @@ export default function Stats() {
     const itemPerPage = 12;
     const totalPages = Math.max(1, Math.ceil(totalRows / itemPerPage));
     const offset = Math.max(0, (itemPerPage * (currentPage - 1)));
+    // Statuses
+    const ALL_STATUSES = ["Pending","Processing","Complete","Failed","Cancelled"];
+    const [selectedStatuses, setSelectedStatuses] = useState<string[]>(ALL_STATUSES);
+    const statusesFromUrl = searchParams.get("statuses");
 
-    const updateParams = (params: any) => {
-        setSearchParams(prev => {
-            const newParams = new URLSearchParams(prev);
+    useEffect(() => {
+        if (statusesFromUrl) {
+            setSelectedStatuses(statusesFromUrl.split(","));
+        } else {
+            setSelectedStatuses(ALL_STATUSES);
+        }
+    }, [statusesFromUrl]);
 
-            Object.keys(params).forEach(key => {
-            if (params[key] === "" || params[key] === null) {
-                newParams.delete(key);
-            } else {
-                newParams.set(key, params[key]);
-            }
+    const statuses = selectedStatuses.length === ALL_STATUSES.length ? "" : selectedStatuses.join(",");
+
+    const toggleStatus = (status: string) => {
+        setSelectedStatuses(prev => {
+            const next = prev.includes(status)
+                ? prev.filter(s => s !== status)
+                : [...prev, status];
+            updateParams({
+                statuses: next.length === ALL_STATUSES.length ? "" : next.join(","),
+                page: 1
             });
-
-            return newParams;
+            return next;
         });
+    };
+    // Confirm
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [confirmTitle, setConfirmTitle] = useState("");
+    const [confirmDescription, setConfirmDescription]= useState("");
+    const [confirmFuncion, setConfirmFuncion] = useState<() => void>(() => {}); 
+    const openConfirm = (title: string, description : string, action: () => void) => {
+        setConfirmTitle(title);
+        setConfirmDescription(description);
+        setConfirmFuncion(() => action);
+        setIsConfirmOpen(true);
     };
 
     const downloadJob = async (id : number) => {
         try {
-            const res = await apiFetch(`/jobs/${id}/download?direct=false`);
+            const res = await apiFetch("GET", `/jobs/${id}/download?direct=false`);
             if (res.ok) {
                 const data = await res.json();
                window.location.href = data.url
@@ -61,7 +84,7 @@ export default function Stats() {
 
     const changeJobStatus = async (id : number, type : string) => {
         try {
-            const res = await apiFetchPost(`/jobs/${id}/${type}`)
+            const res = await apiFetch("POST", `/jobs/${id}/${type}`)
             if (res.ok) {
                 const data = await res.json();
                 if (type == "duplicate") {
@@ -85,7 +108,7 @@ export default function Stats() {
 
     const fetchData = async () => {
         try {
-            const response = await apiFetch(`/jobs?search=${search}&limit=${itemPerPage}&offset=${offset}&statuses=${statuses}`);
+            const response = await apiFetch("GET", `/jobs?search=${search}&limit=${itemPerPage}&offset=${offset}&statuses=${statuses}`);
             if (!response.ok) throw new Error("Fetch failed");
             const data = await response.json();
             setTotalRows(data.totalRows);
@@ -140,7 +163,7 @@ export default function Stats() {
         return () => clearInterval(interval);
     }, [maxId, oldTotalRows, newResults, pendingJobs, search, currentPage, statuses]);
     
-    // updateParams({ page: currentPage }); // Just updates URL if someone tries to go for a non existent page
+    
     return (
         <div className="max-w-4xl lg:max-w-7xl mx-auto py-10 space-y-8">
             <div className="text-center space-y-2">
@@ -152,7 +175,7 @@ export default function Stats() {
                 <CardHeader>
                 <CardTitle className="text-sm font-medium uppercase text-foreground">Search Database</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
                 <div className="flex w-full items-center space-x-2">
                     <Input 
                     placeholder="Enter Name, ID or Details..." 
@@ -160,6 +183,44 @@ export default function Stats() {
                     onChange={(e) =>  updateParams({ search: e.target.value, page: 1})}
                     className="bg-zinc-950 border-border text-white"
                     />
+                </div>
+{/*                 <div className="flex gap-4 items-center">
+                <span className="text-xs font-bold uppercase min-w-16">
+                    Include:
+                </span>
+
+                {ALL_STATUSES.map(status => (
+                    <label key={status} className="flex items-center gap-1 text-xs">
+                    <input
+                        type="checkbox"
+                        checked={selectedStatuses.includes(status)}
+                        onChange={() => toggleStatus(status)}
+                    />
+                    {status}
+                    </label>
+                ))}
+                </div> */}
+                <div className="flex flex-wrap gap-2 items-center">
+                <span className="text-xs font-bold uppercase min-w-16">
+                    Include:
+                </span>
+
+                {ALL_STATUSES.map(status => {
+                    const active = selectedStatuses.includes(status);
+
+                    return (
+                    <Button
+                        key={status}
+                        onClick={() => toggleStatus(status)}
+                        className={`h-7 px-2.5 text-xs rounded-sm
+                        ${active
+                            ? "bg-emerald-700/40 text-foreground border-emerald-500 hover:bg-emerald-800/50"
+                            : "bg-zinc-900 text-muted-foreground border-border hover:bg-zinc-800 hover:text-foreground"
+                        }`}>
+                        {status}
+                    </Button>
+                    );
+                })}
                 </div>
                 </CardContent>
             </Card>
@@ -171,7 +232,7 @@ export default function Stats() {
             )}
             {/* 4. Display Results */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {results.map((data) => {
+            {results.map((data: Job) => {
                 const payload = JSON.parse(data?.payload ?? "{}");
                 const statusClass = data.status === "Complete"? "text-emerald-500": data.status === "Failed"? "text-red-500": data.status === "Processing"? "text-blue-500": "text-zinc-400";
                 if (data.id > maxId && maxId != 0) {return null}
@@ -206,25 +267,25 @@ export default function Stats() {
                         <DropdownMenuSeparator className="bg-background" />
 
                         <DropdownMenuItem disabled={(data.status !== "Failed") || (user?.adminlevel || 0) < (perms?.admin?.JOB_MANAGEMENT ?? 99)} 
-                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => changeJobStatus(data.id, "reset")}>
+                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => openConfirm("Reset Job", "Are you sure you want to reset this job?", () => changeJobStatus(data.id, "reset"))}>
                             
                         Reset Job
                         </DropdownMenuItem>
                         
-                        <DropdownMenuItem disabled={(data.status !== "Incomplete" || data.status !== "Processing") || (user?.adminlevel || 0) < (perms?.admin?.JOB_MANAGEMENT ?? 99)} 
-                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => changeJobStatus(data.id, "cancel")}>
+                        <DropdownMenuItem disabled={(data.status !== "Pending" && data.status !== "Processing") || (user?.adminlevel || 0) < (perms?.admin?.JOB_MANAGEMENT ?? 99)} 
+                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => openConfirm("Cancel Job", "Are you sure you want to cancel this job?", () => changeJobStatus(data.id, "cancel"))}>
                         Cancel Job
                         </DropdownMenuItem>
                         
                         <DropdownMenuItem disabled={(data.status === "Processing") || (user?.adminlevel || 0) < (perms?.admin?.JOB_MANAGEMENT ?? 99)} 
-                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => changeJobStatus(data.id, "duplicate")}>
+                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => openConfirm("Duplicate Job", "Are you sure you want to duplicate this job?", () => changeJobStatus(data.id, "duplicate"))}>
                         Duplicate Job
                         </DropdownMenuItem>
 
                         <DropdownMenuSeparator className="bg-background" />
                         
-                        <DropdownMenuItem disabled={(data.status !== "Incomplete") || (user?.adminlevel || 0) < (perms?.admin?.JOB_MANAGEMENT ?? 99)} 
-                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => changeJobStatus(data.id, "priority")}>
+                        <DropdownMenuItem disabled={(data.status !== "Pending") || (user?.adminlevel || 0) < (perms?.admin?.JOB_MANAGEMENT ?? 99)} 
+                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => openConfirm("Toggle Priority", "Are you sure you want to toggle priority for this job?", () => changeJobStatus(data.id, "priority"))}>
                         Toggle Priority
                         </DropdownMenuItem>
                         
@@ -270,7 +331,7 @@ export default function Stats() {
                             <span className="text-foreground hover:text-blue-400 underline cursor-pointer opacity-0" >
                                 View
                             </span>
-                            <span className="text-foreground hover:text-blue-400 underline cursor-pointer" onClick={() => downloadJob(data.id)}>
+                            <span className="text-foreground hover:text-blue-400 underline cursor-pointer" onClick={() => openConfirm("Download Job File", "Are you sure you want to download this job?", () => downloadJob(data.id))}>
                                 Download
                             </span>
                         </div>
@@ -320,6 +381,7 @@ export default function Stats() {
                 </div>
             </div>
             <LoadingOverlay isVisible={isLoading} />
+            <ConfirmModal open={isConfirmOpen} title={confirmTitle} description={confirmDescription} onConfirm={() => {confirmFuncion()}} onClose={() => setIsConfirmOpen(false)}/>
         </div>
     )
 }

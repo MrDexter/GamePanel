@@ -153,3 +153,13 @@ public record PlayerLogs
     public string Details { get; init; } = "";
     public DateTime CreatedAt { get; init; }
 }
+
+public class ApiException : Exception
+{
+    public string Code { get; }
+
+    public ApiException(string message, string code) : base(message)
+    {
+        Code = code;
+    }
+}

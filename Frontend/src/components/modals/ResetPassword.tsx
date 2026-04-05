@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from '@/components/ui/button'
-import { apiFetchPost } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext"
 import LoadingOverlay from "@/components/modals/Loading"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -36,7 +36,7 @@ export default function ResetPasswordModal({open, setOpen}: { open: boolean; set
     
     setLoading(true);
     
-    const res = await apiFetchPost("/auth/resetPassword", {
+    const res = await apiFetch("POST", "/auth/resetPassword", {
       body: JSON.stringify({
         Password: password,
         ConfirmPassword: confirmPassword,

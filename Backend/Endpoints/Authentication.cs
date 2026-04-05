@@ -75,9 +75,9 @@ public static class AuthEndpoints
             try {
                 var password = await auth.CreateUser(ID, username, context);
                 return Results.Ok( new { password = password});
-            } catch (InvalidOperationException error)
+            } catch (ApiException error)
             {
-                return Results.Conflict(new { message = error.Message });
+                return Results.Conflict(new { message = error.Message, code = error.Code });
             };
         })
         .RequireAuthorization("Staff")

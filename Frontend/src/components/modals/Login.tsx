@@ -6,7 +6,7 @@ import { jwtDecode } from "jwt-decode"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from '@/components/ui/button'
-import { apiFetchPost } from "@/lib/api"
+import { apiFetch } from "@/lib/api"
 import LoadingOverlay from "@/components/modals/Loading"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
@@ -38,30 +38,34 @@ export default function LoginModal({open, setOpen, setUser, setIsResetPassOpen, 
     if (username == "" || password == "") {
       return toast.error("You need to enter a Username and/or Password!");
     };
-    
-    const res = await apiFetchPost("/auth/login", {
-      body: JSON.stringify({
-        Username: username,
-        Password: password,
-      }),
-    });
-    const data = await res.json();
-    setIsLoading(false);
-    if (res.ok) {
-      localStorage.setItem("token", data.token);
-      var decodedToken = jwtDecode<any>(data.token);
-      setUser(decodedToken);
-      setPerms(data.permissions);
-      toast.success("Login Successful");
-      setOpen(false);
-      if(decodedToken.ChangePassword == "True") {
-        setIsResetPassOpen(true);
-        toast.info("Security Action Required", { 
-            description: "Please update your temporary password." 
-        });
+    try {
+      const res = await apiFetch("POST", "/auth/login", {
+        body: JSON.stringify({
+          Username: username,
+          Password: password,
+        }),
+      });
+      const data = await res.json();
+      setIsLoading(false);
+      if (res.ok) {
+        localStorage.setItem("token", data.token);
+        var decodedToken = jwtDecode<any>(data.token);
+        setUser(decodedToken);
+        setPerms(data.permissions);
+        toast.success("Login Successful");
+        setOpen(false);
+        if(decodedToken.ChangePassword == "True") {
+          setIsResetPassOpen(true);
+          toast.info("Security Action Required", { 
+              description: "Please update your temporary password." 
+          });
+        };
+      } else {
+        return toast.error("Login Failed", { description: data.message ?? "Authentication Error!" });
       };
-    } else {
-      return toast.error("Login Failed", { description: data.message ?? "Authentication Error!" });
+    } catch (error: any) {
+      setIsLoading(false);
+      toast.error("Error", { description: error.message ?? "Check API status." });
     };
   };
 
@@ -74,7 +78,7 @@ export default function LoginModal({open, setOpen, setUser, setIsResetPassOpen, 
       return toast.error("Error with data");
     };
 
-    const res = await apiFetchPost("/auth/login", {
+    const res = await apiFetch("POST", "/auth/login", {
       body: JSON.stringify({
         Username: username,
         Password: password,

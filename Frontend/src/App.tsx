@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import { Routes, Route, Link } from 'react-router-dom'
 // Pages
 import Stats from "@/features/Stats"
 import StatsPlayer from "@/features/StatsPlayer"
@@ -10,7 +10,7 @@ import changelogData from "@/features/changelog.json";
 import LoginModal from "@/components/modals/Login"
 import ChangePasswordModal from "@/components/modals/ChangePassword"
 import ResetPasswordModal from "@/components/modals/ResetPassword"
-// import WhitelistingModal from "@/components/modals/Whitelisting";
+import ConfirmModal from "@/components/modals/Confirm"
 // Components
 import { toast } from "sonner"
 import { jwtDecode } from "jwt-decode"
@@ -19,8 +19,9 @@ import { Button } from './components/ui/button'
 import { Toaster } from "@/components/ui/sonner"
 import { AuthContext } from "@/lib/AuthContext"
 import { LogIn, FileJson, Trash2, User, UserCircle } from "lucide-react"
-import { apiFetch, apiFetchPost, setLogoutHandler } from "@/lib/api"
+import { apiFetch, setLogoutHandler } from "@/lib/api"
 import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,DropdownMenuSeparator, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
+import { useQueryParams } from "@/lib/constants"
 
 
 export default function App() {
@@ -28,7 +29,7 @@ export default function App() {
   useEffect(() => {
     const checkHealth = async () => {
       try {
-        const res = await apiFetch("/health");
+        const res = await apiFetch("GET", "/health");
         if (!res.ok) {
           setHealth({ status: "Offline" });
           return; 
@@ -62,7 +63,7 @@ export default function App() {
         const decodedToken = jwtDecode<any>(token);
         setUser(decodedToken);
         try {
-          var res = await apiFetchPost("/auth/refreshToken");
+          var res = await apiFetch("POST", "/auth/refreshToken");
           if (!res.ok)throw new Error("Unauthorized");
           var data = await res.json();
           localStorage.setItem("token", data.token);
@@ -87,7 +88,7 @@ export default function App() {
     const handleLogout = async (e?: React.MouseEvent<HTMLButtonElement>) => {
       if (e) e.preventDefault();
       try {
-        await apiFetchPost("/auth/logout");
+        await apiFetch("POST", "/auth/logout");
       } catch {
         console.error("Server Logout Failed clearing local session");
       } finally {
@@ -98,13 +99,14 @@ export default function App() {
     };
   };
 
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const { searchParams, updateParams } = useQueryParams();
+  const isLoginOpen = searchParams.get("login") === "true";
   const [isResetPasswordOpen, setisResetPasswordOpen] = useState(false);
   const [isChangePasswordOpen, setisChangePasswordOpen] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   return (
  <AuthContext.Provider value={{ user, setUser, logout: handleLogout, perms, setPerms }}>
-    <BrowserRouter>
       <div className='min-h-screen bg-background text-foreground font-sans selection:bg-blue-500/30'>
         
         <nav className='w-full border-b border-border bg-card backdrop-blur-md sticky top-0 z-50'>
@@ -135,7 +137,7 @@ export default function App() {
                     
                     <DropdownMenuContent align="end" className="w-48 bg-zinc-950 border-border text-foreground">
                         <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                        Admin Actions
+                        User Actions
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator className="bg-background" />
                         
@@ -155,7 +157,7 @@ export default function App() {
 
                         <DropdownMenuSeparator className="bg-background" />
                         
-                        <DropdownMenuItem className="text-xs gap-2 cursor-pointer text-red-500 focus:bg-red-500/10 focus:text-red-400" onClick={() => handleLogout()}>
+                        <DropdownMenuItem className="text-xs gap-2 cursor-pointer text-red-500 focus:bg-red-500/10 focus:text-red-400" onClick={() => setIsConfirmOpen(true)}>
                         <Trash2 className="h-3.5 w-3.5" />
                         Log Out
                         </DropdownMenuItem>
@@ -168,7 +170,7 @@ export default function App() {
                     variant="ghost" 
                     size="sm"
                     className="text-[10px] font-black uppercase tracking-widest text-foreground bg-background hover:text-white hover:bg-card transition-all"
-                    onClick={() => setIsLoginOpen(true)}>
+                    onClick={() => updateParams({ login: true })}>
                     <LogIn className="mr-2 h-3 w-3" />
                     Login
                   </Button>
@@ -214,7 +216,8 @@ export default function App() {
         <main className='px-8 py-10'>
           <ChangePasswordModal open={isChangePasswordOpen} setOpen={setisChangePasswordOpen}/>
           <ResetPasswordModal open={isResetPasswordOpen} setOpen={setisResetPasswordOpen}/>
-          <LoginModal open={isLoginOpen} setOpen={setIsLoginOpen} setUser={setUser} setPerms={setPerms} setIsResetPassOpen={setisResetPasswordOpen}/>
+          <ConfirmModal open={isConfirmOpen} title="Logout" description="Are you sure you would like to logout?" onConfirm={() => handleLogout()} onClose={() => setIsConfirmOpen(false)}/>
+          <LoginModal open={isLoginOpen} setOpen={(value) => updateParams({ login: value ? "true" : null })} setUser={setUser} setPerms={setPerms} setIsResetPassOpen={setisResetPasswordOpen}/>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/stats" element={<Stats />} />
@@ -233,7 +236,6 @@ export default function App() {
           }} 
         />
       </div>
-    </BrowserRouter>
   </AuthContext.Provider>
   );
 }

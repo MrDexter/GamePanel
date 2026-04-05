@@ -2,23 +2,25 @@ import { toast } from "sonner"
 import {Badge } from "@/components/ui/badge"
 import {Button } from "@/components/ui/button"
 import React, { useState, useEffect } from 'react'
-import { apiFetch, apiFetchPost } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 import { ClipboardCopy } from "lucide-react"; //ClipboardCheck
-import { useParams, useNavigate, Link  } from "react-router-dom";
+import { useParams, useNavigate, useLocation, Link  } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import { Pencil, EllipsisVertical, FileJson, Key, Trash2 } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import {formatDate, unitNames, formatMoney, unitRankNames, FACTIONS } from "@/lib/constants"
+import {formatDate, unitNames, formatMoney, unitRankNames, FACTIONS, useQueryParams } from "@/lib/constants"
 import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,DropdownMenuSeparator, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
 // import { jwtDecode } from 'jwt-decode';
 import { useAuth } from "@/lib/AuthContext"
 import WhitelistingModal from "@/components/modals/Whitelist"
 import ViewLogsModal from "@/components/modals/ViewLogs"
+import InputModal from "@/components/modals/Input"
+import ConfirmModal from "@/components/modals/Confirm"
+import type { Vehicles, Houses, GangMember } from "@/types/modals"
 
 
 const parseInventory = (inv: string) => {
   if (!inv || inv === '"[[],0]"') return "Empty";
-  // Quick clean of the escaped quotes and messy Arma array nesting
   const cleaned = inv.replace(/\\"/g, "").replace(/[\[\]]/g, "").split(",")[0];
   return cleaned || "Empty";
 };
@@ -36,19 +38,34 @@ const typeColor: Record<string, string> = {
 
 const copyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text);
-  // Add popup or notif?
+  toast.success("Text copied to clipboard!");
 };
 
 export default function StatsPlayer() {
     const { user, perms } = useAuth();
     const { id } = useParams();
     const [player, setPlayer] = useState<any>(null)
+    const [isInputOpen, setIsInputOpen] = useState(false);
+    const { searchParams, updateParams } = useQueryParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const checkInventory = (inv: string) => inv && inv !== '"[[],0]"';
     const checkVirtualInventory = (inv: string) => inv && inv !== '"[[],0]"';
-    const [isWhitelistingOpen, setIsWhitelistingOpen] = useState(false);
-    const [isViewLogsOpen, setIsViewLogsOpen] = useState(false);
-    const [whitelistingType, setWhitelistingType] = useState<string | null>(null);
+    const whitelistingType = searchParams.get("whitelist");
+    const isWhitelistingOpen = whitelistingType !== null;
+    const isViewLogsOpen = searchParams.get("viewlogs") === "true";
+
+    // Confirm
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [confirmTitle, setConfirmTitle] = useState("");
+    const [confirmDescription, setConfirmDescription]= useState("");
+    const [confirmFuncion, setConfirmFuncion] = useState<() => void>(() => {}); 
+    const openConfirm = (title: string, description : string, action: () => void) => {
+        setConfirmTitle(title);
+        setConfirmDescription(description);
+        setConfirmFuncion(() => action);
+        setIsConfirmOpen(true);
+    };
 
     const handleExport = async (id: string) => {
         const adminlevel = parseInt(user?.adminlevel ?? 0);
@@ -57,7 +74,7 @@ export default function StatsPlayer() {
             return;
         }
         try {
-            const res = await apiFetchPost(`/players/${id}/export`);
+            const res = await apiFetch("POST", `/players/${id}/export`);
             const data = await res.json();
             if (res.ok) {
                 toast.success("Background Job Queued", {
@@ -70,8 +87,8 @@ export default function StatsPlayer() {
             } else {
                 toast.error("Export Failed", { description: data.message ?? "API Error" });
             }
-        } catch (error){
-            toast.error("Network Error", { description: "Check API status." });
+        } catch (error : any){
+            toast.error("Network Error", { description: error.message ?? "Check API status." });
         };  
     };
 
@@ -82,7 +99,7 @@ export default function StatsPlayer() {
             return;
         }
         try {
-            const res = await apiFetchPost(`/auth/createuser?ID=${id}&username=${username}`);
+            const res = await apiFetch("POST", `/auth/createuser?ID=${id}&username=${username}`);
                 const data = await res.json();
                 if (res.ok) {
                     toast.success("User Created", {
@@ -104,9 +121,14 @@ export default function StatsPlayer() {
                             onClick: () => copyToClipboard(`User: ${username}\nPass: ${data.password}`)
                         }
                     });
-                } else {
-                    toast.error("Conflict", { description: data.message  ?? "Failed to Create User" });
+                    fetchPlayer()
+                    return;
                 }
+                if (data.code === "USERNAME_EXISTS") {
+                    setIsInputOpen(true);
+                    return;
+                }
+                toast.error("Conflict", { description: data.message  ?? "Failed to Create User" });
         } catch (error){
             toast.error("Network Error", { description: "Check API status." });
             console.log(error);
@@ -121,7 +143,7 @@ export default function StatsPlayer() {
             return;
         }
         try {
-            const res = await apiFetchPost(`/auth/adminResetPassword?ID=${id}`);
+            const res = await apiFetch("POST", `/auth/adminResetPassword?ID=${id}`);
                 const data = await res.json();
                 if (res.ok) {
                     toast.success("Password Reset", {
@@ -143,9 +165,10 @@ export default function StatsPlayer() {
                             onClick: () => copyToClipboard(`User: ${username}\nPass: ${data.password}`)
                         }
                     });
-                } else {
-                    toast.error("Error", { description: data.message  ?? "Failed to Reset User Password" });
+                    fetchPlayer()
+                    return;
                 }
+                toast.error("Error", { description: data.message  ?? "Failed to Reset User Password" });
         } catch (error){
             toast.error("Network Error", { description: "Check API status." });
             console.log(error);
@@ -159,16 +182,17 @@ export default function StatsPlayer() {
             return;
         }
         try {
-            const res = await apiFetchPost(`/auth/deleteuser?id=${id}`);
+            const res = await apiFetch("POST", `/auth/deleteuser?id=${id}`);
                 const data = await res.json();
                 if (res.ok) {
                     toast.success("User Deleted", {
                         description: `You have deleted the account for user: ${username}`,
                         duration: 5000,
                     });
-                } else {
-                    toast.error("Error", { description: data.message  ?? "Failed to Delete User" });
-                }
+                    fetchPlayer()
+                    return;
+                };
+                toast.error("Error", { description: data.message  ?? "Failed to Delete User" });
         } catch (error){
             toast.error("Network Error", { description: "Check API status." });
             console.log(error);
@@ -177,7 +201,7 @@ export default function StatsPlayer() {
 
     const fetchPlayer = async () => {
         try {
-            const res = await apiFetch(`/players/${id}`)
+            const res = await apiFetch("GET", `/players/${id}`)
             if (!res.ok) {
                 setPlayer("Not Found")
             };
@@ -222,12 +246,18 @@ export default function StatsPlayer() {
         </div>   
         );
     }
-    const gangRank = player.gang?.members.find((member: any) => member.id === player.playerid);
+    const gangRank = player.gang?.members.find((member: GangMember) => member.id === player.playerid);
     return (
         <div className="max-w-5xl mx-auto py-10 px-6 space-y-8">
         {/* Top Row: Back Button & Status */}
         <div className="flex justify-between items-center">
-            <Button variant="ghost" onClick={() => navigate(-1)} className="text-foreground hover:text-foreground hover:bg-zinc-800 hover:text-[16px]">
+            <Button variant="ghost" onClick={() => {
+            if (location.state?.from) {
+                navigate(location.state.from);
+            } else {
+                navigate("/stats");
+            }}} 
+            className="text-foreground hover:text-foreground hover:bg-zinc-800 hover:text-[16px]">
             ← Back to Search
             </Button>
             <div className="px-3 py-1 rounded-full bg-card border border-border text-[10px] font-bold uppercase tracking-widest text-foreground">
@@ -271,8 +301,8 @@ export default function StatsPlayer() {
                                 <TooltipProvider>
                                     <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <div className="cursor-help"> {/* Makes the mouse a 'help' cursor */}
-                                        <Badge variant="outline" className="text-[10px] border-red-700 text-red-700 font-mono tracking-tighter bg-red-500/5">
+                                        <div className="cursor-help">
+                                        <Badge variant="outline" className="text-[10px] border-red-500 text-red-500 font-mono tracking-tighter bg-red-500/5">
                                             Donator
                                         </Badge>
                                         </div>
@@ -280,8 +310,31 @@ export default function StatsPlayer() {
                                     <TooltipContent className="bg-zinc-950 border-border text-muted-foreground shadow-2xl">
                                         <div className="flex flex-col gap-1 p-1">
                                         <span className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">Subscription Expiry</span>
-                                        <span className="text-xs font-mono text-red-400 font-bold">
+                                        <span className="text-xs font-mono text-red-500 font-bold">
                                             {formatDate(player.donorExpiry)}
+                                        </span>
+                                        </div>
+                                    </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </div>
+                        )}
+                        {(player.accountUsername != null && (user?.adminlevel ?? 0) > (perms?.admin?.USER_RESET ?? 99)) &&(
+                            <div className='text-[10px] border-border-red-700 text-red-700 font-mono tracking-tighter'>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <div className="cursor-help">
+                                        <Badge variant="outline" className="text-[10px] border-green-500 text-green-500 font-mono tracking-tighter bg-green-500/5">
+                                            {player.accountActive ? "Active" : "Inactive"}
+                                        </Badge>
+                                        </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="bg-zinc-950 border-border text-muted-foreground shadow-2xl">
+                                        <div className="flex flex-col gap-1 p-1">
+                                        <span className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">Account Username</span>
+                                        <span className="text-xs font-mono text-green-500 font-bold">
+                                            {player.accountUsername}
                                         </span>
                                         </div>
                                     </TooltipContent>
@@ -320,30 +373,30 @@ export default function StatsPlayer() {
 
                         <DropdownMenuSeparator className="bg-background" />
 
-                        <DropdownMenuItem disabled={(user?.adminlevel || 0) < (perms?.admin?.USER_CREATE ?? 99)} 
-                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => handleGenerateCredentials(player.playerid, player.name)}>
+                        <DropdownMenuItem disabled={((user?.adminlevel || 0) < (perms?.admin?.USER_CREATE ?? 99)) || (player?.accountUsername !== null)} 
+                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => openConfirm("Generate Credentials", "Are you sure you want to generate credentials?", () => handleGenerateCredentials(player.playerid, player.name))}>
                         <Key className="h-3.5 w-3.5 text-muted-foreground" />
                         Generate Credentials
                         </DropdownMenuItem>
                         
-                        <DropdownMenuItem disabled={(user?.adminlevel || 0) < (perms?.admin?.USER_RESET ?? 99)} 
-                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => handleResetPassword(player.playerid, player.name)}>
+                        <DropdownMenuItem disabled={(user?.adminlevel || 0) < (perms?.admin?.USER_RESET ?? 99) || player?.accountActive == null} 
+                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => openConfirm("Reset User Account", "Are you sure you want to reset this users account?", () => handleResetPassword(player.playerid, player.name))}>
                         <Key className="h-3.5 w-3.5 text-muted-foreground" />
-                        Reset Password
+                        Reset Account
                         </DropdownMenuItem>
 
                         <DropdownMenuSeparator className="bg-background" />
                         
                         <DropdownMenuItem disabled={(user?.adminlevel || 0) < (perms?.admin?.USER_DELETE ?? 99)} 
-                        className="text-xs gap-2 cursor-pointer text-blue-500 focus:bg-blue-500/10 focus:text-blue-400" onClick={() => setIsViewLogsOpen(true)}>
+                        className="text-xs gap-2 cursor-pointer text-blue-500 focus:bg-blue-500/10 focus:text-blue-400" onClick={() => updateParams({ viewlogs: true })}>
                         <Trash2 className="h-3.5 w-3.5" />
                         View Logs
                         </DropdownMenuItem>
                         
-                        <DropdownMenuItem disabled={(user?.adminlevel || 0) < (perms?.admin?.USER_DELETE ?? 99)} 
-                        className="text-xs gap-2 cursor-pointer text-red-500 focus:bg-red-500/10 focus:text-red-400" onClick={() => handleRevokeCredentials(player.playerid, player.name)}>
+                        <DropdownMenuItem disabled={(user?.adminlevel || 0) < (perms?.admin?.USER_DELETE ?? 99) || !player?.accountActive} 
+                        className="text-xs gap-2 cursor-pointer text-red-500 focus:bg-red-500/10 focus:text-red-400" onClick={() => openConfirm("Disable Account", "Are you sure you want to disable the users account?", () => handleRevokeCredentials(player.playerid, player.name))}>
                         <Trash2 className="h-3.5 w-3.5" />
-                        Revoke Credentials
+                        Disable Account
                         </DropdownMenuItem>
                         
                     </DropdownMenuContent>
@@ -414,7 +467,7 @@ export default function StatsPlayer() {
                             </CardTitle>
                             <Button variant="ghost" size="icon" className={`${faction.colorText} h-6 w-6 hover:text-white hover:bg-card`} 
                                 onClick={() => {
-                                    if (canWhitelist) {setWhitelistingType(faction.id); setIsWhitelistingOpen(true);
+                                    if (canWhitelist) {updateParams({ whitelist: faction.id });
                                     } else {
                                         toast("You don't have the permissions to change anything!", { position: "top-center" });
                                     }}}>
@@ -496,7 +549,7 @@ export default function StatsPlayer() {
                                 Members
                             </span>
                             <p className="text-[10px] text-muted-foreground leading-relaxed">
-                                {player.gang.members.map((member : any , index : number) => (
+                                {player.gang.members.map((member : GangMember , index : number) => (
                                 <React.Fragment key={member.id}>
                                     <Link 
                                     to={`/stats/${member.id}`} 
@@ -541,7 +594,7 @@ export default function StatsPlayer() {
         <div className="space-y-4">
             <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground px-2">Registered Vehicles</h2>
             <div className="space-y-2">
-            {player.vehicles?.length > 0 ? player.vehicles.map((v: any) => (
+            {player.vehicles?.length > 0 ? player.vehicles.map((v: Vehicles) => (
                 <div key={v.id} className="p-4 bg-card border border-border rounded-lg flex justify-between items-center">
                 <div className="grid grid-col-1 items-center gap-1.5 shrink-0 w-fit">
                     <Badge variant="outline" className="border-border-accent bg-blue-600 text-foreground uppercase">{v.id}</Badge>
@@ -597,7 +650,7 @@ export default function StatsPlayer() {
         <div className="space-y-4">
             <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground px-2">Properties</h2>
             <div className="space-y-2">
-            {player.housing?.length > 0 ? player.housing.map((v: any) => (
+            {player.housing?.length > 0 ? player.housing.map((v: Houses) => (
                 <div key={v.id} className="p-4 bg-card border border-border rounded-lg flex justify-between items-center">
                 <div className="grid grid-col-1 items-center gap-1.5 shrink-0 w-fit">
                     <Badge variant="outline" className="border-border-accent bg-blue-600 text-foreground uppercase">{v.id}</Badge>
@@ -636,13 +689,13 @@ export default function StatsPlayer() {
                         <div className="flex flex-col border-l border-border pl-4">
                             <span className="text-[10px] md:text-[12px] text-muted-foreground uppercase">Physical</span>
                             <div className="flex items-center gap-2">
-                                <span className={`text-[12px] md:text-[14px] text-foreground font-mono" ${checkVirtualInventory(v.Contents) ? "text-amber-500" : "text-muted-foreground"}`}>
-                                        {checkVirtualInventory(v.Contents) ? "YES" : "NO"}
+                                <span className={`text-[12px] md:text-[14px] text-foreground font-mono" ${checkVirtualInventory(v.contents) ? "text-amber-500" : "text-muted-foreground"}`}>
+                                        {checkVirtualInventory(v.contents) ? "YES" : "NO"}
                                 </span>
                                         
-                                {checkInventory(v.Contents) && (
+                                {checkInventory(v.contents) && (
                                 <button 
-                                    onClick={() => copyToClipboard(parseInventory(v.Contents))}
+                                    onClick={() => copyToClipboard(parseInventory(v.contents))}
                                     className="text-muted-foreground hover:text-white transition-colors"
                                     title="Copy Raw Inventory">
                                     <ClipboardCopy className="h-3 w-3" />
@@ -666,8 +719,10 @@ export default function StatsPlayer() {
         </div>
         </div>
 
-        <WhitelistingModal open={isWhitelistingOpen} setOpen={setIsWhitelistingOpen} player={player} type={whitelistingType} onSuccess={fetchPlayer}/>
-        <ViewLogsModal open={isViewLogsOpen} setOpen={setIsViewLogsOpen} player={player}/>
+        <WhitelistingModal open={isWhitelistingOpen} setOpen={(value) => updateParams({ whitelist: value ? "true" : null })} player={player} type={whitelistingType} onSuccess={fetchPlayer}/>
+        <ViewLogsModal open={isViewLogsOpen} setOpen={(value) => updateParams({ viewlogs: value ? "true" : null })} player={player}/>
+        <ConfirmModal open={isConfirmOpen} title={confirmTitle} description={confirmDescription} onConfirm={() => {confirmFuncion()}} onClose={() => setIsConfirmOpen(false)}/>
+        <InputModal open={isInputOpen} title="Set Username" label="Username" onSubmit={(value) => handleGenerateCredentials(player.playerid, value)}onClose={() => setIsInputOpen(false)}/>
         </div>
     )
 }

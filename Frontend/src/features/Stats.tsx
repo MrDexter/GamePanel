@@ -2,16 +2,16 @@ import { useState, useEffect } from 'react'
 import {Input } from "@/components/ui/input"
 // import {Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
-import {copRanks, medicRanks, ionRanks, formatDate, formatMoney} from "@/lib/constants"
-import { useNavigate, useSearchParams } from "react-router-dom"
+import {copRanks, medicRanks, ionRanks, formatDate, formatMoney, useQueryParams} from "@/lib/constants"
+import { useLocation, useNavigate } from "react-router-dom"
 import { apiFetch } from "@/lib/api"
 import LoadingOverlay from "@/components/modals/Loading"
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 export default function Stats() {
-    const [searchParams, setSearchParams] = useSearchParams();
-    const search = searchParams.get("search") ?? ""
-    const [results, setResults] = useState<any[]>([])
+    const { searchParams, updateParams } = useQueryParams();
+    const search = searchParams.get("search") ?? "";
+    const [results, setResults] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const currentPage = Number(searchParams.get("page") ?? 1);
     const [totalRows, setTotalRows] = useState(1);
@@ -19,22 +19,8 @@ export default function Stats() {
     const totalPages = Math.max(1, Math.ceil(totalRows / itemPerPage));
     const offset = Math.max(0, (itemPerPage * (currentPage - 1)));
     const navigate = useNavigate();
+    const location = useLocation();
 
-    const updateParams = (params: any) => {
-        setSearchParams(prev => {
-            const newParams = new URLSearchParams(prev);
-
-            Object.keys(params).forEach(key => {
-            if (params[key] === "" || params[key] === null) {
-                newParams.delete(key);
-            } else {
-                newParams.set(key, params[key]);
-            }
-            });
-
-            return newParams;
-        });
-    };
     useEffect(() => {
 
 /*         if (!search.trim()) {
@@ -49,7 +35,7 @@ export default function Stats() {
                 ? `/players/search?search=${search}` 
                 : `/players?limit=${itemPerPage}&offset=${offset}`;
 
-                const response = await apiFetch(endpoint);
+                const response = await apiFetch("GET", endpoint);
                 if (!response.ok) throw new Error("Fetch failed");
                 const data = await response.json();
                 setTotalRows(data.totalRows);
@@ -96,7 +82,11 @@ export default function Stats() {
                 {results.map((player) => (
                 <div 
                     key={player.id} 
-                    onClick={() => navigate(`/stats/${player.id}`)}
+                    onClick={() => navigate(`/stats/${player.id}`, {
+                        state: {
+                            from: location.pathname + location.search
+                        }
+                    })}
                     role="button" 
                     tabIndex={0}
                     onKeyDown={(e) => e.key === 'Enter' && navigate(`/stats/${player.id}`)}
