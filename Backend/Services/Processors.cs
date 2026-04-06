@@ -129,14 +129,14 @@ public class ProcessorService : IProcessorService
             switch (job.Type)
             {
                 case "playersExport":
-                    var players = await _playerService.GetAllPlayers(null, null);
+                    var players = await _playerService.GetAllPlayers(null, null, null, null);
                     return await ConvertToCSV(job.Id, "playersExport", players.Data, stopToken);
                 case "playerExport":
                     var player = await _playerService.GetPlayer(data!["playerId"]);
                     return await ConvertToCSV(job.Id, "playerExport", player, stopToken);
                 case "gangsExport":
-                    var gangs = await _gangService.GetAllGangs(null, null);
-                    return await ConvertToCSV(job.Id, "gangsExport", gangs, stopToken);
+                    var gangs = await _gangService.GetAllGangs(null, null, null);
+                    return await ConvertToCSV(job.Id, "gangsExport", gangs.Data, stopToken);
                 case "gangExport":
                     var gang = await _gangService.GetGang(data!["gangId"]);
                     return await ConvertToCSV(job.Id, "gangExport", gang, stopToken);

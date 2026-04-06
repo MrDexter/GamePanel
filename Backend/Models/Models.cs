@@ -163,3 +163,26 @@ public class ApiException : Exception
         Code = code;
     }
 }
+
+public record DashboardPlayerStats
+{
+    public int Players { get; init; }
+    public int Police { get; init; }
+    public int PoliceCommand { get; init; }
+    public int Tfu { get; init; }
+    public int Nca { get; init; }
+    public int Npas { get; init; }
+    public int Mpu { get; init; }
+    public int PolAcad { get; init; }
+    public int Medics { get; init; }
+    public int MedicsCommand { get; init; }
+    public int Hems { get; init; }
+    public int Hart { get; init; }
+    public int MedAcad { get; init; }
+    public int Ion { get; init; }
+    public int IonCommand { get; init; }
+    public int Delta { get; init; }
+    public int Um { get; init; }
+    public int Iaf { get; init; }
+    public int IonAcad { get; init; }
+}

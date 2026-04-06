@@ -236,7 +236,7 @@ public class AuthenticationService : IAuthenticationService
             command.Parameters.AddWithValue("@date", DateTime.UtcNow);
             int reader = await command.ExecuteNonQueryAsync();
             if (reader > 0)
-                await logging.AuditLog("User Delete", ID, userDetails.SteamID, "");
+                await logging.AuditLog("User Disabled", ID, userDetails.SteamID, "");
                 return true;
         };
         throw new InvalidDataException("User not Found");

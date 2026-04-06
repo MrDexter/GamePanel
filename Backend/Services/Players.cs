@@ -11,11 +11,10 @@ namespace DecsPage.Services;
 
 public interface IPlayerService
 {
-    Task<PaginatedRecord<Player>> GetAllPlayers(int? limit, int? offset);
+    Task<PaginatedRecord<Player>> GetAllPlayers(int? limit, int? offset, string? search, string? factions);
     Task<List<Dictionary<string, object>>> GetPlayer(string id);
     Task<UpdateRank> UpdateRank(string id, string rank, string newRank);
     Task UpdateWhitelisting(HttpContext ctx, WhitelistUpdateRequest request);
-    Task<PaginatedRecord<Player>>SearchPlayersAsync(string search, int? limit, int? offset);
     Task<PlayerPerms>GetPlayerPerms(string id);
 }
 
@@ -32,7 +31,7 @@ public class PlayerService : IPlayerService
         _logging = logging; 
     }
 
-    public async Task<PaginatedRecord<Player>> GetAllPlayers(int? limit, int? offset)
+    public async Task<PaginatedRecord<Player>> GetAllPlayers(int? limit, int? offset, string? search, string? factions)
     {
         int totalRows = 0;
         var result = new List<Player>();
@@ -40,7 +39,20 @@ public class PlayerService : IPlayerService
         {
             await connection.OpenAsync();
 
-            var sql = "Select uid, name, playerid, cash, bankacc, adminLevel, copLevel, ionLevel, medicLevel, last_seen, insert_time, COUNT(*) OVER() AS TotalRows From players";
+            var sql = "Select uid, name, playerid, cash, bankacc, adminLevel, copLevel, ionLevel, medicLevel, last_seen, insert_time, COUNT(*) OVER() AS TotalRows From players WHERE 1=1";
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                sql += @" AND name LIKE '%' + @search + '%' OR aliases LIKE '%' + @search + '%' OR playerid = @search OR CAST(uid AS NVARCHAR) = @search";
+            };
+            if(!string.IsNullOrWhiteSpace(factions))
+            {
+                sql += @"AND (
+                    ('police' IN (SELECT TRIM(value) FROM STRING_SPLIT(@factions, ',')) AND coplevel > 0)
+                    OR ('nhs' IN (SELECT TRIM(value) FROM STRING_SPLIT(@factions, ',')) AND mediclevel > 0)
+                    OR ('ion' IN (SELECT TRIM(value) FROM STRING_SPLIT(@factions, ',')) AND ionlevel > 0)
+                    OR ('none' IN (SELECT TRIM(value) FROM STRING_SPLIT(@factions, ',')) AND ionlevel = 0 AND mediclevel = 0 AND coplevel = 0)
+                )";
+            }
             if (limit.HasValue || offset.HasValue)
             {
                 sql += " ORDER BY uid OFFSET @offset ROWS";
@@ -50,6 +62,8 @@ public class PlayerService : IPlayerService
                 }
             };
             using var command = new SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@search", search ?? "");
+            command.Parameters.AddWithValue("@factions", factions ?? "");
             command.Parameters.AddWithValue("@limit", limit ?? 0);
             command.Parameters.AddWithValue("@offset", offset ?? 0);
             using var reader = await command.ExecuteReaderAsync();
@@ -220,49 +234,6 @@ public class PlayerService : IPlayerService
             row["vehicles"] = vehicles;
         };
         return result; 
-    }
-
-    public async Task<PaginatedRecord<Player>> SearchPlayersAsync(string search, int? limit, int? offset)
-    {
-        var totalRows = 0;
-        var result = new List<Player>();
-        using (var connection = new SqlConnection(connectionString))
-        {
-            await connection.OpenAsync();
-
-            var sql = "SELECT TOP 15 uid, name, playerid, cash, bankacc, adminlevel, coplevel, ionlevel, mediclevel, last_seen, insert_time, COUNT(*) OVER() AS TotalRows From players WHERE name LIKE '%' + @search + '%' OR aliases LIKE '%' + @search + '%' OR playerid = @search OR CAST(uid AS NVARCHAR) = @search";
-
-            using var command = new SqlCommand(sql, connection);
-            command.Parameters.AddWithValue("@search", search);
-            using var reader = await command.ExecuteReaderAsync();
-
-            while (await reader.ReadAsync())
-            {
-                if (totalRows == 0)
-                {
-                    totalRows = reader.GetInt32(reader.GetOrdinal("TotalRows"));
-                }
-                var row = new Player(
-                    reader["uid"].ToString() ?? string.Empty,
-                    reader["name"].ToString() ?? string.Empty,
-                    reader["playerid"].ToString() ?? string.Empty,
-                    reader["cash"].ToString() ?? string.Empty,
-                    reader["bankacc"].ToString() ?? string.Empty,
-                    reader["adminLevel"].ToString() ?? string.Empty,
-                    reader["copLevel"].ToString() ?? string.Empty,
-                    reader["ionLevel"].ToString() ?? string.Empty,
-                    reader["medicLevel"].ToString() ?? string.Empty,
-                    reader.GetDateTime(reader.GetOrdinal("last_seen")),
-                    reader.GetDateTime(reader.GetOrdinal("insert_time"))
-                );
-                result.Add(row);
-            };
-        };
-        var response = new PaginatedRecord<Player>(
-            totalRows,
-            result
-        );
-        return response;
     }
 
     public async Task UpdateWhitelisting(HttpContext ctx, WhitelistUpdateRequest request)

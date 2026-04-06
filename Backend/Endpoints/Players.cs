@@ -10,14 +10,17 @@ public static class PlayerEndpoints
     {
         var group = app.MapGroup("/players").WithTags("Player Management");
 
-        group.MapGet("/", async (int? limit, int? offset, IPlayerService players) =>
+        group.MapGet("/", async (int? limit, int? offset, string? search, string? factions, IPlayerService players) =>
         {
-            var result = await players.GetAllPlayers(limit, offset);
+            var result = await players.GetAllPlayers(limit, offset, search, factions);
+            if (result is null)
+                return Results.NotFound();
+
             return Results.Ok(result);
         })
         .WithSummary("Get All Players")
-        .WithDescription("Fetches a partial profile of all player")
-        .Produces<List<Player>>(200);
+        .WithDescription("Fetches a partial profile of all players. Optional Params, Limit, Offset, Search (Name, Aliases, ID, SteamID)")
+        .Produces<PaginatedRecord<Player>>(200);
 
         group.MapGet("/{id}", async (string id, IPlayerService players) =>
         {
@@ -32,18 +35,6 @@ public static class PlayerEndpoints
         })
         .WithSummary("Get A Player")
         .WithDescription("Fetches a full profile including housing, vehicles, and gang membership using the SteamID.");
-
-        group.MapGet("/search", async (string search, int? limit, int? offset, IPlayerService players) =>
-        {
-           var result = await players.SearchPlayersAsync(search, limit, offset);
-           if (result is null)
-                return Results.NotFound();
-                
-            return Results.Ok(result);
-        })
-        .WithSummary("Search Players")
-        .WithDescription("Fetches a partial profile of all players matching search criteria. Accepts UID, SteamID, Name and Aliases")
-        .Produces<PaginatedRecord<Player>>(200);
 
         group.MapPost("/{id}/updateWhitelisting", async (HttpContext context, string id, WhitelistUpdateRequest request, IPlayerService players, ILoggingService logging) =>
         {

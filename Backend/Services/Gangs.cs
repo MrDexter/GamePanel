@@ -1,11 +1,12 @@
 using Microsoft.Data.SqlClient;
 using DecsPage.Models;
+using System.Text.Json;
 
 namespace DecsPage.Services;
 
 public interface IGangService
 {
-    Task<List<Gangs>>GetAllGangs(int? limit, int? offset);   
+    Task<PaginatedRecord<Gangs>>GetAllGangs(int? limit, int? offset, string? search);   
     Task<List<Dictionary<string,object>>>GetGang(string id);
 }
 
@@ -18,53 +19,83 @@ public class GangService : IGangService
         ?? throw new InvalidOperationException("Missing Default Connection");
     }
 
-    public async Task<List<Gangs>>GetAllGangs(int? limit, int? offset)
+    public async Task<PaginatedRecord<Gangs>>GetAllGangs(int? limit, int? offset, string? search)
     {
+        int totalRows = 0;
         var result = new List<Gangs>();
         using (var connection = new SqlConnection(connectionString))
         {
         await connection.OpenAsync();
 
-        var sql = "Select id, name, members, leader, tag, bank FROM organisations WHERE alive = 1";
+        var sql = "Select id, name, members, leader, tag, bank, COUNT(*) OVER() AS TotalRows FROM organisations WHERE alive = 1";
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            sql += @" AND (name LIKE '%' + @search + '%' OR members LIKE '%' + @search + '%' OR tag = @search OR CAST(id AS NVARCHAR) = @search)";
+        };
         if (limit.HasValue || offset.HasValue)
         {
-            sql += " ORDER BY uid OFFSET @offset ROWS";
+            sql += " ORDER BY id OFFSET @offset ROWS";
             if (limit.HasValue)
             {
                 sql += " FETCH NEXT @limit ROWS ONLY";
             }
         };
         using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@search", search ?? "");
         command.Parameters.AddWithValue("@limit", limit ?? 0);
         command.Parameters.AddWithValue("@offset", offset ?? 0);
         using var reader = await command.ExecuteReaderAsync();
 
         while (await reader.ReadAsync())
-            {     
-                var rawMembers = reader["members"].ToString() ?? string.Empty;
-                var cleanMembers = rawMembers.Replace("[[", "").Replace("]]", "").Replace("\"", "").Split("],[");
-
+            {   
+                if (totalRows == 0)
+                {
+                    totalRows = reader.GetInt32(reader.GetOrdinal("TotalRows"));
+                }  
+                var rawMembers = reader["members"]?.ToString();
                 var memberList = new List<GangMember>();
-                foreach (var m in cleanMembers) {
-                    var parts = m.Split(",");
-                    memberList.Add(new GangMember (
-                        parts[2].Replace("\"", "").Trim(),
-                        parts[0].Replace("\"", "").Trim(),
-                        int.Parse(parts[1])
-                    ));
-                };   
+
+                if (!string.IsNullOrWhiteSpace(rawMembers))
+                {
+                    var fixedMembers = rawMembers.Replace("\"\"", "\"").Trim();
+
+                    if (fixedMembers.StartsWith("\"") && fixedMembers.EndsWith("\""))
+                    {
+                        fixedMembers = fixedMembers[1..^1];
+                    }
+
+                    var members = JsonSerializer.Deserialize<List<object[]>>(fixedMembers);
+
+                    if (members is not null)
+                    {
+                        foreach (var m in members)
+                        {
+                            memberList.Add(new GangMember(
+                                m[2]?.ToString() ?? "",
+                                m[0]?.ToString() ?? "",
+                                int.Parse(m[1]?.ToString() ?? "1")
+                            ));
+                        }
+                    }
+                };
+                var tagRaw = reader["tag"]?.ToString() ?? string.Empty;
+                var tag = tagRaw.Trim('"');
                 var row = new Gangs(
                     reader["id"].ToString() ?? string.Empty,
                     reader["name"].ToString() ?? string.Empty,
                     memberList,
                     reader["leader"].ToString() ?? string.Empty,
-                    reader["tag"].ToString() ?? string.Empty,
+                    tag,
                     reader["bank"].ToString() ?? string.Empty
                 );
                 result.Add(row);
             };
         };
-        return(result);
+        var response = new PaginatedRecord<Gangs>(
+            totalRows,
+            result
+        );
+        return response;
     }
 
     public async Task<List<Dictionary<string, object>>>GetGang(string id)

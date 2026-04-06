@@ -7,16 +7,19 @@ public static class GangEndpoints
 {
     public static IEndpointRouteBuilder MapGangEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/gangs").WithTags("Gang Management");
+        var group = app.MapGroup("/groups").WithTags("Group Management");
 
-        group.MapGet("/", async (int? limit, int? offset, IGangService gangs) =>
+        group.MapGet("/", async (int? limit, int? offset, string? search, IGangService gangs) =>
         {
-            var result = await gangs.GetAllGangs(limit, offset);
+            var result = await gangs.GetAllGangs(limit, offset, search);
+            if (result is null)
+                return Results.NotFound();
+
             return Results.Ok(result);
         })
-        .WithSummary("Get All Gangs")
-        .WithDescription("Fetches all currently active gangs")
-        .Produces<List<Gangs>>(200);
+        .WithSummary("Get All Groups")
+        .WithDescription("Get all active Groups. Optional Params: Limit, Offset, Search (Name, Members, Tag, ID)")
+        .Produces<PaginatedRecord<Gangs>>(200);
 
         group.MapGet("/{id}", async (string id, IGangService gangs) =>
         {
@@ -38,8 +41,8 @@ public static class GangEndpoints
             return Results.Accepted($"/jobs/{id}", new {id});
         })
         .RequireAuthorization("Staff")
-        .WithSummary("Export All Gangs Data")
-        .WithDescription("Creates a job to export all gangs data into a CSV for download. Returns Job ID");
+        .WithSummary("Export All Groups Data")
+        .WithDescription("Creates a job to export all Groups data into a CSV for download. Returns Job ID");
 
         group.MapPost("/{id}/export", async (string id, IJobService jobs) =>
         {
@@ -47,8 +50,8 @@ public static class GangEndpoints
             return Results.Accepted($"/jobs/{jobId}", new {jobId});
         })
         .RequireAuthorization("Staff")
-        .WithSummary("Export A Gangs Data")
-        .WithDescription("Creates a job to export a gangss data into a CSV for download. Returns Job ID");
+        .WithSummary("Export A Groups Data")
+        .WithDescription("Creates a job to export a Groups data into a CSV for download. Returns Job ID");
 
         return app;
     }

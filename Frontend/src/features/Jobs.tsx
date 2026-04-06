@@ -7,7 +7,7 @@ import {formatDate, useQueryParams} from "@/lib/constants"
 import { useNavigate, Link } from "react-router-dom"
 import { apiFetch } from "@/lib/api"
 import LoadingOverlay from "@/components/modals/Loading"
-import { ChevronLeft, ChevronRight, ChevronDown, RefreshCw  } from "lucide-react"
+import { ChevronLeft, ChevronRight, ChevronDown, RefreshCw, X  } from "lucide-react"
 import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,DropdownMenuSeparator, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
 import { Button } from '@/components/ui/button'
 import { useAuth } from "@/lib/AuthContext"
@@ -31,13 +31,13 @@ export default function Stats() {
     const totalPages = Math.max(1, Math.ceil(totalRows / itemPerPage));
     const offset = Math.max(0, (itemPerPage * (currentPage - 1)));
     // Statuses
-    const ALL_STATUSES = ["Pending","Processing","Complete","Failed","Cancelled"];
+    const ALL_STATUSES = ["pending","processing","complete","failed","cancelled"];
     const [selectedStatuses, setSelectedStatuses] = useState<string[]>(ALL_STATUSES);
     const statusesFromUrl = searchParams.get("statuses");
 
     useEffect(() => {
         if (statusesFromUrl) {
-            setSelectedStatuses(statusesFromUrl.split(","));
+            setSelectedStatuses(statusesFromUrl.split(",").map(s => s.toLowerCase()));
         } else {
             setSelectedStatuses(ALL_STATUSES);
         }
@@ -47,15 +47,22 @@ export default function Stats() {
 
     const toggleStatus = (status: string) => {
         setSelectedStatuses(prev => {
-            const next = prev.includes(status)
-                ? prev.filter(s => s !== status)
-                : [...prev, status];
+            let next;
+            if (prev.includes(status)) {
+                next = prev.filter(s => s !== status);
+            } else {
+                next = [...prev, status];
+            }
             updateParams({
                 statuses: next.length === ALL_STATUSES.length ? "" : next.join(","),
-                page: 1
+                page: null
             });
             return next;
         });
+    };
+    const resetStatuses = () => {
+        setSelectedStatuses(ALL_STATUSES);
+        updateParams({ statuses: "", page: null });
     };
     // Confirm
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -176,7 +183,7 @@ export default function Stats() {
                 <CardTitle className="text-sm font-medium uppercase text-foreground">Search Database</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                <div className="flex w-full items-center space-x-2">
+                <div className="flex w-full items-center space-x-2 bg-background/50">
                     <Input 
                     placeholder="Enter Name, ID or Details..." 
                     value={search}
@@ -212,15 +219,22 @@ export default function Stats() {
                     <Button
                         key={status}
                         onClick={() => toggleStatus(status)}
-                        className={`h-7 px-2.5 text-xs rounded-sm
+                        className={`h-7 px-2.5 text-xs rounded-sm uppercase
                         ${active
                             ? "bg-emerald-700/40 text-foreground border-emerald-500 hover:bg-emerald-800/50"
-                            : "bg-zinc-900 text-muted-foreground border-border hover:bg-zinc-800 hover:text-foreground"
+                            : "bg-card text-muted-foreground border-border hover:bg-background hover:text-foreground"
                         }`}>
                         {status}
                     </Button>
                     );
                 })}
+                {selectedStatuses.length < ALL_STATUSES.length &&(
+                    <Button
+                        onClick={() => resetStatuses()}
+                        className={`h-7 px-2.5 text-xs rounded-sm bg-card text-foreground border-border hover:bg-background hover:text-foreground`}>
+                        <X className="h-3.5 w-3.5" /> RESET
+                    </Button>
+                )}
                 </div>
                 </CardContent>
             </Card>
@@ -310,7 +324,7 @@ export default function Stats() {
                                             {label}:{" "}
                                             {key === "playerId" ? (
                                                 <Link
-                                                    to={`/stats/${value}`}
+                                                    to={`/search/${value}`}
                                                     className="text-foreground underline hover:text-blue-400">
                                                     {String(value)}
                                                 </Link>

@@ -131,7 +131,7 @@ export default function StatsPlayer() {
                 toast.error("Conflict", { description: data.message  ?? "Failed to Create User" });
         } catch (error){
             toast.error("Network Error", { description: "Check API status." });
-            console.log(error);
+            console.error(error);
         };  
     };
 
@@ -171,7 +171,7 @@ export default function StatsPlayer() {
                 toast.error("Error", { description: data.message  ?? "Failed to Reset User Password" });
         } catch (error){
             toast.error("Network Error", { description: "Check API status." });
-            console.log(error);
+            console.error(error);
         };  
     };
 
@@ -185,8 +185,8 @@ export default function StatsPlayer() {
             const res = await apiFetch("POST", `/auth/deleteuser?id=${id}`);
                 const data = await res.json();
                 if (res.ok) {
-                    toast.success("User Deleted", {
-                        description: `You have deleted the account for user: ${username}`,
+                    toast.success("User Disabled", {
+                        description: `You have disabled the account for user: ${username}`,
                         duration: 5000,
                     });
                     fetchPlayer()
@@ -195,7 +195,7 @@ export default function StatsPlayer() {
                 toast.error("Error", { description: data.message  ?? "Failed to Delete User" });
         } catch (error){
             toast.error("Network Error", { description: "Check API status." });
-            console.log(error);
+            console.error(error);
         };  
     };
 
@@ -454,10 +454,10 @@ export default function StatsPlayer() {
                 {FACTIONS.map((faction) => {
                     const mainLevel = player[faction.levelKey];
                     const canWhitelist = user && (user[faction.levelKey] != null || faction.units.some(unitKey => user[unitKey ?? ""] != null) || user.adminlevel > (perms?.admin?.USER_WHITELIST ?? 99));
-
+                    const color = faction.color;
                     return(
                         <Card key={faction.id} className="relative overflow-hidden bg-background/50 backdrop-blur-md border-border group h-full">
-                        <div className={`absolute top-0 left-0 w-full h-0.5 bg-linear-to-r to-transparent opacity-70 group-hover:opacity-100 transition-opacity`} />
+                        <div className={`absolute top-0 left-0 w-full h-0.5 bg-linear-to-r ${color} to-transparent opacity-70 group-hover:opacity-100 transition-opacity`} />
                         <CardHeader className="pb-3 flex flex-row items-center justify-between">
                             <CardTitle className={`text-xs font-bold uppercase tracking-widest ${faction.colorText}`}>
                             {faction.label}
@@ -515,6 +515,7 @@ export default function StatsPlayer() {
                 })}
                 {/* Civillian / Gang Block */}                     
                     <Card className="bg-background/50 backdrop-blur-md border-border">
+                    <div className={`absolute top-0 left-0 w-full h-0.5 bg-linear-to-r from-purple-500 to-transparent opacity-70 group-hover:opacity-100 transition-opacity`} />
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className={`text-xs font-bold uppercase tracking-widest text-purple-500`}>
                         {player.gang?.name ?? "No Gang Found"}
@@ -548,15 +549,15 @@ export default function StatsPlayer() {
                             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">
                                 Members
                             </span>
-                            <p className="text-[10px] text-muted-foreground leading-relaxed">
+                            <p className="text-[10px] text-muted-foreground flex flex-wrap gap-x-2">
                                 {player.gang.members.map((member : GangMember , index : number) => (
                                 <React.Fragment key={member.id}>
                                     <Link 
-                                    to={`/stats/${member.id}`} 
+                                    to={`/search/${member.id}`} 
                                     className="text-[10px] font-mono text-foreground hover:text-muted-foreground hover:underline transition-colors">
-                                    <span>{member.rank > 4 ? member.name + "(Leader)" : member.name}</span>
+                                    <span>{member.rank > 4 ? member.name + "(Leader)" : member.name}{index < player.gang.members.length - 1 && ","}</span>
                                     </Link>
-                                    {index < player.gang.members.length - 1 && <span className="text-foreground">, </span>}
+                                    
                                 </React.Fragment>
                                 ))}
                             </p>

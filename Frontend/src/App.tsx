@@ -4,8 +4,9 @@ import { Routes, Route, Link } from 'react-router-dom'
 import Stats from "@/features/Stats"
 import StatsPlayer from "@/features/StatsPlayer"
 import Breakdown from "@/features/Breakdown"
-import Home from "@/features/Home"
+import About from "@/features/About"
 import Jobs from "@/features/Jobs"
+import Home from "@/features/Home"
 import changelogData from "@/features/changelog.json";
 import LoginModal from "@/components/modals/Login"
 import ChangePasswordModal from "@/components/modals/ChangePassword"
@@ -114,9 +115,10 @@ export default function App() {
 
             <div className='flex items-center gap-10 text-sm font-medium uppercase tracking-wider'>
               <Link to="/" className='text-muted-foreground hover:text-white transition-colors'>Home</Link>
-              <Link to="/stats" className='text-muted-foreground hover:text-white transition-colors'>Stats</Link>
+              <Link to="/search" className='text-muted-foreground hover:text-white transition-colors'>Search</Link>
               <Link to="/jobs" className='text-muted-foreground hover:text-white transition-colors'>Jobs</Link>
               <Link to="/changelog" className='text-muted-foreground hover:text-white transition-colors'>Changelog</Link>
+              <Link to="/about" className='text-muted-foreground hover:text-white transition-colors'>About</Link>
               <Link to="/breakdown" className='text-muted-foreground hover:text-white transition-colors'>Breakdown</Link>
             </div>
             
@@ -148,7 +150,7 @@ export default function App() {
                         
                         <DropdownMenuItem asChild>
                         <Link 
-                          to={`/stats/${user.SteamID}`} 
+                          to={`/search/${user.SteamID}`} 
                           className="flex w-full items-center cursor-pointer">
                           <UserCircle className="h-3.5 w-3.5 text-muted-foreground" />
                           <span>View Profile</span>
@@ -220,10 +222,11 @@ export default function App() {
           <LoginModal open={isLoginOpen} setOpen={(value) => updateParams({ login: value ? "true" : null })} setUser={setUser} setPerms={setPerms} setIsResetPassOpen={setisResetPasswordOpen}/>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/stats" element={<Stats />} />
-            <Route path="/stats/:id" element={<StatsPlayer />} />
+            <Route path="/search" element={<Stats />} />
+            <Route path="/search/:id" element={<StatsPlayer />} />
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/changelog" element={<Changelog />} />
+            <Route path="/about" element={<About />} />
             <Route path="/breakdown" element={<Breakdown />} />
           </Routes>
         </main>
@@ -239,33 +242,6 @@ export default function App() {
   </AuthContext.Provider>
   );
 }
-
-// function Jobs() {
-//   return (
-//     <div>This page is coming soon and will host the controls and information around the background worker. Including, Pending, In Progress, Completed, Failed and Cancelled Job. 
-//       With the ability to Download, Reset and Cencel Jobs. The API is ready and viewable at api.decspage.com. Have a look at Job Management</div>
-//     // <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-8">
-//     //   {/* Card 1: API Status */}
-//     //   <div className="bg-zinc-900 border border-border p-6 rounded-xl shadow-lg">
-//     //     <h3 className="text-muted-foreground text-sm font-medium uppercase tracking-wider">
-//     //       System Status
-//     //     </h3>
-//     //     <div className="mt-2 flex items-center gap-2">
-//     //       <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse" />
-//     //       <span className="text-2xl font-bold text-white">API Online</span>
-//     //     </div>
-//     //   </div>
-
-//     //   {/* Card 2: Worker Status */}
-//     //   <div className="bg-zinc-900 border border-border p-6 rounded-xl shadow-lg">
-//     //     <h3 className="text-zinc-400 text-sm font-medium uppercase tracking-wider">
-//     //       Background Worker
-//     //     </h3>
-//     //     <p className="mt-2 text-2xl font-bold text-white">Idle</p>
-//     //   </div>
-//     // </div>
-//   );
-// }
 
 function Changelog() {
   return (

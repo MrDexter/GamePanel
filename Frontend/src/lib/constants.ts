@@ -135,7 +135,7 @@ export const unitRankNames: Record<string, Record<number, string>> = {
 };
 
 export const FACTIONS = [
-  { id: 'police', label: 'Police', colorText: 'text-blue-500', colorBg: 'bg-blue-500', colorBorder: 'border-red-500', levelKey: 'coplevel', ranks: copRanks, units: ["tfulevel", "ncalevel", "npaslevel", "mpulevel", "acadlevel",], login: 'cop_login', playtime: 'playtime_cop', commandLevel: 10},
-  { id: 'medic', label: 'Medics', colorText: 'text-green-500', colorBg: 'bg-green-500', colorBorder: 'border-red-500', levelKey: 'mediclevel', ranks: medicRanks, units: ["hemslevel", "hartlevel", "rplevel"], login: 'nhs_login', playtime: 'playtime_nhs', commandLevel: 7},
-  { id: 'ion', label: 'Ion', colorText: 'text-red-500', colorBg: 'bg-red-500', colorBorder: 'border-red-500', levelKey: 'ionlevel', ranks: ionRanks, units: ["deltalevel", "umlevel", "iaflevel", null, "irulevel" ], login: 'van_login', playtime: 'playtime_opfor', commandLevel: 6}, // Null for a unit filler for better layout
+  { id: 'police', label: 'Police', colorText: 'text-blue-500', colorBg: 'bg-blue-500', colorBorder: 'border-red-500', color: 'from-blue-500', levelKey: 'coplevel', ranks: copRanks, units: ["tfulevel", "ncalevel", "npaslevel", "mpulevel", "acadlevel",], login: 'cop_login', playtime: 'playtime_cop', commandLevel: 10},
+  { id: 'medic', label: 'Medics', colorText: 'text-green-500', colorBg: 'bg-green-500', colorBorder: 'border-red-500', color: 'from-green-500', levelKey: 'mediclevel', ranks: medicRanks, units: ["hemslevel", "hartlevel", "rplevel"], login: 'nhs_login', playtime: 'playtime_nhs', commandLevel: 7},
+  { id: 'ion', label: 'Ion', colorText: 'text-red-500', colorBg: 'bg-red-500', colorBorder: 'border-red-500', color: 'from-red-500', levelKey: 'ionlevel', ranks: ionRanks, units: ["deltalevel", "umlevel", "iaflevel", null, "irulevel" ], login: 'van_login', playtime: 'playtime_opfor', commandLevel: 6}, // Null for a unit filler for better layout
 ];

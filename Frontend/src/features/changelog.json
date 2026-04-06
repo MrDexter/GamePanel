@@ -1,5 +1,26 @@
 [
   {
+    "date": "06-04-2026",
+    "version": "0.9.3",
+    "title": "Stats Dashboard and Group Searching",
+    "type": "Feature",
+    "category": "Full",
+    "changes": [
+      { "type": "frontend", "text": "Moved Project Overview and About me to 'About' Page" },
+      { "type": "frontend", "text": "Added Tabs to switch between Player search and Group Search" },
+      { "type": "backend", "text": "Moved Player Search Endpoint into Get All Players endpoint" },
+      { "type": "frontend", "text": "Changed Gangs Endpoint to Groups" },
+      { "type": "backend", "text": "Added Group Search Params to Get All Groups endpoint" },
+      { "type": "frontend", "text": "Fixed capitalization issue causing Job status buttons to not show correct state" },
+      { "type": "frontend", "text": "Changed Stats Page to Search Page" },
+      { "type": "frontend", "text": "Added Tabs to switch between Players and Groups on Search Page" },
+      { "type": "frontend", "text": "Added Filter buttons to Search page for Player Faction filtering" },
+      { "type": "frontend", "text": "Fixed capitalization issue causing Job status buttons to not show correct state" },
+      { "type": "backend", "text": "Added start of Stats Endpoints (Player Stats Done)" },
+      { "type": "frontend", "text": "Added Dashboard design and start of data structure and stats" }
+    ]
+  },
+  {
     "date": "05-04-2026",
     "version": "0.9.2",
     "title": "URL Params, Confirm box and QOL Fixes",
