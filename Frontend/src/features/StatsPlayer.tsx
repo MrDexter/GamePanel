@@ -255,7 +255,7 @@ export default function StatsPlayer() {
             if (location.state?.from) {
                 navigate(location.state.from);
             } else {
-                navigate("/stats");
+                navigate("/search");
             }}} 
             className="text-foreground hover:text-foreground hover:bg-zinc-800 hover:text-[16px]">
             ← Back to Search

@@ -4,26 +4,20 @@ import { apiFetch } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 // import {Button } from "@/components/ui/button"
 import changelogData from "@/features/changelog.json";
+import {formatDate, formatMoney } from "@/lib/constants"
 import { Link  } from "react-router-dom";
 
 export default function Home() {
     const [stats, setStats] = useState<any>(null)
-    const [recentJobs, setJobs] = useState<any>(null)
 
     const fetchStats = async () => {
         try {
-            const res = await apiFetch("GET", `/stats/player`)
+            const res = await apiFetch("GET", `/stats/dashboard`)
             if (!res.ok) {
                 setStats("Not Found")
             };
             const data = await res.json();
             setStats(data)
-            const jobRes = await apiFetch("GET", `/jobs?limit=4`);
-            if(jobRes.ok) {
-                const jobsData = await jobRes.json();
-                setJobs(jobsData.data);
-                console.log(jobsData.data)
-            }
         } catch (error) {
             setStats("Not Found");
             console.error("Fetch Error", error);
@@ -58,17 +52,21 @@ export default function Home() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <p className="text-3xl font-black tracking-tight text-foreground">{stats?.player?.players}</p>
+              <p className="text-3xl font-black tracking-tight text-foreground">{stats?.player?.total}</p>
               <p className="text-xs uppercase text-muted-foreground">Total Players</p>
             </div>
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Vehicles</span>
-                <span className="text-foreground font-medium">50</span>
+                <span className="text-foreground font-medium">{stats?.vehicle?.total}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Houses</span>
-                <span className="text-foreground font-medium">50</span>
+                <span className="text-foreground font-medium">{stats?.housing?.total}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Total Bank</span>
+                <span className="text-foreground font-medium">{formatMoney(stats?.player?.totalBank)}</span>
               </div>
             </div>
           </CardContent>
@@ -83,46 +81,21 @@ export default function Home() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <p className="text-3xl font-black tracking-tight text-foreground">3</p>
+              <p className="text-3xl font-black tracking-tight text-foreground">{stats?.group?.total}</p>
               <p className="text-xs uppercase text-muted-foreground">Total Groups</p>
             </div>
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Police</span>
-                <span className="text-foreground font-medium">{stats?.player?.police}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Medics</span>
-                <span className="text-foreground font-medium">{stats?.player?.medics}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Ion</span>
-                <span className="text-foreground font-medium">{stats?.player?.ion}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden bg-background/50 backdrop-blur-md border-border group h-full">
-          <div className="absolute top-0 left-0 w-full h-0.5 bg-linear-to-r from-violet-500/70 to-transparent opacity-70 group-hover:opacity-100 transition-opacity" />
-          <CardHeader className="pb-2">
-            <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-              Account Stats
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-3xl font-black tracking-tight text-foreground">8</p>
-              <p className="text-xs uppercase text-muted-foreground">Total Accounts</p>
-            </div>
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
                 <span className="text-muted-foreground">Active</span>
-                <span className="text-foreground font-medium">6</span>
+                <span className="text-foreground font-medium">{stats?.group?.active}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Disabled</span>
-                <span className="text-foreground font-medium">2</span>
+                <span className="text-muted-foreground">Inactive</span>
+                <span className="text-foreground font-medium">{stats?.group?.inactive}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Total Bank</span>
+                <span className="text-foreground font-medium">{formatMoney(stats?.group?.totalBank)}</span>
               </div>
             </div>
           </CardContent>
@@ -137,21 +110,61 @@ export default function Home() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <p className="text-3xl font-black tracking-tight text-foreground">3</p>
-              <p className="text-xs uppercase text-muted-foreground">Pending Jobs</p>
+              <p className="text-3xl font-black tracking-tight text-foreground">{stats?.job?.total}</p>
+              <p className="text-xs uppercase text-muted-foreground">Total Jobs</p>
             </div>
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Processing</span>
-                <span className="text-foreground font-medium">1</span>
+                <span className="text-muted-foreground"><Link
+                    to={`/jobs?statuses=pending`}
+                    className="truncate tracking-tight hover:text-foreground hover:underline"
+                  >
+                  Pending
+                  </Link></span>
+                <span className="text-foreground font-medium">{stats?.job?.pending}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Failed</span>
-                <span className="text-foreground font-medium">2</span>
+                <span className="text-muted-foreground"><Link
+                    to={`/jobs?statuses=incomplete`}
+                    className="truncate tracking-tight hover:text-foreground hover:underline"
+                  >
+                  Incomplete
+                  </Link></span>
+                <span className="text-foreground font-medium">{stats?.job?.failed + stats?.job?.cancelled}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Complete</span>
-                <span className="text-foreground font-medium">128</span>
+                <span className="text-muted-foreground"><Link
+                    to={`/jobs?statuses=complete`}
+                    className="truncate tracking-tight hover:text-foreground hover:underline"
+                  >
+                  Complete
+                  </Link></span>
+                <span className="text-foreground font-medium">{stats?.job?.complete}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="relative overflow-hidden bg-background/50 backdrop-blur-md border-border group h-full">
+          <div className="absolute top-0 left-0 w-full h-0.5 bg-linear-to-r from-violet-500/70 to-transparent opacity-70 group-hover:opacity-100 transition-opacity" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              Account Stats
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-3xl font-black tracking-tight text-foreground">{stats?.user?.total}</p>
+              <p className="text-xs uppercase text-muted-foreground">Total Accounts</p>
+            </div>
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Active</span>
+                <span className="text-foreground font-medium">{stats?.user?.active}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Disabled</span>
+                <span className="text-foreground font-medium">{stats?.user?.inactive}</span>
               </div>
             </div>
           </CardContent>
@@ -286,34 +299,135 @@ export default function Home() {
         </Card>
 
         <Card className="relative overflow-hidden bg-background/50 backdrop-blur-md border-border">
-          <div className="absolute top-0 left-0 w-full h-0.5 bg-linear-to-r from-emerald-500/70 to-transparent opacity-70" />
-          <CardHeader className="pb-3">
+            <div className="absolute top-0 left-0 w-full h-0.5 bg-linear-to-r from-green-500/70 to-transparent opacity-70" />
+            <CardHeader className="pb-3">
             <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-              System Overview
+                Player Leaderboard
             </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <div className="flex justify-between border-b border-border/50 pb-2">
-              <span className="text-muted-foreground">API Status</span>
-              <span className="text-emerald-500 font-medium">Online</span>
+            </CardHeader>
+
+            <CardContent className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-sm">
+            <div className="rounded-xl border border-border/50 bg-card/75 p-3 space-y-3">
+              <div className="border-b border-border/50 pb-2">
+                <p className="text-[10px] font-black uppercase tracking-widest text-purple-500">
+                  Most Money
+                </p>
+
+                <p className="truncate text-2xl font-black tracking-tight text-foreground">
+                  <Link
+                    to={`/search/${stats?.top?.money?.playerId}`}
+                    className="block truncate text-2xl font-black tracking-tight text-foreground hover:underline"
+                  >
+                    {stats?.top?.money?.name}
+                  </Link>
+                </p>
+
+                <p className="text-xs font-semibold text-purple-400">
+                  {formatMoney(stats?.top?.money?.total)}
+                </p>
+              </div>
+
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Cash</span>
+                  <span className="text-foreground font-medium">{formatMoney(stats?.top?.money?.cash)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Bank</span>
+                  <span className="text-foreground font-medium truncate">{formatMoney(stats?.top?.money?.bank)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground"></span>
+                  <span className="text-foreground font-medium"> </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground"></span>
+                  <span className="text-foreground font-medium"></span>
+                </div>
+              </div>
             </div>
-            <div className="flex justify-between border-b border-border/50 pb-2">
-              <span className="text-muted-foreground">Jobs Active</span>
-              <span className="text-foreground font-medium">1</span>
+
+
+            <div className="rounded-xl border border-border/50 bg-card/75 p-3 space-y-3">
+              <div className="border-b border-border/50 pb-2">
+                <p className="text-[10px] font-black uppercase tracking-widest text-amber-500">
+                  Most Assets
+                </p>
+
+                <p className="truncate text-2xl font-black tracking-tight text-foreground">
+                  <Link
+                    to={`/search/${stats?.top?.assets?.playerId}`}
+                    className="block truncate text-2xl font-black tracking-tight text-foreground hover:underline"
+                  >
+                  {stats?.top?.assets?.name}
+                  </Link>
+                </p>
+
+            <p className="text-xs font-semibold text-amber-400">
+            {stats?.top?.assets?.total} Assets
+            </p>
+              </div>
+
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Vehicles</span>
+                  <span className="text-foreground font-medium">{stats?.top?.assets?.vehicles}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Ground</span>
+                  <span className="text-foreground font-medium">{stats?.top?.assets?.ground}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Air</span>
+                  <span className="text-foreground font-medium">{stats?.top?.assets?.air}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Houses</span>
+                  <span className="text-foreground font-medium">{stats?.top?.assets?.houses}</span>
+                </div>
+              </div>
             </div>
-            <div className="flex justify-between border-b border-border/50 pb-2">
-              <span className="text-muted-foreground">Exports Generated</span>
-              <span className="text-foreground font-medium">16</span>
+
+            <div className="rounded-xl border border-border/50 bg-card/75 p-3 space-y-3">
+              <div className="border-b border-border/50 pb-2">
+                <p className="text-[10px] font-black uppercase tracking-widest text-red-500">
+                  Most Playtime
+                </p>
+
+                <p className="truncate text-2xl font-black tracking-tight text-foreground">
+                  <Link
+                    to={`/search/${stats?.top?.playtime?.playerId}`}
+                    className="block truncate text-2xl font-black tracking-tight text-foreground hover:underline"
+                  >
+                    {stats?.top?.playtime?.name}
+                  </Link>
+                </p>
+
+            <p className="text-xs font-semibold text-red-300">
+              {Math.round((stats?.top?.playtime?.total) / 60)} Hours
+            </p>
+              </div>
+
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Civilian</span>
+                  <span className="text-foreground font-medium">{Math.round((stats?.top?.playtime?.civilian) / 60)}H</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Police</span>
+                  <span className="text-foreground font-medium">{Math.round((stats?.top?.playtime?.police) / 60)}H</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Medic</span>
+                  <span className="text-foreground font-medium">{Math.round((stats?.top?.playtime?.medic) / 60)}H</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Ion</span>
+                  <span className="text-foreground font-medium">{Math.round((stats?.top?.playtime?.ion) / 60)}H</span>
+                </div>
+              </div>
             </div>
-            <div className="flex justify-between border-b border-border/50 pb-2">
-              <span className="text-muted-foreground">Recent Logins</span>
-              <span className="text-foreground font-medium">4</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Audit Events</span>
-              <span className="text-foreground font-medium">128</span>
-            </div>
-          </CardContent>
+            </CardContent>
         </Card>
       </div>
 
@@ -329,7 +443,7 @@ export default function Home() {
         </CardHeader>
 
         <CardContent className="space-y-1">
-            {recentJobs?.map((job: any) => {
+            {stats?.jobs?.data?.map((job: any) => {
             const statusClass =
                 job?.status === "Complete"
                 ? "text-emerald-500"
@@ -343,24 +457,24 @@ export default function Home() {
 
             return (
                 <Link
-                key={job.id}
-                to={`/jobs?search=${job.id}`}
-                className="block rounded-sm border-b border-border/50 px-2 py-1 transition-colors hover:bg-card"
-                >
-                <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-foreground">
-                        {job?.type}
-                    </p>
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                        Job ID {job?.id}
-                    </p>
-                    </div>
+                    key={job.id}
+                    to={`/jobs?search=${job.id}`}
+                    className="block rounded-sm border-b border-border/50 px-2 py-2 transition-colors hover:bg-card"
+                    >
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-foreground">
+                            {job?.type}
+                        </p>
+                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                            Job ID {job?.id} • {formatDate(job?.updatedAt, true)}
+                        </p>
+                        </div>
+                        <span className={`shrink-0 text-xs font-bold uppercase ${statusClass}`}>
+                        {job?.status}
+                        </span>
 
-                    <span className={`shrink-0 text-xs font-bold uppercase ${statusClass}`}>
-                    {job?.status}
-                    </span>
-                </div>
+                    </div>
                 </Link>
             );
             })}

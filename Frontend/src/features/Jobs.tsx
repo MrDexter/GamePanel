@@ -253,10 +253,8 @@ export default function Stats() {
                 return (
                 <div
                     key={data.id}
-                    role="button"
-                    tabIndex={0}
                     className="p-4 bg-card border border-border rounded-lg hover:border-blue-500 transition-all cursor-pointer group">
-                    <div className="flex justify-between items-start mb-4 border-b border-border pb-3">
+                    <div className="flex justify-between items-start mb-4 border-b border-border pb-3 ">
                     <div>
                         <h3 className="font-bold text-lg uppercase text-foreground  leading-tight">
                         {data.type}

@@ -164,9 +164,21 @@ public class ApiException : Exception
     }
 }
 
+public record DashboardStats
+{
+    public DashboardPlayerStats Player {get; init;} = new();
+    public DashboardGroupStats Group {get; init;} = new();
+    public DashboardUserStats User {get; init;} = new();
+    public DashboardJobStats Job {get; init;} = new();
+    public PaginatedRecord<Job> Jobs {get; init;} = new(0, Enumerable.Empty<Job>());
+    public DashboardVehicleStats Vehicle {get; init;} = new();
+    public DashboardHousingStats Housing {get; init;} = new();
+    public DashboardTopStats Top {get; init;} = new();
+}
+
 public record DashboardPlayerStats
 {
-    public int Players { get; init; }
+    public int Total { get; init; }
     public int Police { get; init; }
     public int PoliceCommand { get; init; }
     public int Tfu { get; init; }
@@ -185,4 +197,85 @@ public record DashboardPlayerStats
     public int Um { get; init; }
     public int Iaf { get; init; }
     public int IonAcad { get; init; }
+    public long TotalBank {get; init;}
+}
+
+public record DashboardGroupStats 
+{
+    public int Total {get; init;}
+    public int Active {get; init;}
+    public int Inactive {get; init;}
+    public long TotalBank {get; init;}
+    
+}
+public record DashboardUserStats 
+{
+    public int Total {get; init;}
+    public int Active {get; init;}
+    public int Inactive {get; init;}
+    
+}
+
+public record DashboardJobStats 
+{
+    public int Total {get; init;}
+    public int Complete {get; init;}
+    public int Pending {get; init;}
+    public int Failed {get; init;}
+    public int Processing {get; init;}
+    public int Cancelled {get; init;}
+    
+}
+public record DashboardVehicleStats 
+{
+    public int Total {get; init;}
+    public int Civilian {get; init;}
+    public int Ion {get; init;}
+    public int Car {get; init;}
+    public int Air {get; init;}
+    public int Impounded {get; init;}
+    
+}
+public record DashboardHousingStats 
+{
+    public int Total {get; init;}
+    public int Civilian {get; init;}
+    public int Group {get; init;}
+    public int Mortgage {get; init;}
+    
+}
+
+public record DashboardTopStats
+{
+    public DashbaordTopAssets Assets {get; init;} = new();
+    public DashboardTopMoney Money {get; init;} = new();
+    public DashboardTopPlaytime Playtime {get; init;} = new();
+}
+public record DashbaordTopAssets
+{
+    public string Name {get; init;} = "";
+    public string PlayerId {get; init;} = "";
+    public int Houses {get; init;}
+    public int Vehicles {get; init;}
+    public int Ground {get; init;}
+    public int Air {get; init;}
+    public int Total {get; init;}
+}
+public record DashboardTopMoney
+{
+    public string Name {get; init;} = "";
+    public string PlayerId {get; init;} = "";
+    public long Bank {get; init;}
+    public long Cash {get; init;}
+    public long Total {get; init;}
+}
+public record DashboardTopPlaytime
+{
+    public string Name {get; init;} = "";
+    public string PlayerId {get; init;} = "";
+    public int Civilian {get; init;}
+    public int Police {get; init;}
+    public int Medic {get; init;}
+    public int Ion {get; init;}
+    public int Total {get; init;}
 }
