@@ -87,7 +87,6 @@ builder.Services.AddHealthChecks()
     .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new Exception("No Default Connection"))
      .AddAzureBlobStorage(builder.Configuration["Storage:ConnectionString"] ?? throw new Exception("No Storage Default Connection"), containerName: builder.Configuration["Storage:Container"]);
 
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

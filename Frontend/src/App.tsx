@@ -19,13 +19,15 @@ import {Badge } from "@/components/ui/badge"
 import { Button } from './components/ui/button'
 import { Toaster } from "@/components/ui/sonner"
 import { AuthContext } from "@/lib/AuthContext"
-import { LogIn, FileJson, Trash2, User, UserCircle } from "lucide-react"
+import { LogIn, FileJson, ArrowLeftRight, User, UserCircle } from "lucide-react"
 import { apiFetch, setLogoutHandler } from "@/lib/api"
 import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,DropdownMenuSeparator, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
 import { useQueryParams } from "@/lib/constants"
+import { applyTheme, getStoredTheme, setTheme } from "@/lib/theme"
 
 
 export default function App() {
+  applyTheme(getStoredTheme());
   const [health, setHealth] = useState<any>(null);
   useEffect(() => {
     const checkHealth = async () => {
@@ -105,6 +107,12 @@ export default function App() {
   const [isResetPasswordOpen, setisResetPasswordOpen] = useState(false);
   const [isChangePasswordOpen, setisChangePasswordOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  let currentTheme = document.documentElement.classList.contains("dark") ? "dark" : "light";
+
+  const handleThemeToggle = () => {
+    currentTheme = document.documentElement.classList.contains("dark") ? "dark" : "light";
+    setTheme(currentTheme === "dark" ? "light" : "dark");
+  };
 
   return (
  <AuthContext.Provider value={{ user, setUser, logout: handleLogout, perms, setPerms }}>
@@ -114,12 +122,12 @@ export default function App() {
           <div className='px-8 h-16 flex items-center justify-between'>
 
             <div className='flex items-center gap-10 text-sm font-medium uppercase tracking-wider'>
-              <Link to="/" className='text-muted-foreground hover:text-white transition-colors'>Home</Link>
-              <Link to="/search" className='text-muted-foreground hover:text-white transition-colors'>Search</Link>
-              <Link to="/jobs" className='text-muted-foreground hover:text-white transition-colors'>Jobs</Link>
-              <Link to="/changelog" className='text-muted-foreground hover:text-white transition-colors'>Changelog</Link>
-              <Link to="/about" className='text-muted-foreground hover:text-white transition-colors'>About</Link>
-              <Link to="/breakdown" className='text-muted-foreground hover:text-white transition-colors'>Breakdown</Link>
+              <Link to="/" className='text-muted-foreground hover:text-foreground transition-colors'>Home</Link>
+              <Link to="/search" className='text-muted-foreground hover:text-foreground transition-colors'>Search</Link>
+              <Link to="/jobs" className='text-muted-foreground hover:text-foreground transition-colors'>Jobs</Link>
+              <Link to="/changelog" className='text-muted-foreground hover:text-foreground transition-colors'>Changelog</Link>
+              <Link to="/about" className='text-muted-foreground hover:text-foreground transition-colors'>About</Link>
+              <Link to="/breakdown" className='text-muted-foreground hover:text-foreground transition-colors'>Breakdown</Link>
             </div>
             
               <div className="flex items-center gap-3 cursor-pointer">
@@ -131,19 +139,24 @@ export default function App() {
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        className="text-[10px] font-black uppercase tracking-widest text-foreground bg-background hover:text-white hover:bg-card transition-all">
+                        className="text-[10px] font-black uppercase tracking-widest text-foreground bg-background hover:text-foreground hover:bg-card transition-all">
                         <User className="mr-2 h-3 w-3" />
                         {user.Name}
                       </Button>
                     </DropdownMenuTrigger>
                     
-                    <DropdownMenuContent align="end" className="w-48 bg-zinc-950 border-border text-foreground">
+                    <DropdownMenuContent align="end" className="w-48 bg-card border-border text-foreground">
                         <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
                         User Actions
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator className="bg-background" />
                         
-                        <DropdownMenuItem className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => setisChangePasswordOpen(true)}>
+                        <DropdownMenuItem className="text-xs gap-2 cursor-pointer focus:bg-background focus:text-foreground" onClick={() => handleThemeToggle()}>
+                        <FileJson className="h-3.5 w-3.5 text-muted-foreground" />
+                        Toggle Theme
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuItem className="text-xs gap-2 cursor-pointer focus:bg-background focus:text-foreground" onClick={() => setisChangePasswordOpen(true)}>
                         <FileJson className="h-3.5 w-3.5 text-muted-foreground" />
                         Change Password
                         </DropdownMenuItem>
@@ -160,7 +173,7 @@ export default function App() {
                         <DropdownMenuSeparator className="bg-background" />
                         
                         <DropdownMenuItem className="text-xs gap-2 cursor-pointer text-red-500 focus:bg-red-500/10 focus:text-red-400" onClick={() => setIsConfirmOpen(true)}>
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <User className="h-3.5 w-3.5" />
                         Log Out
                         </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -168,19 +181,35 @@ export default function App() {
                 </div>
               ) : (
                 <div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="text-[10px] font-black uppercase tracking-widest text-foreground bg-background hover:text-white hover:bg-card transition-all"
-                    onClick={() => updateParams({ login: true })}>
-                    <LogIn className="mr-2 h-3 w-3" />
-                    Login
-                  </Button>
+                    <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="text-[10px] font-black uppercase tracking-widest text-foreground bg-background hover:text-foreground hover:bg-card transition-all">
+                        <User className="mr-2 h-3 w-3" />
+                        Menu
+                      </Button>
+                    </DropdownMenuTrigger>
+                    
+                    <DropdownMenuContent align="end" className="w-48 bg-card border-border text-foreground">
+                        <DropdownMenuItem className="text-xs gap-2 cursor-pointer focus:bg-background focus:text-foreground" onClick={() => handleThemeToggle()}>
+                        <ArrowLeftRight className="h-3.5 w-3.5" />
+                        Toggle Theme
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator className="bg-background" />
+                        
+                        <DropdownMenuItem className="text-xs gap-2 cursor-pointer focus:bg-background focus:text-foreground" onClick={() => updateParams({ login: true })}>
+                        <LogIn className="h-3.5 w-3.5" />
+                        Login
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
               )}
               {/* The Health Indicator */} 
                 <div className='group relative gap-3 flex items-center border-l border-border pl-6'>
-                  <span className="text-[10px] font-bold uppercase tracking-tighter text-foreground group-hover:text-white transition-colors">
+                  <span className="text-[10px] font-bold uppercase tracking-tighter text-foreground group-hover:text-foreground transition-colors">
                   Status: {
                   {
                     "Healthy": "Online",
@@ -231,7 +260,6 @@ export default function App() {
           </Routes>
         </main>
         <Toaster
-          theme = "dark"
           position = "top-center"
           toastOptions={{
             // className: '!bg-background !border-border !text-foreground !shadow-2xl !p-4',

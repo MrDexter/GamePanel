@@ -81,7 +81,7 @@ export default function StatsPlayer() {
                     description: `ID: ${data.jobId} - Exporting metadata to Azure Blob Storage.`,
                     action: {
                         label: "View Jobs",
-                        onClick: () => navigate("/jobs") // Not setup
+                        onClick: () => navigate(`/jobs?search=${data.jobId}`)
                     }
                 });
             } else {
@@ -106,11 +106,11 @@ export default function StatsPlayer() {
                         description: (
                             <div className="flex flex-col gap-1 mt-1 font-mono text-[11px]">
                             <div className="flex border-b border-white/5 pb-1">
-                                <span className="text-zinc-500 uppercase">User:</span>
+                                <span className="text-muted-foreground uppercase">User:</span>
                                 <span className="text-blue-400">{username}</span>
                             </div>
                             <div className="flex">
-                                <span className="text-zinc-500 uppercase">Pass:</span>
+                                <span className="text-muted-foreground uppercase">Pass:</span>
                                 <span className="text-emerald-400">{data.password}</span>
                             </div>
                             </div>
@@ -150,11 +150,11 @@ export default function StatsPlayer() {
                         description: (
                             <div className="flex flex-col gap-1 mt-1 font-mono text-[11px]">
                             <div className="flex border-b border-white/5 pb-1">
-                                <span className="text-zinc-500 uppercase">User:</span>
+                                <span className="text-muted-foreground uppercase">User:</span>
                                 <span className="text-blue-400">{username}</span>
                             </div>
                             <div className="flex">
-                                <span className="text-zinc-500 uppercase">Pass:</span>
+                                <span className="text-muted-foreground uppercase">Pass:</span>
                                 <span className="text-emerald-400">{data.password}</span>
                             </div>
                             </div>
@@ -257,7 +257,7 @@ export default function StatsPlayer() {
             } else {
                 navigate("/search");
             }}} 
-            className="text-foreground hover:text-foreground hover:bg-zinc-800 hover:text-[16px]">
+            className="text-foreground hover:text-foreground hover:bg-background hover:text-[16px]">
             ← Back to Search
             </Button>
             <div className="px-3 py-1 rounded-full bg-card border border-border text-[10px] font-bold uppercase tracking-widest text-foreground">
@@ -273,7 +273,7 @@ export default function StatsPlayer() {
                 
                 {/* Group 1: Primary Identity */}
                 <div className="flex items-center gap-6">
-                    <div className="relative h-16 w-16 flex items-center justify-center rounded-2xl bg-zinc-card border-2 border-blue-600/50 shadow-[0_0_15px_rgba(37,99,235,0.15)]">
+                    <div className="relative h-16 w-16 flex items-center justify-center rounded-2xl bg-card border-2 border-blue-600/50 shadow-[0_0_15px_rgba(37,99,235,0.15)]">
                     <span className="text-3xl font-black text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]">
                         {player.name?.[0].toUpperCase()}
                     </span>
@@ -281,7 +281,7 @@ export default function StatsPlayer() {
                     {/* <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-green-500 border-4 border-border" /> */}
                     </div>
                     <div>
-                    <h1 className="text-3xl font-black uppercase tracking-tighter text-white">
+                    <h1 className="text-3xl font-black uppercase tracking-tighter text-foreground">
                         {player.name}
                     </h1>
                     <div className="flex gap-3 items-center mt-1">
@@ -307,7 +307,7 @@ export default function StatsPlayer() {
                                         </Badge>
                                         </div>
                                     </TooltipTrigger>
-                                    <TooltipContent className="bg-zinc-950 border-border text-muted-foreground shadow-2xl">
+                                    <TooltipContent className="bg-card border-border text-muted-foreground shadow-2xl">
                                         <div className="flex flex-col gap-1 p-1">
                                         <span className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">Subscription Expiry</span>
                                         <span className="text-xs font-mono text-red-500 font-bold">
@@ -330,7 +330,7 @@ export default function StatsPlayer() {
                                         </Badge>
                                         </div>
                                     </TooltipTrigger>
-                                    <TooltipContent className="bg-zinc-950 border-border text-muted-foreground shadow-2xl">
+                                    <TooltipContent className="bg-card border-border text-muted-foreground shadow-2xl">
                                         <div className="flex flex-col gap-1 p-1">
                                         <span className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">Account Username</span>
                                         <span className="text-xs font-mono text-green-500 font-bold">
@@ -353,20 +353,20 @@ export default function StatsPlayer() {
                 <div className="absolute top-4 right-4 z-50 flex gap-2 border-border/50 pl-12 h-12 ">
                     <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="text-foreground hover:text-white hover:bg-card">
+                        <Button variant="ghost" className="text-foreground hover:text-foreground hover:bg-card">
                         <EllipsisVertical size={28} strokeWidth={2.5}/>
                         </Button>
                     </DropdownMenuTrigger>
                     
                     {/* {user?.adminlevel > 4 && ( */}
-                    <DropdownMenuContent align="end" className="w-48 bg-zinc-950 border-border text-foreground">
+                    <DropdownMenuContent align="end" className="w-48 bg-card border-border text-foreground">
                         <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
                         Player Actions
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator className="bg-background" />
                         
                         <DropdownMenuItem disabled={(user?.adminlevel || 0) < (perms?.admin?.EXPORT_DATA ?? 99)} 
-                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => handleExport(player.playerid)}>
+                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-foreground" onClick={() => handleExport(player.playerid)}>
                         <FileJson className="h-3.5 w-3.5 text-muted-foreground" />
                         Export Metadata
                         </DropdownMenuItem>
@@ -374,13 +374,13 @@ export default function StatsPlayer() {
                         <DropdownMenuSeparator className="bg-background" />
 
                         <DropdownMenuItem disabled={((user?.adminlevel || 0) < (perms?.admin?.USER_CREATE ?? 99)) || (player?.accountUsername !== null)} 
-                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => openConfirm("Generate Credentials", "Are you sure you want to generate credentials?", () => handleGenerateCredentials(player.playerid, player.name))}>
+                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-foreground" onClick={() => openConfirm("Generate Credentials", "Are you sure you want to generate credentials?", () => handleGenerateCredentials(player.playerid, player.name))}>
                         <Key className="h-3.5 w-3.5 text-muted-foreground" />
                         Generate Credentials
                         </DropdownMenuItem>
                         
                         <DropdownMenuItem disabled={(user?.adminlevel || 0) < (perms?.admin?.USER_RESET ?? 99) || player?.accountActive == null} 
-                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => openConfirm("Reset User Account", "Are you sure you want to reset this users account?", () => handleResetPassword(player.playerid, player.name))}>
+                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-foreground" onClick={() => openConfirm("Reset User Account", "Are you sure you want to reset this users account?", () => handleResetPassword(player.playerid, player.name))}>
                         <Key className="h-3.5 w-3.5 text-muted-foreground" />
                         Reset Account
                         </DropdownMenuItem>
@@ -465,7 +465,7 @@ export default function StatsPlayer() {
                             Rank: {faction.ranks[mainLevel] ?? "None"}
                             </div>
                             </CardTitle>
-                            <Button variant="ghost" size="icon" className={`${faction.colorText} h-6 w-6 hover:text-white hover:bg-card`} 
+                            <Button variant="ghost" size="icon" className={`${faction.colorText} h-6 w-6 hover:text-foreground hover:bg-card`} 
                                 onClick={() => {
                                     if (canWhitelist) {updateParams({ whitelist: faction.id });
                                     } else {
@@ -555,7 +555,7 @@ export default function StatsPlayer() {
                                     <Link 
                                     to={`/search/${member.id}`} 
                                     className="text-[10px] font-mono text-foreground hover:text-muted-foreground hover:underline transition-colors">
-                                    <span>{member.rank > 4 ? member.name + "(Leader)" : member.name}{index < player.gang.members.length - 1 && ","}</span>
+                                    <span>{Number(member.rank) > 4 ? member.name + "(Leader)" : member.name}{index < player.gang.members.length - 1 && ","}</span>
                                     </Link>
                                     
                                 </React.Fragment>
@@ -566,7 +566,7 @@ export default function StatsPlayer() {
                     )} 
                     </CardContent>
                         {/* The Faction Footer */}
-                         <div className="mt-auto border-t border-border/50 bg-zinc-650/30 px-6 py-3">
+                         <div className="mt-auto border-t border-border/50 bg-background/30 px-6 py-3">
                             <div className="flex justify-between items-center">
                                 <div className="flex flex-col">
                                     <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Join Date</span>
@@ -600,11 +600,11 @@ export default function StatsPlayer() {
                 <div className="grid grid-col-1 items-center gap-1.5 shrink-0 w-fit">
                     <Badge variant="outline" className="border-border-accent bg-blue-600 text-foreground uppercase">{v.id}</Badge>
                     <Badge variant="outline" className={`${typeColor[v.type] ?? 'bg-blue-600'} border-border-accent text-foreground md:hidden`}>{v.type}</Badge>
-                    <Badge variant="outline" className={`${sideColor[v.side] ?? 'bg-zinc-800'} border-border-accent text-foreground uppercase md:hidden`}>{v.side}</Badge>
+                    <Badge variant="outline" className={`${sideColor[v.side] ?? 'bg-background'} border-border-accent text-foreground uppercase md:hidden`}>{v.side}</Badge>
                 </div>
 
                 <div className="flex-1 px-6">
-                    <p className="font-bold text-white text-xs md:text-m uppercase">{v.class} 
+                    <p className="font-bold text-foreground text-xs md:text-m uppercase">{v.class} 
                     </p>
                     <div className="flex gap-2 md:gap-4 mt-1 items-center">
                         <div className="flex flex-col">
@@ -622,7 +622,7 @@ export default function StatsPlayer() {
                                 {checkInventory(v.inventory) && (
                                 <button 
                                     onClick={() => copyToClipboard(parseInventory(v.inventory))}
-                                    className="text-muted-foreground hover:text-white transition-colors"
+                                    className="text-muted-foreground hover:text-foreground transition-colors"
                                     title="Copy Raw Inventory">
                                     <ClipboardCopy className="h-3 w-3" />
                                 </button>
@@ -640,7 +640,7 @@ export default function StatsPlayer() {
 
                 <div className="grid grid-rows-2 gap-2 invisible md:visible">
                     <Badge variant="outline" className={`${typeColor[v.type] ?? 'bg-blue-600'} border-border-accent text-foreground`}>{v.type}</Badge>
-                    <Badge variant="outline" className={`${sideColor[v.side] ?? 'bg-zinc-800'} border-border-accent text-foreground uppercase`}>{v.side}</Badge>
+                    <Badge variant="outline" className={`${sideColor[v.side] ?? 'bg-background'} border-border-accent text-foreground uppercase`}>{v.side}</Badge>
                 </div>
                 </div>
             )) : <p className="text-muted-foreground  px-2">No vehicles found.</p>}
@@ -661,7 +661,7 @@ export default function StatsPlayer() {
                 </div>
 
                 <div className="flex-1 px-6">
-                    <p className="font-bold text-white text-xs md:text-m uppercase">{v.location.replaceAll('"', "") }
+                    <p className="font-bold text-foreground text-xs md:text-m uppercase">{v.location.replaceAll('"', "") }
                     </p>
                     <div className="flex gap-4 mt-1 items-center">
                         <div className="flex flex-col">
@@ -679,7 +679,7 @@ export default function StatsPlayer() {
                                 {checkInventory(v.virtualContents) && (
                                 <button 
                                     onClick={() => copyToClipboard(parseInventory(v.virtualContents))}
-                                    className="text-muted-foreground hover:text-white transition-colors"
+                                    className="text-muted-foreground hover:text-foreground transition-colors"
                                     title="Copy Raw Inventory">
                                     <ClipboardCopy className="h-3 w-3" />
                                 </button>
@@ -697,7 +697,7 @@ export default function StatsPlayer() {
                                 {checkInventory(v.contents) && (
                                 <button 
                                     onClick={() => copyToClipboard(parseInventory(v.contents))}
-                                    className="text-muted-foreground hover:text-white transition-colors"
+                                    className="text-muted-foreground hover:text-foreground transition-colors"
                                     title="Copy Raw Inventory">
                                     <ClipboardCopy className="h-3 w-3" />
                                 </button>

@@ -58,11 +58,11 @@ export default function ResetPasswordModal({open, setOpen}: { open: boolean; set
       setOpen(isOpen);
     }}>
       <DialogContent 
-      className="sm:max-w-100 bg-zinc-950 border-zinc-800 shadow-2xl" 
+      className="sm:max-w-100 bg-card border-border hadow-2xl" 
       onPointerDownOutside={(e) => e.preventDefault()}
       onEscapeKeyDown={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle className="text-xl font-black uppercase tracking-tighter italic text-white">
+          <DialogTitle className="text-xl font-black uppercase tracking-tighter italic text-foreground">
             Reset Password
           </DialogTitle>
           <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
@@ -73,7 +73,7 @@ export default function ResetPasswordModal({open, setOpen}: { open: boolean; set
         <form onSubmit={handleResetPassword} className="space-y-6 pt-4">
 
           <div className="grid gap-2">
-            <Label htmlFor="password" className="text-[10px] uppercase font-black text-zinc-500">
+            <Label htmlFor="password" className="text-[10px] uppercase font-black text-muted-foreground">
               Password
             </Label>
             <Input 
@@ -81,12 +81,12 @@ export default function ResetPasswordModal({open, setOpen}: { open: boolean; set
               name="password"
               type="password" 
               placeholder="••••••••" 
-              className="bg-zinc-900 border-zinc-800 font-mono focus-visible:ring-blue-600" 
+              className="bg-card border-border font-mono focus-visible:ring-blue-600" 
             />
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="confirmPassword" className="text-[10px] uppercase font-black text-zinc-500">
+            <Label htmlFor="confirmPassword" className="text-[10px] uppercase font-black text-muted-foreground">
               Confirm Password
             </Label>
             <Input 
@@ -94,11 +94,11 @@ export default function ResetPasswordModal({open, setOpen}: { open: boolean; set
               name="confirmPassword"
               type="password" 
               placeholder="••••••••" 
-              className="bg-zinc-900 border-zinc-800 font-mono focus-visible:ring-blue-600" 
+              className="bg-card border-border font-mono focus-visible:ring-blue-600" 
             />
           </div>
 
-          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-widest text-[11px] h-10">
+          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-foreground font-bold uppercase tracking-widest text-[11px] h-10">
             {loading ? "Verifying..." : "Login"}
           </Button>
         </form>

@@ -3,11 +3,11 @@ import {Input } from "@/components/ui/input"
 import { toast } from "sonner"
 // import {Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
-import {formatDate, useQueryParams} from "@/lib/constants"
+import {formatDate, useQueryParams, JOB_TYPE_LABELS} from "@/lib/constants"
 import { useNavigate, Link } from "react-router-dom"
 import { apiFetch } from "@/lib/api"
 import LoadingOverlay from "@/components/modals/Loading"
-import { ChevronLeft, ChevronRight, ChevronDown, RefreshCw, X  } from "lucide-react"
+import { ChevronLeft, ChevronRight, ChevronDown, RefreshCw, X, EllipsisVertical, FileJson  } from "lucide-react"
 import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,DropdownMenuSeparator, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
 import { Button } from '@/components/ui/button'
 import { useAuth } from "@/lib/AuthContext"
@@ -22,7 +22,7 @@ export default function Stats() {
     const [oldTotalRows, setOldTotalRows] = useState(0);
     const [maxId, setMaxId] = useState(0);
     const [pendingJobs, setPendingJobs] = useState(false);
-    const [results, setResults] = useState<any[]>([])
+    const [results, setResults] = useState<Job[]>([])
     const [isLoading, setIsLoading] = useState(false);
     const [totalRows, setTotalRows] = useState(1);
     const search = searchParams.get("search") ?? ""
@@ -113,6 +113,32 @@ export default function Stats() {
         }
     }
 
+    const handleExport = async (id?: number) => {
+        const adminlevel = parseInt(user?.adminlevel ?? 0);
+        if (adminlevel < (perms?.admin?.EXPORT_DATA ?? 99)) {
+            toast.error("You don't have permission to export user data");
+            return;
+        }
+        try {
+            const endpoint = id != null ? `/jobs/${id}/export` : `/jobs/export`;
+            const res = await apiFetch("POST", endpoint);
+            const data = await res.json();
+            if (res.ok) {
+                toast.success("Background Job Queued", {
+                    description: `ID: ${data.jobId} - Exporting metadata to Azure Blob Storage.`,
+                    action: {
+                        label: "View Jobs",
+                        onClick: () => navigate(`/jobs?search=${data.jobId}`) // Not setup
+                    }
+                });
+            } else {
+                toast.error("Export Failed", { description: data.message ?? "API Error" });
+            }
+        } catch (error : any){
+            toast.error("Network Error", { description: error.message ?? "Check API status." });
+        };  
+    };
+
     const fetchData = async () => {
         try {
             const response = await apiFetch("GET", `/jobs?search=${search}&limit=${itemPerPage}&offset=${offset}&statuses=${statuses}`);
@@ -179,64 +205,105 @@ export default function Stats() {
             </div>
 
             <Card className="bg-card border-border">
-                <CardHeader>
-                <CardTitle className="text-sm font-medium uppercase text-foreground">Search Database</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                <div className="flex w-full items-center space-x-2 bg-background/50">
-                    <Input 
-                    placeholder="Enter Name, ID or Details..." 
+            <CardHeader className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium uppercase text-foreground">
+                Search Database
+                </CardTitle>
+
+                <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-foreground hover:text-foreground hover:bg-card"
+                    >
+                    <EllipsisVertical className="h-5 w-5" strokeWidth={2.5} />
+                    </Button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent
+                    align="end"
+                    className="w-52 bg-card border-border text-foreground"
+                >
+                    <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Job Actions
+                    </DropdownMenuLabel>
+
+                    <DropdownMenuSeparator className="bg-background" />
+
+                    <DropdownMenuItem
+                    disabled={(user?.adminlevel || 0) < (perms?.admin?.EXPORT_DATA ?? 99)}
+                    onClick={() => handleExport()}
+                    className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-foreground" 
+                    >
+                    <FileJson className="h-3.5 w-3.5 text-muted-foreground" />
+                    Export All Jobs
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+                </DropdownMenu>
+            </CardHeader>
+
+            <CardContent className="space-y-5">
+                {/* Search */}
+                <div className="relative w-full">
+                <Input
+                    placeholder="Enter Name or ID..."
                     value={search}
-                    onChange={(e) =>  updateParams({ search: e.target.value, page: 1})}
-                    className="bg-zinc-950 border-border text-white"
-                    />
+                    onChange={(e) => updateParams({ search: e.target.value, page: 1 })}
+                    onKeyDown={(e) => {
+                    if (e.key === "Escape") updateParams({ search: "" });
+                    }}
+                    className="border border-border text-foreground pr-9"
+                />
+
+                <button
+                    onClick={() => updateParams({ search: "" })}
+                    className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded transition-all ${
+                    search
+                        ? "opacity-100 hover:bg-card text-muted-foreground hover:text-foreground"
+                        : "opacity-0 pointer-events-none"
+                    }`}
+                >
+                    <X className="h-4 w-4" />
+                </button>
                 </div>
-{/*                 <div className="flex gap-4 items-center">
-                <span className="text-xs font-bold uppercase min-w-16">
+
+                {/* Filters */}
+                <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-bold uppercase text-muted-foreground min-w-15">
                     Include:
                 </span>
 
-                {ALL_STATUSES.map(status => (
-                    <label key={status} className="flex items-center gap-1 text-xs">
-                    <input
-                        type="checkbox"
-                        checked={selectedStatuses.includes(status)}
-                        onChange={() => toggleStatus(status)}
-                    />
-                    {status}
-                    </label>
-                ))}
-                </div> */}
-                <div className="flex flex-wrap gap-2 items-center">
-                <span className="text-xs font-bold uppercase min-w-16">
-                    Include:
-                </span>
-
-                {ALL_STATUSES.map(status => {
+                {ALL_STATUSES.map((status) => {
                     const active = selectedStatuses.includes(status);
 
                     return (
                     <Button
                         key={status}
                         onClick={() => toggleStatus(status)}
-                        className={`h-7 px-2.5 text-xs rounded-sm uppercase
-                        ${active
+                        className={`h-7 px-2.5 text-xs rounded-sm uppercase transition-colors
+                        ${
+                            active
                             ? "bg-emerald-700/40 text-foreground border-emerald-500 hover:bg-emerald-800/50"
                             : "bg-card text-muted-foreground border-border hover:bg-background hover:text-foreground"
-                        }`}>
+                        }`}
+                    >
                         {status}
                     </Button>
                     );
                 })}
-                {selectedStatuses.length < ALL_STATUSES.length &&(
+
+                {selectedStatuses.length < ALL_STATUSES.length && (
                     <Button
-                        onClick={() => resetStatuses()}
-                        className={`h-7 px-2.5 text-xs rounded-sm bg-card text-foreground border-border hover:bg-background hover:text-foreground`}>
-                        <X className="h-3.5 w-3.5" /> RESET
+                    onClick={resetStatuses}
+                    className="h-7 px-2.5 text-xs rounded-sm bg-card text-foreground border-border hover:bg-background hover:text-foreground flex items-center gap-1"
+                    >
+                    <X className="h-3.5 w-3.5" />
+                    Reset
                     </Button>
                 )}
                 </div>
-                </CardContent>
+            </CardContent>
             </Card>
             {newResults == true &&(
                 <Button onClick={() => {setMaxId(0); setNewResults(false); setOldTotalRows(totalRows);}}
@@ -246,10 +313,10 @@ export default function Stats() {
             )}
             {/* 4. Display Results */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {results.map((data: Job) => {
+            {results.map((data) => {
                 const payload = JSON.parse(data?.payload ?? "{}");
-                const statusClass = data.status === "Complete"? "text-emerald-500": data.status === "Failed"? "text-red-500": data.status === "Processing"? "text-blue-500": "text-zinc-400";
-                if (data.id > maxId && maxId != 0) {return null}
+                const statusClass = data.status === "Complete"? "text-emerald-500": data.status === "Failed"? "text-red-500": data.status === "Processing"? "text-blue-500": "text-muted-foreground";
+                if (Number(data.id) > maxId && maxId != 0) {return null}
                 return (
                 <div
                     key={data.id}
@@ -257,7 +324,7 @@ export default function Stats() {
                     <div className="flex justify-between items-start mb-4 border-b border-border pb-3 ">
                     <div>
                         <h3 className="font-bold text-lg uppercase text-foreground  leading-tight">
-                        {data.type}
+                        {JOB_TYPE_LABELS[data.type] ?? data?.type}
                         </h3>
                         <p className={`text-[10px] uppercase tracking-widest font-mono ${statusClass}`}>
                         Status: {data.status}
@@ -272,32 +339,37 @@ export default function Stats() {
                     </DropdownMenuTrigger>
                     
                     {/* {user?.adminlevel > 4 && ( */}
-                    <DropdownMenuContent align="end" className="w-48 bg-zinc-950 border-border text-foreground">
+                    <DropdownMenuContent align="end" className="w-48 bg-card border-border text-foreground">
                         <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
                         Job Actions
                         </DropdownMenuLabel>
+                        <DropdownMenuItem disabled={(user?.adminlevel || 0) < (perms?.admin?.EXPORT_DATA ?? 99)} 
+                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-foreground" onClick={() => handleExport(Number(data.id))}>
+                        <FileJson className="h-3.5 w-3.5 text-muted-foreground" />
+                            Export Job Metadata
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator className="bg-background" />
 
                         <DropdownMenuItem disabled={(data.status !== "Failed") || (user?.adminlevel || 0) < (perms?.admin?.JOB_MANAGEMENT ?? 99)} 
-                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => openConfirm("Reset Job", "Are you sure you want to reset this job?", () => changeJobStatus(data.id, "reset"))}>
+                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-foreground" onClick={() => openConfirm("Reset Job", "Are you sure you want to reset this job?", () => changeJobStatus(Number(data.id), "reset"))}>
                             
                         Reset Job
                         </DropdownMenuItem>
                         
                         <DropdownMenuItem disabled={(data.status !== "Pending" && data.status !== "Processing") || (user?.adminlevel || 0) < (perms?.admin?.JOB_MANAGEMENT ?? 99)} 
-                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => openConfirm("Cancel Job", "Are you sure you want to cancel this job?", () => changeJobStatus(data.id, "cancel"))}>
+                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-foreground" onClick={() => openConfirm("Cancel Job", "Are you sure you want to cancel this job?", () => changeJobStatus(Number(data.id), "cancel"))}>
                         Cancel Job
                         </DropdownMenuItem>
                         
                         <DropdownMenuItem disabled={(data.status === "Processing") || (user?.adminlevel || 0) < (perms?.admin?.JOB_MANAGEMENT ?? 99)} 
-                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => openConfirm("Duplicate Job", "Are you sure you want to duplicate this job?", () => changeJobStatus(data.id, "duplicate"))}>
+                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-foreground" onClick={() => openConfirm("Duplicate Job", "Are you sure you want to duplicate this job?", () => changeJobStatus(Number(data.id), "duplicate"))}>
                         Duplicate Job
                         </DropdownMenuItem>
 
                         <DropdownMenuSeparator className="bg-background" />
                         
                         <DropdownMenuItem disabled={(data.status !== "Pending") || (user?.adminlevel || 0) < (perms?.admin?.JOB_MANAGEMENT ?? 99)} 
-                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-white" onClick={() => openConfirm("Toggle Priority", "Are you sure you want to toggle priority for this job?", () => changeJobStatus(data.id, "priority"))}>
+                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-foreground" onClick={() => openConfirm("Toggle Priority", "Are you sure you want to toggle priority for this job?", () => changeJobStatus(Number(data.id), "priority"))}>
                         Toggle Priority
                         </DropdownMenuItem>
                         
@@ -343,7 +415,7 @@ export default function Stats() {
                             <span className="text-foreground hover:text-blue-400 underline cursor-pointer opacity-0" >
                                 View
                             </span>
-                            <span className="text-foreground hover:text-blue-400 underline cursor-pointer" onClick={() => openConfirm("Download Job File", "Are you sure you want to download this job?", () => downloadJob(data.id))}>
+                            <span className="text-foreground hover:text-blue-400 underline cursor-pointer" onClick={() => openConfirm("Download Job File", "Are you sure you want to download this job?", () => downloadJob(Number(data.id)))}>
                                 Download
                             </span>
                         </div>

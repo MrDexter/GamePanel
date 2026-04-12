@@ -1,4 +1,5 @@
 import React,  { useState, useEffect } from 'react'
+import { toast } from "sonner"
 import {Input } from "@/components/ui/input"
 import {Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
@@ -6,13 +7,18 @@ import {copRanks, medicRanks, ionRanks, formatDate, formatMoney, useQueryParams}
 import { useLocation, useNavigate, Link   } from "react-router-dom"
 import { apiFetch } from "@/lib/api"
 import LoadingOverlay from "@/components/modals/Loading"
-import { ChevronLeft, ChevronRight, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, X, EllipsisVertical, FileJson, ArrowUp } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { GangMember } from "@/types/modals"
+import { useAuth } from "@/lib/AuthContext"
+import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,DropdownMenuSeparator, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
 
 export default function Stats() {
+    const { user, perms } = useAuth();
     const { searchParams, updateParams } = useQueryParams();
     const search = searchParams.get("search") ?? "";
+    const orderby = searchParams.get("orderby") ?? "id";
+    const direction = searchParams.get("direction") ?? "asc";
     const [results, setResults] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const currentPage = Number(searchParams.get("page") ?? 1);
@@ -23,6 +29,17 @@ export default function Stats() {
     const offset = Math.max(0, (itemPerPage * (currentPage - 1)));
     const navigate = useNavigate();
     const location = useLocation();
+
+    const ORDER_OPTIONS = [
+        { value: "id", label: "ID", entry: "uid" },
+        { value: "name", label: "Name", entry: "name" },
+        { value: "bank", label: "Bank", entry: "bankacc" },
+        { value: "seen", label: "Last Seen", entry: "last_seen" },
+    ] as const;
+
+    const ORDER_OPTION_MAP = Object.fromEntries(
+        ORDER_OPTIONS.map((opt) => [opt.value, opt])
+    ) as Record<string, (typeof ORDER_OPTIONS)[number]>;
 
     // Factions
     const groups = ["police", "ion", "nhs", "none"];   
@@ -59,6 +76,31 @@ export default function Stats() {
         updateParams({ factions: null, page: null });
     };
 
+    const handleExport = async () => {
+        const adminlevel = parseInt(user?.adminlevel ?? 0);
+        if (adminlevel < (perms?.admin?.EXPORT_DATA ?? 99)) {
+            toast.error("You don't have permission to export user data");
+            return;
+        }
+        try {
+            const res = await apiFetch("POST", `/${activeTab}s/export`);
+            const data = await res.json();
+            if (res.ok) {
+                toast.success("Background Job Queued", {
+                    description: `ID: ${data.jobId} - Exporting metadata to Azure Blob Storage.`,
+                    action: {
+                        label: "View Jobs",
+                        onClick: () => navigate(`/jobs?search=${data.jobId}`) // Not setup
+                    }
+                });
+            } else {
+                toast.error("Export Failed", { description: data.message ?? "API Error" });
+            }
+        } catch (error : any){
+            toast.error("Network Error", { description: error.message ?? "Check API status." });
+        };  
+    };
+
     // End of Factions
     useEffect(() => {
 
@@ -70,8 +112,9 @@ export default function Stats() {
         const delayedSearch = setTimeout(async () => {
             // setIsLoading(true);
             try {
+                const orderbyValue = ORDER_OPTION_MAP[orderby].entry;
                 const endpoint = activeTab === 'Player' 
-                ? `/players?limit=${itemPerPage}&offset=${offset}&search=${search}&factions=${factions}` 
+                ? `/players?limit=${itemPerPage}&offset=${offset}&search=${search}&factions=${factions}&orderby=${orderbyValue}&direction=${direction}` 
                 : `/groups?limit=${itemPerPage}&offset=${offset}&search=${search}`;
 
                 const response = await apiFetch("GET", endpoint);
@@ -92,7 +135,7 @@ export default function Stats() {
             }
         }, search.trim() ? 500 : 0);
         return () => clearTimeout(delayedSearch)
-    }, [search, currentPage, activeTab, factions]);
+    }, [search, currentPage, activeTab, factions, orderby, direction]);
     return (
         <div className="max-w-4xl lg:max-w-7xl mx-auto py-10 space-y-8">
             <div className="text-center space-y-2">
@@ -100,66 +143,175 @@ export default function Stats() {
                 <p className="text-muted-foreground">Search for a {activeTab}</p>
             </div>
         <Tabs value={activeTab} className="w-full" onValueChange={(value) => updateParams({ tab: value, page: null, factions: null })}>
-            <Card className="bg-card border-border">
-                <CardHeader>
-                <CardTitle className="text-sm font-medium uppercase text-foreground">Search Database</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                <div className="flex w-full items-center space-x-2 bg-background/50 ">
-                    <Input 
-                    placeholder="Enter Name or ID..." 
-                    value={search}
-                    onChange={(e) =>  updateParams({ search: e.target.value, page: 1})}
-                    className="border border-border text-foreground"
-                    />
-                </div>
-                <TabsList className="grid w-full grid-cols-2 bg-background border border-border">
-                    <TabsTrigger 
-                    value="Player" 
-                    className="text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card!"
-                    >
-                    Players
-                    </TabsTrigger>
-                    <TabsTrigger 
-                    value="Group" 
-                    className="text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card!"
-                    >
-                    Groups
-                    </TabsTrigger>
-                </TabsList>
-                {activeTab === "Player" &&(
-                    <div className="flex flex-wrap gap-2 items-center">
-                    <span className="text-xs font-bold uppercase min-w-12">
-                        Filter:
-                    </span>
-                    {groups.map(status => {
-                        const active = selectedFactions.includes(status);
-                        // const formatFaction = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+        <Card className="bg-card border-border">
+        <CardHeader className="flex items-center justify-between">
+            <CardTitle className="text-sm font-medium uppercase text-foreground">
+            Search Database
+            </CardTitle>
 
-                        return (
-                        <Button
-                            key={status}
-                            onClick={() => toggleFactions(status)}
-                            className={`h-7 px-2.5 text-xs rounded-sm uppercase
-                            ${active
-                                ? "bg-emerald-700/40 text-foreground border-emerald-500 hover:bg-emerald-800/50"
-                                : "bg-card text-muted-foreground border-border hover:bg-background hover:text-foreground"
-                            }`}>
-                            {status}
-                        </Button>
-                        );
-                    })}
-                    {selectedFactions.length > 0  &&(
-                        <Button
-                            onClick={() => resetFactions()}
-                            className={`h-7 px-2.5 text-xs rounded-sm bg-card text-foreground border-border hover:bg-background hover:text-foreground`}>
-                            <X className="h-3.5 w-3.5" /> RESET
-                        </Button>
-                    )}
-                    </div>
+            <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-foreground hover:text-foreground hover:bg-card"
+                >
+                <EllipsisVertical className="h-5 w-5" strokeWidth={2.5} />
+                </Button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent
+                align="end"
+                className="w-52 bg-card border-border text-foreground"
+            >
+                <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                Search Actions
+                </DropdownMenuLabel>
+
+                <DropdownMenuSeparator className="bg-background" />
+
+                <DropdownMenuItem
+                disabled={(user?.adminlevel || 0) < (perms?.admin?.EXPORT_DATA ?? 99)}
+                onClick={handleExport}
+                className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-foreground"
+                >
+                <FileJson className="h-3.5 w-3.5 text-muted-foreground" />
+                Export All {activeTab} Metadata
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+            </DropdownMenu>
+        </CardHeader>
+
+        <CardContent className="space-y-5">
+            {/* Search */}
+            <div className="relative w-full">
+            <Input
+                placeholder="Enter Name or ID..."
+                value={search}
+                onChange={(e) => updateParams({ search: e.target.value, page: 1 })}
+                onKeyDown={(e) => {
+                if (e.key === "Escape") updateParams({ search: "" });
+                }}
+                className="border border-border text-foreground pr-9"
+            />
+
+            <button
+                onClick={() => updateParams({ search: "" })}
+                className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded transition-all ${
+                search
+                    ? "opacity-100 hover:bg-card text-muted-foreground hover:text-foreground"
+                    : "opacity-0 pointer-events-none"
+                }`}
+            >
+                <X className="h-4 w-4" />
+            </button>
+            </div>
+
+            {/* Tabs */}
+            <TabsList className="grid w-full grid-cols-2 bg-background border border-border h-9 p-1">
+            <TabsTrigger
+                value="Player"
+                className="text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card! data-[state=active]:text-foreground"
+            >
+                Players
+            </TabsTrigger>
+            <TabsTrigger
+                value="Group"
+                className="text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card! data-[state=active]:text-foreground"
+            >
+                Groups
+            </TabsTrigger>
+            </TabsList>
+
+            {/* Player Filters */}
+            {activeTab === "Player" && (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <div className="flex items-center gap-2">
+            <span className="text-xs font-bold uppercase text-muted-foreground">
+                Order By:
+            </span>
+
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                <Button
+                    variant="outline"
+                    className="h-7 px-2.5 text-xs uppercase text-foreground border-border hover:bg-background"
+                >
+                    {ORDER_OPTIONS.find(opt => opt.value === orderby)?.label ?? orderby}
+                </Button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent
+                align="start"
+                className="w-40 bg-card border-border text-muted-foreground"
+                >
+                {ORDER_OPTIONS
+                    .filter(opt => opt.value !== orderby)
+                    .map(opt => (
+                    <DropdownMenuItem
+                        key={opt.value}
+                        onClick={() => updateParams({ orderby: opt.value, direction: null })}
+                        className="text-xs cursor-pointer focus:bg-card focus:text-foreground"
+                    >
+                        {opt.label}
+                    </DropdownMenuItem>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button
+                variant="outline"
+                size="icon"
+                onClick={() =>
+                updateParams({ direction: direction === "asc" ? "desc" : "asc" })
+                }
+                className="h-7 w-7 border-border text-muted-foreground hover:text-foreground hover:bg-background"
+            >
+                <ArrowUp
+                className={`h-3.5 w-3.5 transition-transform ${
+                    direction === "desc" ? "rotate-180" : ""
+                }`}
+                />
+            </Button>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-bold uppercase text-muted-foreground">
+                Filter:
+                </span>
+
+                {groups.map((status) => {
+                const active = selectedFactions.includes(status);
+
+                return (
+                    <Button
+                    key={status}
+                    onClick={() => toggleFactions(status)}
+                    className={`h-7 px-2.5 text-xs rounded-sm uppercase transition-colors ${
+                        active
+                        ? "bg-emerald-700/40 text-foreground border-emerald-500 hover:bg-emerald-800/50"
+                        : "bg-card text-muted-foreground border-border hover:bg-background hover:text-foreground"
+                    }`}
+                    >
+                    {status}
+                    </Button>
+                );
+                })}
+
+                {selectedFactions.length > 0 && (
+                <Button
+                    onClick={resetFactions}
+                    className="h-7 px-2.5 text-xs rounded-sm bg-card text-foreground border-border hover:bg-background hover:text-foreground flex items-center gap-1"
+                >
+                    <X className="h-3.5 w-3.5" />
+                    Reset
+                </Button>
                 )}
-                </CardContent>
-            </Card>
+            </div>
+            </div>
+            )}
+        </CardContent>
+        </Card>
             <TabsContent value={activeTab} className="mt-2 min-h-18.75"> 
             {activeTab === "Player" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -282,7 +434,7 @@ export default function Stats() {
                                 <Link 
                                 to={`/search/${member.id}`} 
                                 className="text-[10px] font-mono text-foreground hover:text-muted-foreground hover:underline transition-colors">
-                                <span>{member.rank > 4 ? member.name + "(Leader)" : member.name}{index < group.members.length - 1 && ","}</span>
+                                <span>{Number(member.rank) > 4 ? member.name + "(Leader)" : member.name}{index < group.members.length - 1 && ","}</span>
                                 </Link>
                             </React.Fragment>
                             ))}

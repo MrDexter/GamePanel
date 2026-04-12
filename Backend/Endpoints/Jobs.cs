@@ -21,7 +21,7 @@ public static class JobEndpoints
         .WithDescription("Retrieve all jobs as per params")
         .Produces<List<Job>>(200);
 
-        group.MapGet("/{id}", async (string id, IJobService jobs) =>
+        group.MapGet("/{id}", async (int id, IJobService jobs) =>
         {
             try
             {
@@ -37,7 +37,7 @@ public static class JobEndpoints
         .WithDescription("Retrieve a job by ID")
         .Produces<List<Job>>(200);
 
-        group.MapPost("/{id}/duplicate", async (string id, IJobService jobs) =>
+        group.MapPost("/{id}/duplicate", async (int id, IJobService jobs) =>
         {
             try
             {
@@ -59,7 +59,7 @@ public static class JobEndpoints
         .WithDescription("Create a new job with the same details as this job")
         .Produces(200);
 
-        group.MapPost("/{id}/cancel", async (string id, IJobService jobs) =>
+        group.MapPost("/{id}/cancel", async (int id, IJobService jobs) =>
         {
             try
             {
@@ -80,7 +80,7 @@ public static class JobEndpoints
         .WithDescription("Cancel a job that hasn't been completed yet")
         .Produces(200);
 
-        group.MapPost("/{id}/reset", async (string id, IJobService jobs) =>
+        group.MapPost("/{id}/reset", async (int id, IJobService jobs) =>
         {
             try
             {
@@ -101,7 +101,7 @@ public static class JobEndpoints
         .WithDescription("Reset a failed Job or Restart a completed job. Required Job ID.")
         .Produces<List<Job>>(200);
 
-        group.MapPost("/{id}/priority", async (string id, IJobService jobs) =>
+        group.MapPost("/{id}/priority", async (int id, IJobService jobs) =>
         {
             try
             {
@@ -124,7 +124,7 @@ public static class JobEndpoints
         .WithDescription("Set the job to be either Priority or Not")
         .Produces(200);
 
-        group.MapGet("/{id}/download", async (string id, bool? direct, IJobService jobs, IProcessorService processor) =>
+        group.MapGet("/{id}/download", async (int id, bool? direct, IJobService jobs, IProcessorService processor) =>
         {
             bool isDirect = direct ?? true;
             try {
@@ -149,6 +149,24 @@ public static class JobEndpoints
         .RequireAuthorization("SeniorStaff")
         .WithSummary("Download a Jobs File")
         .WithDescription("Download a file associated with a job. Requires a job ID.");
+
+        group.MapPost("/export", async (IJobService jobs) =>
+        {
+            var jobId = await jobs.CreateJobAsync("jobsExport", new {});
+            return Results.Accepted($"/jobs/{jobId}", new {jobId});
+        })
+        .RequireAuthorization("Staff")
+        .WithSummary("Export All Player Data")
+        .WithDescription("Creates a job to export all player data into a CSV for download. Returns Job ID");
+
+        group.MapPost("/{id}/export", async (string id, IJobService jobs) =>
+        {
+            var jobId = await jobs.CreateJobAsync("jobExport", new { jobId = id} );
+            return Results.Accepted($"/jobs/{jobId}", new {jobId});
+        })
+        .RequireAuthorization("Staff")
+        .WithSummary("Export A Players Data")
+        .WithDescription("Creates a job to export a players data into a CSV for download. Returns Job ID");
 
         return app;
     }

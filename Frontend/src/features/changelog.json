@@ -1,5 +1,28 @@
 [
   {
+    "date": "12-04-2026",
+    "version": "0.9.4",
+    "title": "Dashboard Stats, Auto Modal -> Interface Conversion",
+    "type": "Feature",
+    "category": "Full",
+    "changes": [
+      { "type": "Backend", "text": "Added last Stats data to backend" },
+      { "type": "frontend", "text": "Added remaining stats data to Dashboard" },
+      { "type": "backend", "text": "Fixed miscellaneous data handling on backend (Types)" },
+      { "type": "frontend", "text": "Added automatic C# Modal to TS Interface processing" },
+      { "type": "frontend", "text": "Fixed interface related data handling and added some missing" },
+      { "type": "frontend", "text": "Added dropdown to create Export All Players / Gangs Job" },
+      { "type": "frontend", "text": "Added Labels table for Job names for better display" },
+      { "type": "backend", "text": "Added Job Exporting to Background Worker" },
+      { "type": "frontend", "text": "Added dropdown and options to export all and specific jobs" },
+      { "type": "frontend", "text": "Added X to clear search to both search bars" },
+      { "type": "frontend", "text": "Added toggle for Light theme. (Please use Dark though)" },
+      { "type": "frontend", "text": "Added Orderby amd Direction params to All Players Endpoint" },
+      { "type": "frontend", "text": "Added Orderby amd Direction params to Player Search" },
+      { "type": "frontend", "text": "Fixed theme inconsistencies across site and models" }
+    ]
+  },
+  {
     "date": "06-04-2026",
     "version": "0.9.3",
     "title": "Stats Dashboard and Group Searching",

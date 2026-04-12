@@ -11,7 +11,7 @@ namespace DecsPage.Services;
 
 public interface IPlayerService
 {
-    Task<PaginatedRecord<Player>> GetAllPlayers(int? limit, int? offset, string? search, string? factions);
+    Task<PaginatedRecord<Player>> GetAllPlayers(int? limit, int? offset, string? search, string? factions, string? orderby, string? sortby);
     Task<List<Dictionary<string, object>>> GetPlayer(string id);
     Task<UpdateRank> UpdateRank(string id, string rank, string newRank);
     Task UpdateWhitelisting(HttpContext ctx, WhitelistUpdateRequest request);
@@ -31,7 +31,7 @@ public class PlayerService : IPlayerService
         _logging = logging; 
     }
 
-    public async Task<PaginatedRecord<Player>> GetAllPlayers(int? limit, int? offset, string? search, string? factions)
+    public async Task<PaginatedRecord<Player>> GetAllPlayers(int? limit, int? offset, string? search, string? factions, string? orderby, string? direction)
     {
         int totalRows = 0;
         var result = new List<Player>();
@@ -53,9 +53,24 @@ public class PlayerService : IPlayerService
                     OR ('none' IN (SELECT TRIM(value) FROM STRING_SPLIT(@factions, ',')) AND ionlevel = 0 AND mediclevel = 0 AND coplevel = 0)
                 )";
             }
+            var safeOrderBy = (orderby ?? "uid").ToLower() switch
+            {
+                "uid" => "uid",
+                "name" => "name",
+                "bankacc" => "bankacc",
+                "last_seen" => "last_seen",
+                _ => "uid"
+            };
+
+            var safeDirection = (direction ?? "ASC").ToUpper() switch
+            {
+                "ASC" => "ASC",
+                "DESC" => "DESC",
+                _ => "ASC"
+            };
             if (limit.HasValue || offset.HasValue)
             {
-                sql += " ORDER BY uid OFFSET @offset ROWS";
+                sql += $" ORDER BY {safeOrderBy} {safeDirection} OFFSET @offset ROWS";
                 if (limit.HasValue)
                 {
                     sql += " FETCH NEXT @limit ROWS ONLY";

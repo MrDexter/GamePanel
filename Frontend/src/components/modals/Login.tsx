@@ -101,9 +101,9 @@ export default function LoginModal({open, setOpen, setUser, setIsResetPassOpen, 
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-100 bg-zinc-950 border-zinc-800 shadow-2xl">
+      <DialogContent className="sm:max-w-100 bg-card border-border shadow-2xl">
         <DialogHeader>
-          <DialogTitle className="text-xl font-black uppercase tracking-tighter italic text-white">
+          <DialogTitle className="text-xl font-black uppercase tracking-tighter italic text-foreground">
             User Login
           </DialogTitle>
           <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
@@ -111,11 +111,11 @@ export default function LoginModal({open, setOpen, setUser, setIsResetPassOpen, 
           </p>
         </DialogHeader>
         <div className="mt-1 pt-1 border-t border-white/5 space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                 Testing Quick-Access
             </label>
             <select 
-                className="w-full bg-zinc-950 border border-zinc-800 text-xs p-2 rounded-sm outline-none focus:border-blue-600 transition-colors cursor-pointer"
+                className="w-full bg-card border border-border text-xs p-2 rounded-sm outline-none focus:border-blue-600 transition-colors cursor-pointer"
                 onChange={(e) => {
                     const account = DEMO_ACCOUNTS[e.target.value as keyof typeof DEMO_ACCOUNTS];
                     if (account) {
@@ -135,19 +135,19 @@ export default function LoginModal({open, setOpen, setUser, setIsResetPassOpen, 
         <form onSubmit={handleLogin} className="space-y-6 pt-4">
 
           <div className="grid gap-2">
-            <Label htmlFor="username" className="text-[10px] uppercase font-black text-zinc-500">
+            <Label htmlFor="username" className="text-[10px] uppercase font-black text-muted-foreground">
               Username
             </Label>
             <Input 
               id="username" 
               name="username"
               placeholder="Username" 
-              className="bg-zinc-900 border-zinc-800 font-mono focus-visible:ring-blue-600" 
+              className="bg-card border-border font-mono focus-visible:ring-blue-600" 
             />
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="password" className="text-[10px] uppercase font-black text-zinc-500">
+            <Label htmlFor="password" className="text-[10px] uppercase font-black text-muted-foreground">
               Password
             </Label>
             <Input 
@@ -155,11 +155,11 @@ export default function LoginModal({open, setOpen, setUser, setIsResetPassOpen, 
               name="password"
               type="password" 
               placeholder="••••••••" 
-              className="bg-zinc-900 border-zinc-800 font-mono focus-visible:ring-blue-600" 
+              className="bg-card border-border font-mono focus-visible:ring-blue-600" 
             />
           </div>
 
-          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-widest text-[11px] h-10">
+          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-foreground font-bold uppercase tracking-widest text-[11px] h-10">
             {isLoading ? "Verifying..." : "Login"}
           </Button>
         </form>

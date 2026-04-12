@@ -33,7 +33,7 @@ export default function ConfirmModal({
             Cancel
           </button>
           <button
-            className="px-3 py-1 bg-red-500 text-white rounded-sm"
+            className="px-3 py-1 bg-red-500 text-foreground rounded-sm"
             onClick={() => {
               onConfirm();
               onClose();

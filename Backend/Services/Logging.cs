@@ -48,7 +48,7 @@ public class LoggingService : ILoggingService
         using (var connection = new SqlConnection(connectionString))
         {
            await connection.OpenAsync();
-           var sql = "SELECT a.event_type, a.player_id, a.performed_by, a.details, a.created_at, target.name AS target_name, performer.name AS performer_name, COUNT(*) OVER() AS TotalRows FROM audit_log a LEFT JOIN players target ON target.playerid = a.player_id LEFT JOIN players performer ON performer.playerid = a.performed_by ";
+           var sql = "SELECT a.id, a.event_type, a.player_id, a.performed_by, a.details, a.created_at, target.name AS target_name, performer.name AS performer_name, COUNT(*) OVER() AS TotalRows FROM audit_log a LEFT JOIN players target ON target.playerid = a.player_id LEFT JOIN players performer ON performer.playerid = a.performed_by ";
             sql += type switch
             {
                 "incoming" => "WHERE (player_id = @steamid) ",
@@ -91,6 +91,7 @@ public class LoggingService : ILoggingService
                 }
                 var row = new PlayerLogs
                 {
+                    Id = Convert.ToInt32(reader["id"].ToString()),
                     EventType = reader["event_type"].ToString() ?? string.Empty,
                     PlayerId = reader["player_id"].ToString() ?? string.Empty,
                     PerformedBy = reader["performed_by"].ToString() ?? string.Empty,

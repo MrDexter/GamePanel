@@ -48,9 +48,9 @@ export default function ChangePasswordModal({open, setOpen}: { open: boolean; se
   };
     return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-100 bg-zinc-950 border-zinc-800 shadow-2xl">
+      <DialogContent className="sm:max-w-100 bg-card border-border shadow-2xl">
         <DialogHeader>
-          <DialogTitle className="text-xl font-black uppercase tracking-tighter italic text-white">
+          <DialogTitle className="text-xl font-black uppercase tracking-tighter italic text-foreground">
             Change Password
           </DialogTitle>
           <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
@@ -61,7 +61,7 @@ export default function ChangePasswordModal({open, setOpen}: { open: boolean; se
         <form onSubmit={handlePasswordChange} className="space-y-6 pt-4">
 
           <div className="grid gap-2">
-            <Label htmlFor="password" className="text-[10px] uppercase font-black text-zinc-500">
+            <Label htmlFor="password" className="text-[10px] uppercase font-black text-muted-foreground">
               Old Password
             </Label>
             <Input 
@@ -69,12 +69,12 @@ export default function ChangePasswordModal({open, setOpen}: { open: boolean; se
               name="oldPassword"
               type="password" 
               placeholder="••••••••" 
-              className="bg-zinc-900 border-zinc-800 font-mono focus-visible:ring-blue-600" 
+              className="bg-card border-border font-mono focus-visible:ring-blue-600" 
             />
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="password" className="text-[10px] uppercase font-black text-zinc-500">
+            <Label htmlFor="password" className="text-[10px] uppercase font-black text-muted-foreground">
               New Password
             </Label>
             <Input 
@@ -82,12 +82,12 @@ export default function ChangePasswordModal({open, setOpen}: { open: boolean; se
               name="password"
               type="password" 
               placeholder="••••••••" 
-              className="bg-zinc-900 border-zinc-800 font-mono focus-visible:ring-blue-600" 
+              className="bg-card border-border font-mono focus-visible:ring-blue-600" 
             />
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="password" className="text-[10px] uppercase font-black text-zinc-500">
+            <Label htmlFor="password" className="text-[10px] uppercase font-black text-muted-foreground">
               Confirm New Password
             </Label>
             <Input 
@@ -95,11 +95,11 @@ export default function ChangePasswordModal({open, setOpen}: { open: boolean; se
               name="confirmPassword"
               type="password" 
               placeholder="••••••••" 
-              className="bg-zinc-900 border-zinc-800 font-mono focus-visible:ring-blue-600" 
+              className="bg-card border-border font-mono focus-visible:ring-blue-600" 
             />
           </div>
 
-          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-widest text-[11px] h-10">
+          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-foreground font-bold uppercase tracking-widest text-[11px] h-10">
             {loading ? "Verifying..." : "Change Password"}
           </Button>
         </form>

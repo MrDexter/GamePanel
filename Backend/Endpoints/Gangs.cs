@@ -37,8 +37,8 @@ public static class GangEndpoints
 
         group.MapPost("/export", async (IJobService jobs) =>
         {
-            var id = await jobs.CreateJobAsync("gangsExport", new {});
-            return Results.Accepted($"/jobs/{id}", new {id});
+            var jobId = await jobs.CreateJobAsync("gangsExport", new {});
+            return Results.Accepted($"/jobs/{jobId}", new {jobId});
         })
         .RequireAuthorization("Staff")
         .WithSummary("Export All Groups Data")

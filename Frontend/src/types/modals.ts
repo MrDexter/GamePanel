@@ -1,15 +1,16 @@
+import type { components } from "./api";
 
-export interface AuditLog {
-  id: number;
-  eventType: string;
-  playerId: string;
-  performedBy: string;
-  performedByName: string;
-  targetName: string;
-  details: string;
-  createdAt: string;
-}
+export type AuditLog = components["schemas"]["PlayerLogs"];
 
+export type GangMember = components["schemas"]["GangMember"];
+
+export type Job = components["schemas"]["Job"];
+
+//Stats / Dashboard
+export type DashboardStats = components["schemas"]["DashboardStats"];
+export type DashboardTopStats = components["schemas"]["DashboardTopStats"];
+
+// Player Data
 export interface Houses {
   id: string;
   location: string;
@@ -31,21 +32,4 @@ export interface Vehicles {
   security: string;
   acceleration: string;
   insertTime: string;
-}
-
-export interface GangMember {
-  name: string;
-  id: string;
-  rank: number; 
-}
-
-export interface Job {
-  id: number;
-  type: string;
-  status: string;
-  result: string;
-  payload: string;
-  priority: boolean;
-  createdAt: string;
-  updatedAt: string;
 }

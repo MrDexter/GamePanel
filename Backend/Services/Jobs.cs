@@ -9,12 +9,12 @@ namespace DecsPage.Services;
 public interface IJobService
 {
   Task<PaginatedRecord<Job>>GetJobsAsync(string? search, string? statuses, int? limit, int? offset);
-  Task<Job>GetJobAsync(string id);  
+  Task<Job>GetJobAsync(int id);  
   Task<object>CreateJobAsync(string type, object? payload);
   Task StartWorker();
   Task <Job>GetWaitingJobAsync(CancellationToken stopToken);
-  Task<String>UpdateJobStatusAsync(string id, string status, string? result);
-  Task<bool>TogglePriority(string id, bool toggle);
+  Task<String>UpdateJobStatusAsync(int id, string status, string? result);
+  Task<bool>TogglePriority(int id, bool toggle);
 
 };
 
@@ -77,7 +77,7 @@ public class JobService : IJobService
                     totalRows = reader.GetInt32(reader.GetOrdinal("TotalRows"));
                 }
                 var row = new Job (
-                    reader["id"].ToString() ?? string.Empty,
+                    Convert.ToInt32(reader["id"].ToString()),
                     reader["type"].ToString() ?? string.Empty,
                     reader["status"].ToString() ?? string.Empty,
                     reader["result"].ToString() ?? string.Empty,
@@ -96,7 +96,7 @@ public class JobService : IJobService
         return response;
     }
 
-    public async Task<Job>GetJobAsync(string id)
+    public async Task<Job>GetJobAsync(int id)
     {
         using (var connection = new SqlConnection(connectionString))
         {
@@ -110,7 +110,7 @@ public class JobService : IJobService
                 throw new InvalidDataException("Job not found!");
             }
             return new Job (
-                reader["id"].ToString() ?? string.Empty,
+                Convert.ToInt32(reader["id"].ToString()),
                 reader["type"].ToString() ?? string.Empty,
                 reader["status"].ToString() ?? string.Empty,
                 reader["result"].ToString() ?? string.Empty,
@@ -156,7 +156,7 @@ public class JobService : IJobService
             if (!await reader.ReadAsync())
             {return null!;};
             return new Job (
-                reader["id"].ToString() ?? string.Empty,
+                Convert.ToInt32(reader["id"].ToString()),
                 reader["type"].ToString() ?? string.Empty,
                 reader["status"].ToString() ?? string.Empty,
                 reader["result"].ToString() ?? string.Empty,
@@ -168,7 +168,7 @@ public class JobService : IJobService
         };
     }
 
-    public async Task<string>UpdateJobStatusAsync(string id, string status, string? result)
+    public async Task<string>UpdateJobStatusAsync(int id, string status, string? result)
     {
         using (var connection = new SqlConnection(connectionString))
         {
@@ -190,7 +190,7 @@ public class JobService : IJobService
         }
     }
 
-    public async Task<bool>TogglePriority(string id, bool toggle)
+    public async Task<bool>TogglePriority(int id, bool toggle)
     {
         using (var connection = new SqlConnection(connectionString))
         {

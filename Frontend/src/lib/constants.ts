@@ -55,6 +55,15 @@ export const formatMoney = (amount: number) => {
   }).format(amount);
 };
 
+export const formatMoneyCompact = (amount: number) => {
+  return new Intl.NumberFormat("en-GB", {
+    style: "currency",
+    currency: "GBP",
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(amount);
+};
+
 export const APP_CONFIG = {
 } as const;
 
@@ -139,3 +148,12 @@ export const FACTIONS = [
   { id: 'medic', label: 'Medics', colorText: 'text-green-500', colorBg: 'bg-green-500', colorBorder: 'border-red-500', color: 'from-green-500', levelKey: 'mediclevel', ranks: medicRanks, units: ["hemslevel", "hartlevel", "rplevel"], login: 'nhs_login', playtime: 'playtime_nhs', commandLevel: 7},
   { id: 'ion', label: 'Ion', colorText: 'text-red-500', colorBg: 'bg-red-500', colorBorder: 'border-red-500', color: 'from-red-500', levelKey: 'ionlevel', ranks: ionRanks, units: ["deltalevel", "umlevel", "iaflevel", null, "irulevel" ], login: 'van_login', playtime: 'playtime_opfor', commandLevel: 6}, // Null for a unit filler for better layout
 ];
+
+export const JOB_TYPE_LABELS: Record<string, string> = {
+  playerExport: "Player Export",
+  playersExport: "Players Export",
+  gangsExport: "Groups Export",
+  gangExport: "Group Export",
+  jobExport: "Job Export",
+  jobsExport: "Jobs Export"
+};

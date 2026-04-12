@@ -13,7 +13,7 @@ public interface IProcessorService
 {
     Task<string>UploadBlobAsync(string name, string content, CancellationToken stopToken);
     Task<string>GetDownloadUrl(string name, TimeSpan expiry);
-    Task<string>ConvertToCSV<T>(string id, string type, IEnumerable<T> data, CancellationToken stopToken);
+    Task<string>ConvertToCSV<T>(int id, string type, IEnumerable<T> data, CancellationToken stopToken);
     Task<string>GetJobProcessorAsync(Job job, CancellationToken stopToken);
 }
 
@@ -69,7 +69,7 @@ public class ProcessorService : IProcessorService
         return url.ToString();
     }
 
-    public async Task<string>ConvertToCSV<T>(string id, string type, IEnumerable<T> data, CancellationToken stopToken)
+    public async Task<string>ConvertToCSV<T>(int id, string type, IEnumerable<T> data, CancellationToken stopToken)
     {
         var sb = new StringBuilder();
 
@@ -121,25 +121,34 @@ public class ProcessorService : IProcessorService
         }; 
     }
 
-    public async Task<string>GetJobProcessorAsync(Job job, CancellationToken stopToken)
+    public async Task<string>GetJobProcessorAsync(Job jobData, CancellationToken stopToken)
     {
+        Console.WriteLine("Starting");
         try
         {
-            var data = JsonSerializer.Deserialize<Dictionary<string, string>>(job.Payload.ToString() ?? "{}");
-            switch (job.Type)
+            var data = JsonSerializer.Deserialize<Dictionary<string, string>>(jobData.Payload.ToString() ?? "{}");
+            Console.WriteLine("Here");
+            switch (jobData.Type)
             {
                 case "playersExport":
-                    var players = await _playerService.GetAllPlayers(null, null, null, null);
-                    return await ConvertToCSV(job.Id, "playersExport", players.Data, stopToken);
+                    var players = await _playerService.GetAllPlayers(null, null, null, null, null, null);
+                    return await ConvertToCSV(jobData.Id, "playersExport", players.Data, stopToken);
                 case "playerExport":
                     var player = await _playerService.GetPlayer(data!["playerId"]);
-                    return await ConvertToCSV(job.Id, "playerExport", player, stopToken);
+                    return await ConvertToCSV(jobData.Id, "playerExport", player, stopToken);
                 case "gangsExport":
                     var gangs = await _gangService.GetAllGangs(null, null, null);
-                    return await ConvertToCSV(job.Id, "gangsExport", gangs.Data, stopToken);
+                    return await ConvertToCSV(jobData.Id, "gangsExport", gangs.Data, stopToken);
                 case "gangExport":
                     var gang = await _gangService.GetGang(data!["gangId"]);
-                    return await ConvertToCSV(job.Id, "gangExport", gang, stopToken);
+                    return await ConvertToCSV(jobData.Id, "gangExport", gang, stopToken);
+                case "jobsExport":
+                    var jobs = await _jobService.GetJobsAsync(null, null, null, null);
+                    return await ConvertToCSV(jobData.Id, "jobsExport", jobs.Data, stopToken);
+                case "jobExport":
+                    var job = await _jobService.GetJobAsync(Convert.ToInt32(data!["jobId"]));
+                    Console.WriteLine(job);
+                    return await ConvertToCSV(jobData.Id, "jobExport", [job], stopToken);
                 default:
                     throw new InvalidDataException("Processor not found");
 

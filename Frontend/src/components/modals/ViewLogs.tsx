@@ -20,7 +20,7 @@ export default function ViewLogsModal({open, setOpen, player}: {open: boolean; s
     const { user, perms } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [activeTab, setActiveTab] = useState("all");
-    const [logs, setLogs] = useState<any>([]);
+    const [logs, setLogs] = useState<AuditLog[]>([]);
     const [currentPage, setCurrentPage] = useState(0);
     const [totalRows, setTotalRows] = useState(1);
     const [search, setSearch] = useState("")
@@ -98,7 +98,7 @@ export default function ViewLogsModal({open, setOpen, player}: {open: boolean; s
 
     const eventFormatters: Record<string, (log: AuditLog) => string> = {
         "Rank Update": (log) => {
-            const [name, valueStr] = log.details.split(" - ");
+            const [name, valueStr] = log?.details?.split(" - ") ?? "";
             const value = Number(valueStr);
             const unitRanks = unitRankNames[name] || {}; 
             const rankName = unitRanks[value] ?? value;
@@ -134,7 +134,7 @@ export default function ViewLogsModal({open, setOpen, player}: {open: boolean; s
             </TabsTrigger>
             <TabsTrigger 
             value="all" 
-            className="text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-cover data-[state=active]:text-white"
+            className="text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-cover data-[state=active]:text-foreground"
             >
             All
             </TabsTrigger>
@@ -160,10 +160,11 @@ export default function ViewLogsModal({open, setOpen, player}: {open: boolean; s
         </div>
         ) : (
             <div className="h-112.5 overflow-y-auto pr-2 custom-scrollbar rounded-md border border-white/5 bg-cover">
-            {logs.map((log : AuditLog) => {
+            {logs.map((log) => {
             const isIncoming = log.playerId === player.playerid;
             const isSelf = log.playerId === log.performedBy;
-            const eventText = eventFormatters[log.eventType]?.(log) ?? log.details;
+            const eventType = log?.eventType ?? "";
+            const eventText = eventFormatters[eventType]?.(log) ?? log.details;
             const performerIsSelected = log.performedBy === selectedId;
             const targetIsSelected = log.playerId === selectedId;
 
@@ -191,14 +192,14 @@ export default function ViewLogsModal({open, setOpen, player}: {open: boolean; s
 
                 <p className="text-[11px] text-muted-foreground">
                     <PlayerLink
-                    id={log.performedBy}
-                    name={log.performedByName}
+                    id={log?.performedBy ?? "Unknown"}
+                    name={log?.performedByName ?? "Unknown"}
                     hideId={performerIsSelected}
                     />
                     <span className="mx-1">→</span>
                     <PlayerLink
-                    id={log.playerId}
-                    name={log.targetName}
+                    id={log?.playerId ?? "None"}
+                    name={log?.targetName ?? "Unknown"}
                     hideId={targetIsSelected}
                     />
                 </p>
@@ -211,7 +212,7 @@ export default function ViewLogsModal({open, setOpen, player}: {open: boolean; s
                 </div>
 
                 <div className="shrink-0 text-[9px] font-medium tabular-nums text-foreground">
-                {formatLogDate(log.createdAt)}
+                {log?.createdAt ? formatLogDate(log?.createdAt) : ""}
                 </div>
                 </div>
             );

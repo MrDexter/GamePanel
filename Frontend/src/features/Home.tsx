@@ -4,22 +4,22 @@ import { apiFetch } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 // import {Button } from "@/components/ui/button"
 import changelogData from "@/features/changelog.json";
-import {formatDate, formatMoney } from "@/lib/constants"
+import {formatDate, formatMoney, formatMoneyCompact } from "@/lib/constants"
 import { Link  } from "react-router-dom";
+import type { DashboardStats } from '@/types/modals';
 
 export default function Home() {
-    const [stats, setStats] = useState<any>(null)
+    const [stats, setStats] = useState<DashboardStats | null>(null);
 
     const fetchStats = async () => {
         try {
             const res = await apiFetch("GET", `/stats/dashboard`)
-            if (!res.ok) {
-                setStats("Not Found")
+            if (res.ok) {
+              const data = await res.json();
+              setStats(data)
             };
-            const data = await res.json();
-            setStats(data)
         } catch (error) {
-            setStats("Not Found");
+            setStats(null);
             console.error("Fetch Error", error);
         }
     };
@@ -66,7 +66,7 @@ export default function Home() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Total Bank</span>
-                <span className="text-foreground font-medium">{formatMoney(stats?.player?.totalBank)}</span>
+                <span className="text-foreground font-medium">{formatMoney(Number(stats?.player?.totalBank))}</span>
               </div>
             </div>
           </CardContent>
@@ -95,7 +95,7 @@ export default function Home() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Total Bank</span>
-                <span className="text-foreground font-medium">{formatMoney(stats?.group?.totalBank)}</span>
+                <span className="text-foreground font-medium">{formatMoney(Number(stats?.group?.totalBank))}</span>
               </div>
             </div>
           </CardContent>
@@ -130,7 +130,7 @@ export default function Home() {
                   >
                   Incomplete
                   </Link></span>
-                <span className="text-foreground font-medium">{stats?.job?.failed + stats?.job?.cancelled}</span>
+                <span className="text-foreground font-medium">{Number(stats?.job?.failed) + Number(stats?.job?.cancelled)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground"><Link
@@ -323,18 +323,18 @@ export default function Home() {
                 </p>
 
                 <p className="text-xs font-semibold text-purple-400">
-                  {formatMoney(stats?.top?.money?.total)}
+                  {formatMoney(Number(stats?.top?.money?.total))}
                 </p>
               </div>
 
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Cash</span>
-                  <span className="text-foreground font-medium">{formatMoney(stats?.top?.money?.cash)}</span>
+                  <span className="text-foreground font-medium">{formatMoney(Number(stats?.top?.money?.cash))}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Bank</span>
-                  <span className="text-foreground font-medium truncate">{formatMoney(stats?.top?.money?.bank)}</span>
+                  <span className="text-foreground font-medium truncate">{formatMoneyCompact(Number(stats?.top?.money?.bank))}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground"></span>
@@ -404,26 +404,26 @@ export default function Home() {
                 </p>
 
             <p className="text-xs font-semibold text-red-300">
-              {Math.round((stats?.top?.playtime?.total) / 60)} Hours
+              {Math.round(Number(stats?.top?.playtime?.total) / 60)} Hours
             </p>
               </div>
 
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Civilian</span>
-                  <span className="text-foreground font-medium">{Math.round((stats?.top?.playtime?.civilian) / 60)}H</span>
+                  <span className="text-foreground font-medium">{Math.round(Number(stats?.top?.playtime?.civilian) / 60)}H</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Police</span>
-                  <span className="text-foreground font-medium">{Math.round((stats?.top?.playtime?.police) / 60)}H</span>
+                  <span className="text-foreground font-medium">{Math.round(Number(stats?.top?.playtime?.police) / 60)}H</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Medic</span>
-                  <span className="text-foreground font-medium">{Math.round((stats?.top?.playtime?.medic) / 60)}H</span>
+                  <span className="text-foreground font-medium">{Math.round(Number(stats?.top?.playtime?.medic) / 60)}H</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Ion</span>
-                  <span className="text-foreground font-medium">{Math.round((stats?.top?.playtime?.ion) / 60)}H</span>
+                  <span className="text-foreground font-medium">{Math.round(Number(stats?.top?.playtime?.ion) / 60)}H</span>
                 </div>
               </div>
             </div>

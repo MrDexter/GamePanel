@@ -10,9 +10,9 @@ public static class PlayerEndpoints
     {
         var group = app.MapGroup("/players").WithTags("Player Management");
 
-        group.MapGet("/", async (int? limit, int? offset, string? search, string? factions, IPlayerService players) =>
+        group.MapGet("/", async (int? limit, int? offset, string? search, string? factions, string? orderby, string? direction, IPlayerService players) =>
         {
-            var result = await players.GetAllPlayers(limit, offset, search, factions);
+            var result = await players.GetAllPlayers(limit, offset, search, factions, orderby, direction);
             if (result is null)
                 return Results.NotFound();
 
@@ -82,8 +82,8 @@ public static class PlayerEndpoints
 
         group.MapPost("/export", async (IJobService jobs) =>
         {
-            var id = await jobs.CreateJobAsync("playersExport", new {});
-            return Results.Accepted($"/jobs/{id}", new {id});
+            var jobId = await jobs.CreateJobAsync("playersExport", new {});
+            return Results.Accepted($"/jobs/{jobId}", new {jobId});
         })
         .RequireAuthorization("Staff")
         .WithSummary("Export All Player Data")

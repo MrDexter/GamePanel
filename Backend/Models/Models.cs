@@ -67,7 +67,7 @@ public record UpdateRank (
 );
 
 public record Job (
-    string Id,
+    int Id,
     string Type,
     string Status,
     string Result,
@@ -145,6 +145,7 @@ public record Permissions(
 
 public record PlayerLogs
 {
+    public int Id {get; init;}
     public string EventType { get; init; } = "";
     public string PlayerId { get; init; } = "";
     public string PerformedBy { get; init; } = "";
