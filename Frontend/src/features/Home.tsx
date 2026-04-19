@@ -28,7 +28,7 @@ export default function Home() {
         fetchStats();
     }, []);
   return (
-<div className="max-w-6xl mx-auto py-10 px-6 space-y-8">
+<div className="max-w-6xl mx-auto py-10 md:px-6 space-y-8">
   <div className="text-center space-y-2">
     <h1 className="text-3xl font-bold tracking-tight text-foreground">
       Welcome to DecsPage

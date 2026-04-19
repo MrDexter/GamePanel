@@ -6,11 +6,13 @@
     "type": "Feature",
     "category": "Full",
     "changes": [
-      { "type": "backend", "text": "Added Steam / Openid integration and Login endpoint" },
+      { "type": "backend", "text": "Added Steam / Openid integration and Steam Login endpoints" },
       { "type": "frontend", "text": "Added Sign in with Steam option to Login Modal" },
       { "type": "frontend", "text": "Added Steam Avatar and Link to Player Profile" },
       { "type": "frontend", "text": "Removed unnecessary backdrop-blur usage to improve scroll performance and responsiveness" },
-      { "type": "frontend", "text": "Added consistent background containers to Project and About pages for improved layout and visual structure" }
+      { "type": "frontend", "text": "Added consistent background containers to Project and About pages for improved layout and visual structure" },
+      { "type": "frontend", "text": "Replaced top navigation with dropdown menu on mobile and tablet for improved responsiveness" },
+      { "type": "frontend", "text": "Adjusted layout spacing for mobile to improve readability and reduce content compression" }
     ]
   },
   {
