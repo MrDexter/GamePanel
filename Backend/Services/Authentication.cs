@@ -7,18 +7,21 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using BCrypt.Net;
+using System.Net.Http.Json;
+using System.Text.RegularExpressions;
 
 namespace DecsPage.Services;
 
-public interface IAuthenticationService
+public interface IAuthService
 {
     Task<string>GenerateToken (HttpContext context, UserDetails userDetails);
     Task <bool> GenerateGUID (HttpContext context, string id);
     Task <bool> DeleteGUID (HttpContext context, string guid);
     Task<LoginResponse> RefreshToken (HttpContext context, string guid);
     Task <LoginResponse> AuthenticateUser (string username, string password, HttpContext context);
+    Task<string> SteamLogin (HttpContext context, string steamid);
     Task LogoutUser (HttpContext context);
-    Task <string> CreateUser (string ID, string username, HttpContext context);
+    Task <string> CreateUser (string ID, string username, Boolean? steamLogin, HttpContext context);
     Task<bool> DeleteUser (string id, HttpContext context);
     Task<string> AdminResetPassword (string id, HttpContext context);
     Task<string> ResetPassword (ResetPassword req, HttpContext context);
@@ -26,7 +29,7 @@ public interface IAuthenticationService
     Task<UserDetails> GetUserDetails (string column, string filter);
 }
 
-public class AuthenticationService : IAuthenticationService
+public class AuthenticationService : IAuthService
 {
     private readonly string connectionString;
     private readonly string expectedSecret;
@@ -34,6 +37,7 @@ public class AuthenticationService : IAuthenticationService
     public readonly IPlayerService player;
     private readonly ILogger<AuthenticationService> _logger;
     public readonly ILoggingService logging;
+    public readonly string steamWebKey;
     public AuthenticationService(IConfiguration config, ILogger<AuthenticationService> logger, IPlayerService playerService, ILoggingService loggingService)
     {
         connectionString = config.GetConnectionString("DefaultConnection")
@@ -44,6 +48,8 @@ public class AuthenticationService : IAuthenticationService
         player = playerService;        
         _logger = logger;
         logging = loggingService;
+        steamWebKey = config["Steam:Key"]
+        ?? throw new InvalidOperationException("Missing Steam Key");
     }
 
     public async Task<string> GenerateToken(HttpContext context, UserDetails userDetails)
@@ -56,6 +62,14 @@ public class AuthenticationService : IAuthenticationService
             new Claim("SteamID", steamID),
             new Claim("ChangePassword", userDetails.ChangePassword)
         };
+
+        if (!string.IsNullOrEmpty(userDetails.SteamName))
+        {
+            claims.Add(
+                new Claim("steamName", userDetails.SteamName)
+            );
+        }
+
         var properties = typeof(PlayerPerms).GetProperties();
         foreach (var data in properties)
         {
@@ -179,6 +193,26 @@ public class AuthenticationService : IAuthenticationService
         
         throw new InvalidOperationException("GUID Failed to Generate!");
     }  
+
+    public async Task<string> SteamLogin (HttpContext context, string steamid)
+    {   
+        var userDetails = await GetUserDetails("SteamID", steamid);
+        if (userDetails is null) 
+        {
+            var steamLink = $"https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={steamWebKey}&steamids={steamid}";
+            using var httpClient = new HttpClient();
+            var response = await httpClient.GetFromJsonAsync<SteamResponse>(steamLink);
+            var player = response?.Response?.Players?.FirstOrDefault();
+            var steamName = player?.PersonaName ?? "Username Error"; 
+            string username = Regex.Replace(steamName, @"[^a-zA-Z0-9]", "");
+            await CreateUser(steamid, username, true, context);
+            userDetails = await GetUserDetails("SteamID", steamid);
+        };
+        var success = await GenerateGUID(context, steamid);
+        if (!success) throw new InvalidDataException("Failed to Generate a GUID");
+        var token = await GenerateToken(context, userDetails);
+        return token;
+    }
     public async Task LogoutUser(HttpContext context)
     {
         if (context.Request.Cookies.TryGetValue("refreshToken", out var guid))
@@ -186,27 +220,33 @@ public class AuthenticationService : IAuthenticationService
             await DeleteGUID(context, guid);
         }
     }
-    public async Task<string> CreateUser (string ID, string username, HttpContext context)
+    public async Task<string> CreateUser (string ID, string username, Boolean? steamLogin, HttpContext context)
     {
-        if (!context.Request.Cookies.TryGetValue("refreshToken", out var guid))
-        {   
-            throw new InvalidDataException("Session token not found!"); // Request not from a Logged in user
-        };
-        var userDetails = await GetUserDetails("RefreshToken", guid!) ?? throw new InvalidDataException("Error Fetching user details");
+        UserDetails? userDetails = null;
+        if (!steamLogin ?? true)
+        {
+            if (!context.Request.Cookies.TryGetValue("refreshToken", out var guid))
+            {   
+                throw new InvalidDataException("Session token not found!"); // Request not from a Logged in user
+            };
+            userDetails = await GetUserDetails("RefreshToken", guid!) ?? throw new InvalidDataException("Error Fetching user details");
+        }
         try {
             var password = GenerateRandomPassword();
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(password); 
             using (var connection = new SqlConnection(connectionString))
             {
                 await connection.OpenAsync();
-                var sql = "INSERT INTO users (UserName, PasswordHash, AdminLevel, SteamID) VALUES (@username, @passwordHash, 0, @SteamID)";
+                var sql = "INSERT INTO users (UserName, PasswordHash, AdminLevel, SteamID, changePassword, steamName) VALUES (@username, @passwordHash, 0, @SteamID, @changePass, @steamName)";
                 var command = new SqlCommand(sql, connection);
-                command.Parameters.AddWithValue("@username", username);
+                command.Parameters.AddWithValue("@username", (steamLogin == true) ? "steam_" + ID : username);
                 command.Parameters.AddWithValue("@passwordHash", passwordHash);
                 command.Parameters.AddWithValue("@steamID", ID);
+                command.Parameters.AddWithValue("@changePass", (steamLogin == true) ? 0 : 1);
+                command.Parameters.AddWithValue("@steamName", (steamLogin == true) ? username : DBNull.Value);
                 await command.ExecuteNonQueryAsync();
             };
-            await logging.AuditLog("User Create", ID, userDetails.SteamID, "");
+            await logging.AuditLog("User Create", ID, userDetails?.SteamID ?? "Steam Login", "");
             return password; 
         } catch (SqlException error) when (error.Number == 2627 || error.Number == 2601) // Duplicate Entry for Username or SteamID
         {
@@ -334,7 +374,7 @@ public class AuthenticationService : IAuthenticationService
         using (var connection = new SqlConnection(connectionString))
         {
             await connection.OpenAsync();
-            var sql = $"SELECT id, Username, PasswordHash, AdminLevel, SteamID, changePassword, isActive FROM users WHERE {column} = @filter";
+            var sql = $"SELECT id, Username, PasswordHash, AdminLevel, SteamID, changePassword, steamName, isActive FROM users WHERE {column} = @filter";
             using var command = new SqlCommand(sql, connection); 
             command.Parameters.AddWithValue("@filter", filter);
             using var reader = await command.ExecuteReaderAsync();
@@ -348,10 +388,11 @@ public class AuthenticationService : IAuthenticationService
                     reader["PasswordHash"].ToString() ?? string.Empty,
                     int.Parse(reader["AdminLevel"].ToString() ?? string.Empty),
                     reader["SteamID"].ToString() ?? string.Empty,
-                    reader["changePassword"].ToString() ?? string.Empty
+                    reader["changePassword"].ToString() ?? string.Empty,
+                    reader["steamName"].ToString() ?? string.Empty
                 );
             };
-            throw new UnauthorizedAccessException(column + " cannot be found!");
+            return null!;
         };
     }
     private static string GenerateRandomPassword(int length = 12)

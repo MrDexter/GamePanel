@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AspNet.Security.OpenId.Steam" Version="10.0.0" />
     <PackageReference Include="AspNetCore.HealthChecks.Azure.Storage.Blobs" Version="9.0.0" />
     <PackageReference Include="AspNetCore.HealthChecks.AzureStorage" Version="7.0.0" />
     <PackageReference Include="AspNetCore.HealthChecks.SqlServer" Version="9.0.0" />

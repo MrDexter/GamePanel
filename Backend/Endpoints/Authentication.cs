@@ -1,10 +1,9 @@
 using DecsPage.Models;
 using DecsPage.Services;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+
 
 namespace DecsPage.Endpoints;
 
@@ -24,7 +23,7 @@ public static class AuthEndpoints
         .WithDescription("Generate a new JWT Token with specified params. Requires Auth Secret")
         .Produces(200); */
 
-        group.MapPost("/refreshToken", async(HttpContext context, IAuthenticationService auth) =>
+        group.MapPost("/refreshToken", async(HttpContext context, IAuthService auth) =>
         {
             if (!context.Request.Cookies.TryGetValue("refreshToken", out var oldGuid))
             {
@@ -42,7 +41,7 @@ public static class AuthEndpoints
         .WithDescription("Refresh a JWT Token. Requires JWT Token")
         .Produces<LoginResponse>(200);
 
-        group.MapPost("/login", async (LoginRequest req, IAuthenticationService auth, HttpContext context) =>
+        group.MapPost("/login", async (LoginRequest req, IAuthService auth, HttpContext context) =>
         {
             try {
                 var data = await auth.AuthenticateUser(req.Username, req.Password, context);
@@ -60,7 +59,52 @@ public static class AuthEndpoints
         .WithDescription("Login to a User Account. Requires Username and Password")
         .Produces(200);
 
-        group.MapPost("/logout", async (IAuthenticationService auth, HttpContext context) =>
+        group.MapGet("/steamLogin", (HttpContext context, string? currentUrl) =>
+        {
+            Console.WriteLine(currentUrl);
+            return Results.Challenge(
+                properties: new AuthenticationProperties 
+                { 
+                    RedirectUri = $"/auth/steamCallback?currentUrl={currentUrl}" 
+                },
+                authenticationSchemes: new[] { "Steam" } 
+            );
+        })
+        .AllowAnonymous()
+        .WithSummary("Steam Login")
+        .Produces(302);
+
+        group.MapGet("/steamCallback", async (HttpContext context, string? currentUrl, IAuthService auth) =>
+        {
+            // 1. Authenticate against the temporary Cookie scheme
+            var result = await context.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+            if (!result.Succeeded || result.Principal == null)
+            {
+                return Results.BadRequest("Steam authentication failed.");
+            }
+
+            var steamUrl = result.Principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var steamId64 = steamUrl?.Split('/').Last();
+
+            if (string.IsNullOrEmpty(steamId64))
+            {
+                return Results.BadRequest("Could not retrieve SteamID.");
+            }
+            if (string.IsNullOrEmpty(currentUrl))
+            {
+                currentUrl = "https://decspage.com/";
+            }
+            var token = await auth.SteamLogin(context, steamId64);
+            string separator = currentUrl.Contains("?") ? "&" : "?" ?? "?";
+            var url = $"{currentUrl}{separator}token={token}";
+            return Results.Redirect(url);
+        })
+        .AllowAnonymous()
+        .WithSummary("Steam Callback")
+        .Produces(200);
+
+        group.MapPost("/logout", async (IAuthService auth, HttpContext context) =>
         {
            await auth.LogoutUser(context);
            return Results.Ok(new { message = "Logged out" });   
@@ -70,10 +114,10 @@ public static class AuthEndpoints
         .WithDescription("Logout a User Account. Wipes the GUID Cookie")
         .Produces(200);
 
-        group.MapPost("/createUser", async (string ID, string username, HttpContext context, IAuthenticationService auth) =>
+        group.MapPost("/createUser", async (string ID, string username, HttpContext context, IAuthService auth) =>
         {
             try {
-                var password = await auth.CreateUser(ID, username, context);
+                var password = await auth.CreateUser(ID, username, false, context);
                 return Results.Ok( new { password = password});
             } catch (ApiException error)
             {
@@ -85,7 +129,7 @@ public static class AuthEndpoints
         .WithDescription("Create a User. Requires a Vaid JWT Token")
         .Produces(200);
 
-        group.MapPost("/deleteUser", async (string id, HttpContext context, IAuthenticationService auth) =>
+        group.MapPost("/deleteUser", async (string id, HttpContext context, IAuthService auth) =>
         {
             try {
                 await auth.DeleteUser(id, context);
@@ -99,7 +143,7 @@ public static class AuthEndpoints
         .WithDescription("Delete a User. Requires a Valid JWT Token")
         .Produces(200);
 
-        group.MapPost("/adminResetPassword", async (string id, HttpContext context, IAuthenticationService auth) =>
+        group.MapPost("/adminResetPassword", async (string id, HttpContext context, IAuthService auth) =>
         {
             try {
                 var password = await auth.AdminResetPassword(id, context);  
@@ -113,7 +157,7 @@ public static class AuthEndpoints
         .WithDescription("Reset a Users Password. Requires a Valid JWT Token")
         .Produces(200);
 
-        group.MapPost("/resetPassword", async (ResetPassword req, IAuthenticationService auth, HttpContext context) =>
+        group.MapPost("/resetPassword", async (ResetPassword req, IAuthService auth, HttpContext context) =>
         {
             if (!context.Request.Cookies.TryGetValue("refreshToken", out var Guid))
             {
@@ -131,7 +175,7 @@ public static class AuthEndpoints
         .WithDescription("Reset Password Without Old Password.")
         .Produces(200);
 
-        group.MapPost("/changePassword", async (ChangePassword req, IAuthenticationService auth, HttpContext context) =>
+        group.MapPost("/changePassword", async (ChangePassword req, IAuthService auth, HttpContext context) =>
         {
             if (!context.Request.Cookies.TryGetValue("refreshToken", out var Guid))
             {

@@ -24,6 +24,7 @@ services:
       - Jwt__Key=${JWT_KEY}
       - Storage__ConnectionString=${Storage__ConnectionString}
       - Storage__Container=${Storage__Container}
+      - Steam__Key=${STEAM_KEY}
     depends_on:
       - db
     develop:

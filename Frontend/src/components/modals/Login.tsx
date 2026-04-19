@@ -8,10 +8,15 @@ import { Input } from "@/components/ui/input"
 import { Button } from '@/components/ui/button'
 import { apiFetch } from "@/lib/api"
 import LoadingOverlay from "@/components/modals/Loading"
+import { useAuth } from "@/lib/AuthContext"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default function LoginModal({open, setOpen, setUser, setIsResetPassOpen, setPerms}: { open: boolean; setOpen: (val: boolean) => void; setUser: (user: any) => void; setIsResetPassOpen: (user: any) => void; setPerms: (perms: any) => void;}) {
+  const { user } = useAuth();
+  if (user) return;
+  const BASE_URL = import.meta.env.VITE_API_URL;
   const [isLoading, setIsLoading] = useState(false);
+  const steamLoginButton = "https://community.fastly.steamstatic.com/public/images/signinthroughsteam/sits_01.png";
   const DEMO_ACCOUNTS = {
     admin:          { user: "Sam",  pass: "Sp!cnawqLYvC" },
     policeCommand:  { user: "Lewis", pass: "VChQ@@x^iUsi" },
@@ -68,6 +73,14 @@ export default function LoginModal({open, setOpen, setUser, setIsResetPassOpen, 
       toast.error("Error", { description: error.message ?? "Check API status." });
     };
   };
+
+  const handleSteamLogin = () => {
+    const returnUrl = encodeURIComponent(window.location.href);
+    window.location.href = `${BASE_URL}/auth/steamLogin?currentUrl=${returnUrl}`;
+  };
+
+  const returnUrl = encodeURIComponent(window.location.href);
+  const loginUrl = `${BASE_URL}/auth/steamLogin?currentUrl=${returnUrl}`;
 
   const quickLogin = async (loginData: any) => {
     setIsLoading(true);
@@ -157,6 +170,16 @@ export default function LoginModal({open, setOpen, setUser, setIsResetPassOpen, 
               placeholder="••••••••" 
               className="bg-card border-border font-mono focus-visible:ring-blue-600" 
             />
+          </div>
+
+          <div className="flex justify-center w-full pt-2">
+            <a href={loginUrl} className="inline-block transition-opacity hover:opacity-80">
+              <img 
+                src={steamLoginButton} 
+                alt="Sign in through Steam" 
+                className="cursor-pointer"
+              />
+            </a>
           </div>
 
           <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-foreground font-bold uppercase tracking-widest text-[11px] h-10">

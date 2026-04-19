@@ -23,12 +23,15 @@ public class PlayerService : IPlayerService
     private readonly string connectionString;
 
     private readonly ILoggingService _logging;
+    private readonly string steamWebKey;
 
     public PlayerService(IConfiguration config, ILoggingService logging)
     {
         connectionString = config.GetConnectionString("DefaultConnection")
         ?? throw new InvalidOperationException("Missing Default Connection");
         _logging = logging; 
+        steamWebKey = config["Steam:Key"]
+        ?? throw new InvalidOperationException("Missing Steam Key");
     }
 
     public async Task<PaginatedRecord<Player>> GetAllPlayers(int? limit, int? offset, string? search, string? factions, string? orderby, string? direction)
@@ -150,6 +153,13 @@ public class PlayerService : IPlayerService
                     }
                 }
                 row["civ_licenses"] = activeLicenses;
+                var steamLink = $"https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={steamWebKey}&steamids={row["playerid"]}";
+                using var httpClient = new HttpClient();
+                var response = await httpClient.GetFromJsonAsync<SteamResponse>(steamLink);
+                var player = response?.Response?.Players?.FirstOrDefault();
+                var steamAvatar = player?.AvatarFull; 
+                if (!string.IsNullOrEmpty(steamAvatar))
+                    row["avatar"] = steamAvatar;
                 result.Add(row);
         };
         // Gang
