@@ -4,7 +4,7 @@ import { apiFetch } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 // import {Button } from "@/components/ui/button"
 import changelogData from "@/features/changelog.json";
-import {formatDate, formatMoney, formatMoneyCompact } from "@/lib/constants"
+import {formatDate, formatMoney, formatMoneyCompact, JOB_TYPE_LABELS } from "@/lib/constants"
 import { Link  } from "react-router-dom";
 import type { DashboardStats } from '@/types/modals';
 
@@ -464,7 +464,7 @@ export default function Home() {
                     <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-foreground">
-                            {job?.type}
+                            {JOB_TYPE_LABELS[job?.type] ?? job?.type}
                         </p>
                         <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
                             Job ID {job?.id} • {formatDate(job?.updatedAt, true)}

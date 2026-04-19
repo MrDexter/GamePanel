@@ -275,7 +275,24 @@ export default function StatsPlayer() {
                 <div className="flex items-center gap-6">
                     <div className="relative h-16 w-16 flex items-center justify-center rounded-2xl bg-card border-2 border-blue-600/50 shadow-[0_0_15px_rgba(37,99,235,0.15)]">
                     <span className="text-3xl font-black text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]">
+                    {player?.avatar ? (
+                        <a 
+                        href={"https://steamcommunity.com/profiles/" + player?.playerid} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="transition-opacity hover:opacity-80"
+                        >
+                        <img 
+                            src={player.avatar} 
+                            alt={player.name} 
+                            className="w-12 h-12 rounded-md cursor-pointer" 
+                        />
+                        </a>
+                    ) : (
+                        <div>
                         {player.name?.[0].toUpperCase()}
+                        </div>
+                    )}
                     </span>
                     {/* Small "Active" dot in the corner */}
                     {/* <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-green-500 border-4 border-border" /> */}

@@ -1,5 +1,17 @@
 [
   {
+    "date": "19-04-2026",
+    "version": "0.9.5",
+    "title": "Steam Integration",
+    "type": "Feature",
+    "category": "Full",
+    "changes": [
+      { "type": "Backend", "text": "Added Steam / Openid integration and Login endpoint" },
+      { "type": "frontend", "text": "Added Sign in with Steam option to Login Modal" },
+      { "type": "frontend", "text": "Added Steam Avatar and Link to Player Profile" }
+    ]
+  },
+  {
     "date": "12-04-2026",
     "version": "0.9.4",
     "title": "Dashboard Stats, Auto Modal -> Interface Conversion",

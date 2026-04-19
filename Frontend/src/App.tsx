@@ -61,6 +61,10 @@ export default function App() {
     setLogoutHandler(globalLogout);
 
     const LoginStatus = async () => {
+      if (jwtToken) {
+        localStorage.setItem("token", jwtToken);
+        updateParams({ token: null, login: null });
+      }
       const token = localStorage.getItem("token");
       if (token) {
         const decodedToken = jwtDecode<any>(token);
@@ -83,7 +87,7 @@ export default function App() {
         } catch (err) {
           globalLogout(true);
         };
-      }
+      };
     };
     LoginStatus()
   }, []);
@@ -104,6 +108,7 @@ export default function App() {
 
   const { searchParams, updateParams } = useQueryParams();
   const isLoginOpen = searchParams.get("login") === "true";
+  const jwtToken = searchParams.get("token");
   const [isResetPasswordOpen, setisResetPasswordOpen] = useState(false);
   const [isChangePasswordOpen, setisChangePasswordOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -141,7 +146,7 @@ export default function App() {
                         size="sm"
                         className="text-[10px] font-black uppercase tracking-widest text-foreground bg-background hover:text-foreground hover:bg-card transition-all">
                         <User className="mr-2 h-3 w-3" />
-                        {user.Name}
+                        {user.steamName ?? user.Name}
                       </Button>
                     </DropdownMenuTrigger>
                     

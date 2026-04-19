@@ -1,37 +1,43 @@
-using Microsoft.Extensions.Hosting;
 using Scalar.AspNetCore;
 using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
 using System.Text.Json;
 using DecsPage.Endpoints;
 using DecsPage.Services;
 using DecsPage.Background;
 using Microsoft.OpenApi;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-// using Microsoft.AspNetCore.HealthChecks.AzureStorage;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddAuthentication("Bearer").AddJwtBearer("Bearer", options =>
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddCookie(CookieAuthenticationDefaults.AuthenticationScheme)
+.AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
     {
-      ValidateIssuer = true,
-      ValidateAudience = true,
-      ValidateLifetime = true,
-      ValidateIssuerSigningKey = true, 
-
-      ValidIssuer = builder.Configuration["Jwt:Issuer"],
-      ValidAudience = builder.Configuration["Jwt:Audience"],
-
-      IssuerSigningKey = new SymmetricSecurityKey(
-        Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]
-        ?? throw new InvalidOperationException("Missing Default JWT Key"))
-      ),
-      ClockSkew = TimeSpan.Zero 
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] 
+            ?? throw new InvalidOperationException("Missing Default JWT Key"))
+        ),
+        ClockSkew = TimeSpan.Zero 
     };
+})
+.AddSteam(options => 
+{
+    options.ApplicationKey = builder.Configuration["Steam:Key"];
+    options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme; 
 });
 
 builder.Services.AddAuthorization(options =>
@@ -49,7 +55,7 @@ builder.Services.AddScoped<IGangService, GangService>();
 builder.Services.AddScoped<ILoggingService, LoggingService>();
 builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<IProcessorService, ProcessorService>();
-builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<IAuthService, AuthenticationService>();
 builder.Services.AddScoped<IStatsService, StatsService>();
 // For the Azure App Service test platform, Disable this and do a manual trigger on job creation to save on resources
 // builder.Services.AddHostedService<JobWorker>();

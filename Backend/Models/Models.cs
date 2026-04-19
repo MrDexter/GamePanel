@@ -99,7 +99,8 @@ public record UserDetails(
     string PasswordHash,
     int AdminLevel,
     string SteamID,
-    string ChangePassword
+    string ChangePassword,
+    string SteamName
 );
 
 public record PlayerPerms(
@@ -279,4 +280,21 @@ public record DashboardTopPlaytime
     public int Medic {get; init;}
     public int Ion {get; init;}
     public int Total {get; init;}
+}
+
+public class SteamResponse
+{
+    public SteamPlayers Response { get; set; } = new();
+}
+
+public class SteamPlayers
+{
+    public List<SteamPlayer> Players { get; set; } = new();
+}
+
+public class SteamPlayer
+{
+    public string PersonaName { get; set; } = string.Empty;
+    public string AvatarFull { get; set; } = string.Empty;
+    public string SteamId { get; set; } = string.Empty;
 }
