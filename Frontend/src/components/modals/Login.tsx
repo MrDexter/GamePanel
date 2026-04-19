@@ -74,11 +74,6 @@ export default function LoginModal({open, setOpen, setUser, setIsResetPassOpen, 
     };
   };
 
-  const handleSteamLogin = () => {
-    const returnUrl = encodeURIComponent(window.location.href);
-    window.location.href = `${BASE_URL}/auth/steamLogin?currentUrl=${returnUrl}`;
-  };
-
   const returnUrl = encodeURIComponent(window.location.href);
   const loginUrl = `${BASE_URL}/auth/steamLogin?currentUrl=${returnUrl}`;
 

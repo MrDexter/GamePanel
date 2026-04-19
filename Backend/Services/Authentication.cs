@@ -380,7 +380,6 @@ public class AuthenticationService : IAuthService
             using var reader = await command.ExecuteReaderAsync();
             if (await reader.ReadAsync())
             {
-                Console.WriteLine(reader["isActive"]);
                 if (!Convert.ToBoolean(reader["isActive"])) throw new UnauthorizedAccessException("Account is disabled!");
                 return new UserDetails(
                     int.Parse(reader["id"].ToString() ?? string.Empty),

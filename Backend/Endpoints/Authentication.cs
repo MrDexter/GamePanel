@@ -61,7 +61,6 @@ public static class AuthEndpoints
 
         group.MapGet("/steamLogin", (HttpContext context, string? currentUrl) =>
         {
-            Console.WriteLine(currentUrl);
             return Results.Challenge(
                 properties: new AuthenticationProperties 
                 { 
