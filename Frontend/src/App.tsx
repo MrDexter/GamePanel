@@ -7,6 +7,7 @@ import Breakdown from "@/features/Breakdown"
 import About from "@/features/About"
 import Jobs from "@/features/Jobs"
 import Home from "@/features/Home"
+import Test from "@/features/Test"
 import changelogData from "@/features/changelog.json";
 import LoginModal from "@/components/modals/Login"
 import ChangePasswordModal from "@/components/modals/ChangePassword"
@@ -19,7 +20,7 @@ import {Badge } from "@/components/ui/badge"
 import { Button } from './components/ui/button'
 import { Toaster } from "@/components/ui/sonner"
 import { AuthContext } from "@/lib/AuthContext"
-import { LogIn, FileJson, ArrowLeftRight, User, UserCircle } from "lucide-react"
+import { LogIn, FileJson, ArrowLeftRight, User, UserCircle, Menu } from "lucide-react"
 import { apiFetch, setLogoutHandler } from "@/lib/api"
 import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,DropdownMenuSeparator, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
 import { useQueryParams } from "@/lib/constants"
@@ -119,6 +120,15 @@ export default function App() {
     setTheme(currentTheme === "dark" ? "light" : "dark");
   };
 
+  const NAV_LINKS = [
+  { to: "/", label: "Home" },
+  { to: "/search", label: "Search" },
+  { to: "/jobs", label: "Jobs" },
+  { to: "/changelog", label: "Changelog" },
+  { to: "/about", label: "About" },
+  { to: "/breakdown", label: "Breakdown" },
+];
+
   return (
  <AuthContext.Provider value={{ user, setUser, logout: handleLogout, perms, setPerms }}>
       <div className='min-h-screen bg-background text-foreground font-sans selection:bg-blue-500/30'>
@@ -126,14 +136,34 @@ export default function App() {
         <nav className='w-full border-b border-border bg-card sticky top-0 z-50'>
           <div className='px-8 h-16 flex items-center justify-between'>
 
-            <div className='flex items-center gap-10 text-sm font-medium uppercase tracking-wider'>
-              <Link to="/" className='text-muted-foreground hover:text-foreground transition-colors'>Home</Link>
-              <Link to="/search" className='text-muted-foreground hover:text-foreground transition-colors'>Search</Link>
-              <Link to="/jobs" className='text-muted-foreground hover:text-foreground transition-colors'>Jobs</Link>
-              <Link to="/changelog" className='text-muted-foreground hover:text-foreground transition-colors'>Changelog</Link>
-              <Link to="/about" className='text-muted-foreground hover:text-foreground transition-colors'>About</Link>
-              <Link to="/breakdown" className='text-muted-foreground hover:text-foreground transition-colors'>Breakdown</Link>
-            </div>
+          <div className="hidden md:flex items-center gap-10 text-sm font-medium uppercase tracking-wider">
+            {NAV_LINKS.map((nav) => (
+              <Link key={nav.to} to={nav.to} className="text-muted-foreground hover:text-foreground transition-colors">{nav.label}</Link>
+            ))}
+          </div>
+
+          <div className="flex md:hidden items-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-foreground hover:bg-card">
+                  <Menu className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent
+                align="start"
+                className="w-48 bg-card border-border text-foreground">
+                {NAV_LINKS.map((nav) => (
+                  <DropdownMenuItem key={nav.to} asChild className="text-xs cursor-pointer focus:bg-background focus:text-foreground">
+                    <Link to={nav.to}>{nav.label}</Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
             
               <div className="flex items-center gap-3 cursor-pointer">
               {/* Login Button */}
@@ -262,6 +292,7 @@ export default function App() {
             <Route path="/changelog" element={<Changelog />} />
             <Route path="/about" element={<About />} />
             <Route path="/breakdown" element={<Breakdown />} />
+            <Route path="/Future/:name" element={<Test />} />
           </Routes>
         </main>
         <Toaster
@@ -278,38 +309,41 @@ export default function App() {
 
 function Changelog() {
   return (
-    <div className="max-w-3xl mx-auto py-12 px-6 bg-card">
-      <h1 className="text-3xl font-black uppercase tracking-tighter text-foreground mb-12">
-        System Changelog
-      </h1>
-      
-      <div className="relative">
-        {changelogData.map((release) => (
-          <div key={release.version} className="border-l-2 border-border pl-8 pb-12 last:pb-0 relative">
-            <div className="absolute -left-2.25 top-1 h-4 w-4 rounded-full bg-card border-2 border-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.3)]" />
-            
-            <div className="flex items-center gap-3 mb-2">
-                <span className="text-[12px] font-mono text-foreground uppercase tracking-widest">{release.date}</span>
-                <Badge className="bg-blue-600/10 text-blue-500 border-blue-500/20 text-[9px] h-4">
-                    {release.category}
-                </Badge>
-            </div>
-
-            <ul className="mt-4 space-y-3">
-              {release.changes.map((change, i) => (
-                <li key={i} className="text-[14px] text-foreground flex gap-3 items-start">
-                  <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border uppercase mt-0.5 shrink-0
-                    ${change.type === 'backend' ? 'border-emerald-500/30 text-emerald-500' : 'border-purple-500/30 text-purple-500'}`}>
-                    {change.type[0]}
-                  </span>
-                  {change.text}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+  <div className="max-w-6xl mx-auto md:px-6 py-12">
+    <div className="bg-card border border-border rounded-xl p-6 space-y-12">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Changelog</h1>
+        <p className="text-sm text-muted-foreground">
+          Development updates, fixes and new features
+        </p>
       </div>
+      
+      {changelogData.map((release) => (
+      <div key={release.version} className="relative pl-6 space-y-4">
+        <div className="absolute left-0 top-0.75 h-3 w-3 rounded-full bg-card border-2 border-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.4)]" />
+          
+          <div className="flex items-center gap-3 mb-2">
+              <span className="text-[12px] font-mono text-foreground uppercase tracking-widest">{release.date}</span>
+              <Badge className="bg-blue-600/10 text-blue-500 border-blue-500/20 text-[11px] h-4">
+                  {release.version}
+              </Badge>
+          </div>
+
+          <ul className="mt-4 space-y-3">
+            {release.changes.map((change, i) => (
+              <li key={i} className="text-[14px] text-foreground flex gap-3 items-start">
+                <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border uppercase mt-0.5 shrink-0
+                  ${change.type === 'backend' ? 'border-emerald-500/30 text-emerald-500' : 'border-purple-500/30 text-purple-500'}`}>
+                  {change.type[0]}
+                </span>
+                {change.text}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
     </div>
+  </div>
   );
 }
 
