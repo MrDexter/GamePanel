@@ -123,7 +123,7 @@ export default function App() {
  <AuthContext.Provider value={{ user, setUser, logout: handleLogout, perms, setPerms }}>
       <div className='min-h-screen bg-background text-foreground font-sans selection:bg-blue-500/30'>
         
-        <nav className='w-full border-b border-border bg-card backdrop-blur-md sticky top-0 z-50'>
+        <nav className='w-full border-b border-border bg-card sticky top-0 z-50'>
           <div className='px-8 h-16 flex items-center justify-between'>
 
             <div className='flex items-center gap-10 text-sm font-medium uppercase tracking-wider'>
@@ -278,20 +278,18 @@ export default function App() {
 
 function Changelog() {
   return (
-    <div className="max-w-3xl mx-auto py-12 px-6"> {/* Added layout container */}
+    <div className="max-w-3xl mx-auto py-12 px-6 bg-card">
       <h1 className="text-3xl font-black uppercase tracking-tighter text-foreground mb-12">
         System Changelog
       </h1>
       
-      <div className="relative"> {/* Container for the timeline line */}
+      <div className="relative">
         {changelogData.map((release) => (
           <div key={release.version} className="border-l-2 border-border pl-8 pb-12 last:pb-0 relative">
-            {/* The Version Dot - use -left-[9px] to center it on a 2px border */}
             <div className="absolute -left-2.25 top-1 h-4 w-4 rounded-full bg-card border-2 border-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.3)]" />
             
             <div className="flex items-center gap-3 mb-2">
                 <span className="text-[12px] font-mono text-foreground uppercase tracking-widest">{release.date}</span>
-                {/* Category Badge */}
                 <Badge className="bg-blue-600/10 text-blue-500 border-blue-500/20 text-[9px] h-4">
                     {release.category}
                 </Badge>
@@ -300,7 +298,6 @@ function Changelog() {
             <ul className="mt-4 space-y-3">
               {release.changes.map((change, i) => (
                 <li key={i} className="text-[14px] text-foreground flex gap-3 items-start">
-                  {/* Type Badge (Frontend/Backend) */}
                   <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border uppercase mt-0.5 shrink-0
                     ${change.type === 'backend' ? 'border-emerald-500/30 text-emerald-500' : 'border-purple-500/30 text-purple-500'}`}>
                     {change.type[0]}

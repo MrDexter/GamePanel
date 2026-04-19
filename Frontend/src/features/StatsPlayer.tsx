@@ -265,7 +265,7 @@ export default function StatsPlayer() {
             </div>
         </div>
 
-        <Card className="w-full bg-card border-border shadow-2xl shadow-blue-900/10 mb-6 overflow-hidden relative backdrop-blur-md">
+        <Card className="w-full bg-card border-border shadow-2xl shadow-blue-900/10 mb-6 overflow-hidden relative">
         <CardHeader className="flex flex-row items-center gap-6 border-b border-border/50 pb-8">
             <div className="space-y-1">
             <CardTitle className="text-4xl font-black uppercase tracking-tighter text-foreground">
@@ -426,7 +426,7 @@ export default function StatsPlayer() {
         <CardContent className="pt-1">
             <div className="grid grid-cols-1 md:grid-cols-1 grid-rows-1 gap-4">
 
-            <div className="relative overflow-hidden bg-background/50 backdrop-blur-md border-border rounded-xl p-6">
+            <div className="relative overflow-hidden bg-background/75 border-border rounded-xl p-6">
             {/* Row 1: Key Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                 <div className="flex flex-col ">
@@ -473,7 +473,7 @@ export default function StatsPlayer() {
                     const canWhitelist = user && (user[faction.levelKey] != null || faction.units.some(unitKey => user[unitKey ?? ""] != null) || user.adminlevel > (perms?.admin?.USER_WHITELIST ?? 99));
                     const color = faction.color;
                     return(
-                        <Card key={faction.id} className="relative overflow-hidden bg-background/50 backdrop-blur-md border-border group h-full">
+                        <Card key={faction.id} className="relative overflow-hidden bg-background/75 border-border group h-full">
                         <div className={`absolute top-0 left-0 w-full h-0.5 bg-linear-to-r ${color} to-transparent opacity-70 group-hover:opacity-100 transition-opacity`} />
                         <CardHeader className="pb-3 flex flex-row items-center justify-between">
                             <CardTitle className={`text-xs font-bold uppercase tracking-widest ${faction.colorText}`}>
@@ -531,8 +531,8 @@ export default function StatsPlayer() {
                     );
                 })}
                 {/* Civillian / Gang Block */}                     
-                    <Card className="bg-background/50 backdrop-blur-md border-border">
-                    <div className={`absolute top-0 left-0 w-full h-0.5 bg-linear-to-r from-purple-500 to-transparent opacity-70 group-hover:opacity-100 transition-opacity`} />
+                    <Card className="bg-background/75 border-border">
+                    <div className={`absolute top-0 left-0 w-full h-0.5`} />
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className={`text-xs font-bold uppercase tracking-widest text-purple-500`}>
                         {player.gang?.name ?? "No Gang Found"}

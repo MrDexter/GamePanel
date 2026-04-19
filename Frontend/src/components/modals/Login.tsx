@@ -109,7 +109,7 @@ export default function LoginModal({open, setOpen, setUser, setIsResetPassOpen, 
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-100 bg-card border-border shadow-2xl">
+      <DialogContent className="sm:max-w-100 bg-card border-border shadow-sm">
         <DialogHeader>
           <DialogTitle className="text-xl font-black uppercase tracking-tighter italic text-foreground">
             User Login

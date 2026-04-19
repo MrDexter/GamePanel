@@ -38,12 +38,12 @@ export default function Home() {
     </p>
   </div>
 
-  <Card className="w-full bg-card border-border shadow-2xl shadow-blue-900/10 overflow-hidden relative backdrop-blur-md">
+  <Card className="w-full bg-card border-border shadow-sm shadow-background overflow-hidden relative">
     <CardContent className="p-6 space-y-6">
 
       {/* Top Summary Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <Card className="relative overflow-hidden bg-background/50 backdrop-blur-md border-border group h-full">
+        <Card className="relative overflow-hidden bg-background/75 border-border group h-full">
           <div className="absolute top-0 left-0 w-full h-0.5 bg-linear-to-r from-blue-500/70 to-transparent opacity-70 group-hover:opacity-100 transition-opacity" />
           <CardHeader className="pb-2">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
@@ -72,7 +72,7 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden bg-background/50 backdrop-blur-md border-border group h-full">
+        <Card className="relative overflow-hidden bg-background/75 border-border group h-full">
           <div className="absolute top-0 left-0 w-full h-0.5 bg-linear-to-r from-emerald-500/70 to-transparent opacity-70 group-hover:opacity-100 transition-opacity" />
           <CardHeader className="pb-2">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
@@ -101,7 +101,7 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden bg-background/50 backdrop-blur-md border-border group h-full">
+        <Card className="relative overflow-hidden bg-background/75 border-border group h-full">
           <div className="absolute top-0 left-0 w-full h-0.5 bg-linear-to-r from-amber-500/70 to-transparent opacity-70 group-hover:opacity-100 transition-opacity" />
           <CardHeader className="pb-2">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
@@ -145,7 +145,7 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden bg-background/50 backdrop-blur-md border-border group h-full">
+        <Card className="relative overflow-hidden bg-background/75 border-border group h-full">
           <div className="absolute top-0 left-0 w-full h-0.5 bg-linear-to-r from-violet-500/70 to-transparent opacity-70 group-hover:opacity-100 transition-opacity" />
           <CardHeader className="pb-2">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
@@ -173,7 +173,7 @@ export default function Home() {
 
       {/* Middle Row */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <Card className="relative overflow-hidden bg-background/50 backdrop-blur-md border-border">
+        <Card className="relative overflow-hidden bg-background/75 border-border">
             <div className="absolute top-0 left-0 w-full h-0.5 bg-linear-to-r from-blue-500/70 to-transparent opacity-70" />
             <CardHeader className="pb-3">
             <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">
@@ -183,8 +183,8 @@ export default function Home() {
 
             <CardContent className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-sm">
             {/* Police */}
-            <div className="rounded-xl border border-border/50 bg-card/75 p-3 space-y-3">
-                <div className="border-b border-border/50 pb-2">
+            <div className="rounded-xl border border-border bg-card p-3 space-y-3">
+                <div className="border-b border-border pb-2">
                 <p className="text-[10px] font-black uppercase tracking-widest text-blue-400">
                     Police
                 </p>
@@ -225,8 +225,8 @@ export default function Home() {
             </div>
 
             {/* Medics */}
-            <div className="rounded-xl border border-border/50 bg-card/75 p-3 space-y-3">
-                <div className="border-b border-border/50 pb-2">
+            <div className="rounded-xl border border-border bg-card p-3 space-y-3">
+                <div className="border-b border-border pb-2">
                 <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
                     Medics
                 </p>
@@ -259,8 +259,8 @@ export default function Home() {
             </div>
 
             {/* Ion */}
-            <div className="rounded-xl border border-border/50 bg-card/75 p-3 space-y-3">
-                <div className="border-b border-border/50 pb-2">
+            <div className="rounded-xl border border-border bg-card p-3 space-y-3">
+                <div className="border-b border-border pb-2">
                 <p className="text-[10px] font-black uppercase tracking-widest text-red-400">
                     Ion
                 </p>
@@ -298,7 +298,7 @@ export default function Home() {
             </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden bg-background/50 backdrop-blur-md border-border">
+        <Card className="relative overflow-hidden bg-background/75 border-border">
             <div className="absolute top-0 left-0 w-full h-0.5 bg-linear-to-r from-green-500/70 to-transparent opacity-70" />
             <CardHeader className="pb-3">
             <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">
@@ -307,8 +307,8 @@ export default function Home() {
             </CardHeader>
 
             <CardContent className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-sm">
-            <div className="rounded-xl border border-border/50 bg-card/75 p-3 space-y-3">
-              <div className="border-b border-border/50 pb-2">
+            <div className="rounded-xl border border-border bg-card p-3 space-y-3">
+              <div className="border-b border-border pb-2">
                 <p className="text-[10px] font-black uppercase tracking-widest text-purple-500">
                   Most Money
                 </p>
@@ -348,8 +348,8 @@ export default function Home() {
             </div>
 
 
-            <div className="rounded-xl border border-border/50 bg-card/75 p-3 space-y-3">
-              <div className="border-b border-border/50 pb-2">
+            <div className="rounded-xl border border-border bg-card p-3 space-y-3">
+              <div className="border-b border-border pb-2">
                 <p className="text-[10px] font-black uppercase tracking-widest text-amber-500">
                   Most Assets
                 </p>
@@ -388,8 +388,8 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-border/50 bg-card/75 p-3 space-y-3">
-              <div className="border-b border-border/50 pb-2">
+            <div className="rounded-xl border border-border bg-card p-3 space-y-3">
+              <div className="border-b border-border pb-2">
                 <p className="text-[10px] font-black uppercase tracking-widest text-red-500">
                   Most Playtime
                 </p>
@@ -433,7 +433,7 @@ export default function Home() {
 
       {/* Bottom Row */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <Card className="relative overflow-hidden bg-background/50 backdrop-blur-md border-border">
+        <Card className="relative overflow-hidden bg-background/75 border-border">
         <div className="absolute top-0 left-0 w-full h-0.5 bg-linear-to-r from-amber-500/70 to-transparent opacity-70" />
         
         <CardHeader className="pb-1">
@@ -459,7 +459,7 @@ export default function Home() {
                 <Link
                     key={job.id}
                     to={`/jobs?search=${job.id}`}
-                    className="block rounded-sm border-b border-border/50 px-2 py-2 transition-colors hover:bg-card"
+                    className="block rounded-sm border-b border-border px-2 py-2 transition-colors hover:bg-card"
                     >
                     <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0 flex-1">
@@ -490,13 +490,13 @@ export default function Home() {
         </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden bg-background/50 backdrop-blur-md border-border">
+        <Card className="relative overflow-hidden bg-background/75 border-border">
         <div className="absolute top-0 left-0 w-full h-0.5 bg-linear-to-r from-violet-500/70 to-transparent opacity-70" />
         
         <CardHeader className="pb-2">
             <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">
             Recent Changes
-            <span className="ml-2 text-[10px] font-medium text-muted-foreground/70">
+            <span className="ml-2 text-[10px] font-medium text-muted-foreground">
                 {changelogData[0].date}
             </span>
             </CardTitle>
@@ -510,8 +510,8 @@ export default function Home() {
                     className={`mt-0.5 shrink-0 rounded border px-1.5 py-0.5 text-[9px] font-black uppercase
                     ${
                         change.type === "backend"
-                        ? "border-emerald-500/30 text-emerald-500 bg-emerald-500/5"
-                        : "border-purple-500/30 text-purple-500 bg-purple-500/5"
+                        ? "border-emerald-500/30 text-emerald-500"
+                        : "border-purple-500/30 text-purple-500"
                     }`}
                 >
                     {change.type[0]}
@@ -539,7 +539,7 @@ export default function Home() {
       </div>
 
       {/* Optional Quick Actions */}
-      {/* <Card className="relative overflow-hidden bg-background/40 backdrop-blur-md border-border">
+      {/* <Card className="relative overflow-hidden bg-background/40 border-border">
         <CardHeader className="pb-3">
           <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">
             Quick Actions

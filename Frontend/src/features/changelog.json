@@ -6,9 +6,11 @@
     "type": "Feature",
     "category": "Full",
     "changes": [
-      { "type": "Backend", "text": "Added Steam / Openid integration and Login endpoint" },
+      { "type": "backend", "text": "Added Steam / Openid integration and Login endpoint" },
       { "type": "frontend", "text": "Added Sign in with Steam option to Login Modal" },
-      { "type": "frontend", "text": "Added Steam Avatar and Link to Player Profile" }
+      { "type": "frontend", "text": "Added Steam Avatar and Link to Player Profile" },
+      { "type": "frontend", "text": "Removed unnecessary backdrop-blur usage to improve scroll performance and responsiveness" },
+      { "type": "frontend", "text": "Added consistent background containers to Project and About pages for improved layout and visual structure" }
     ]
   },
   {
@@ -18,7 +20,7 @@
     "type": "Feature",
     "category": "Full",
     "changes": [
-      { "type": "Backend", "text": "Added last Stats data to backend" },
+      { "type": "backend", "text": "Added last Stats data to backend" },
       { "type": "frontend", "text": "Added remaining stats data to Dashboard" },
       { "type": "backend", "text": "Fixed miscellaneous data handling on backend (Types)" },
       { "type": "frontend", "text": "Added automatic C# Modal to TS Interface processing" },

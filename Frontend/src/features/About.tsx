@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 export default function About() {
 
     return (
-        <div className="space-y-12 max-w-6xl mx-auto px-6 py-12">
+        <div className="space-y-12 max-w-6xl mx-auto px-6 py-12 bg-card border border-border rounded-xl p-6">
         
         {/* SECTION 1: PROJECT OVERVIEW */}
         <div className="space-y-6">

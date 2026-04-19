@@ -5,8 +5,7 @@
 export default function Breakdown() {
 
     return (
-        <div className="space-y-12 max-w-6xl mx-auto px-6 py-12">
-
+        <div className="space-y-12 max-w-6xl mx-auto px-6 py-12 bg-card border border-border rounded-xl p-6">
             <section id="stats" className="scroll-mt-20 space-y-6">
                 <div className="border-l-4 border-blue-600 pl-4">
                     <h2 className="text-3xl font-black uppercase italic tracking-tighter text-foreground">
@@ -238,19 +237,6 @@ export default function Breakdown() {
                         "Moving the validation into the core methods ensures the API never proceeds with 'broken' data, 
                         providing a much more reliable foundation for the live production database."
                     </p>
-                    <div className="flex items-center gap-4 mt-6 opacity-60 grayscale hover:grayscale-0 transition-all">
-                    <div className="flex items-center gap-2 border border-amber-500/20 px-3 py-1 rounded-full bg-amber-500/5">
-                        <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-                        <span className="text-[9px] font-black uppercase text-amber-500 tracking-widest italic">
-                            Refactoring in Progress
-                        </span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground max-w-sm italic leading-tight">
-                        Currently migrating legacy Community API endpoints to the new 
-                        <span className="text-foreground font-bold"> Exception-Driven Model </span> 
-                        deployed in the v0.8 Identity Suite.
-                    </p>
-                </div>
                 </div>
 
             </section>
