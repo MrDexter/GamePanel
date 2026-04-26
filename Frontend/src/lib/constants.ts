@@ -68,6 +68,7 @@ export const APP_CONFIG = {
 } as const;
 
 export const copRanks: Record<number, string> = {
+    0: "None",
     1: "PCSO",
     2: "PC",
     3: "SPC",
@@ -82,6 +83,7 @@ export const copRanks: Record<number, string> = {
 };
 
 export const medicRanks: Record<number, string> = {
+    0: "None",
     1: "NUR",
     2: "FR",
     3: "PAR",
@@ -93,6 +95,7 @@ export const medicRanks: Record<number, string> = {
 };
 
 export const ionRanks: Record<number, string> = {
+    0: "None",
     1: "Rct.",
     2: "Pvt.",
     3: "LCpl.",
