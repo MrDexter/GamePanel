@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Routes, Route, Link } from 'react-router-dom'
 // Pages
 import Stats from "@/features/Stats"
@@ -8,6 +8,7 @@ import About from "@/features/About"
 import Jobs from "@/features/Jobs"
 import Home from "@/features/Home"
 import Test from "@/features/Test"
+import Shop from "@/features/Shop"
 import changelogData from "@/features/changelog.json";
 import LoginModal from "@/components/modals/Login"
 import ChangePasswordModal from "@/components/modals/ChangePassword"
@@ -120,14 +121,24 @@ export default function App() {
     setTheme(currentTheme === "dark" ? "light" : "dark");
   };
 
-  const NAV_LINKS = [
-  { to: "/", label: "Home" },
-  { to: "/search", label: "Search" },
-  { to: "/jobs", label: "Jobs" },
-  { to: "/changelog", label: "Changelog" },
-  { to: "/about", label: "About" },
-  { to: "/breakdown", label: "Breakdown" },
-];
+  type NavLink =
+    | { to: string; label: string }
+    | { label: string; children: { to: string; label: string }[] };
+
+  const NAV_LINKS: NavLink[] = [
+    { to: "/", label: "Home" },
+    { to: "/search", label: "Search" },
+    { to: "/jobs", label: "Jobs" },
+    { to: "/shop", label: "Shop"},
+    {
+      label: "Project Info",
+      children: [
+        { to: "/changelog", label: "Changelog" },
+        { to: "/about", label: "About" },
+        { to: "/breakdown", label: "Breakdown" },
+      ],
+    }
+  ];
 
   return (
  <AuthContext.Provider value={{ user, setUser, logout: handleLogout, perms, setPerms }}>
@@ -137,7 +148,32 @@ export default function App() {
           <div className='px-8 h-16 flex items-center justify-between'>
 
           <div className="hidden md:flex items-center gap-10 text-sm font-medium uppercase tracking-wider">
-            {NAV_LINKS.map((nav) => (
+            {NAV_LINKS.map((nav) => 
+              "children" in nav ? (
+                <DropdownMenu key={nav.label}>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="h-auto p-0 text-sm font-medium uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-transparent"
+                    >
+                      {nav.label}
+                    </Button>
+                  </DropdownMenuTrigger>
+
+                  <DropdownMenuContent
+                    align="start"
+                    className="w-48 bg-card border-border text-foreground">
+                    {nav.children.map((child) => (
+                      <DropdownMenuItem
+                        key={child.to}
+                        asChild
+                        className="text-xs cursor-pointer focus:bg-background focus:text-foreground">
+                        <Link to={child.to}>{child.label}</Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
               <Link key={nav.to} to={nav.to} className="text-muted-foreground hover:text-foreground transition-colors">{nav.label}</Link>
             ))}
           </div>
@@ -156,11 +192,31 @@ export default function App() {
               <DropdownMenuContent
                 align="start"
                 className="w-48 bg-card border-border text-foreground">
-                {NAV_LINKS.map((nav) => (
-                  <DropdownMenuItem key={nav.to} asChild className="text-xs cursor-pointer focus:bg-background focus:text-foreground">
-                    <Link to={nav.to}>{nav.label}</Link>
-                  </DropdownMenuItem>
-                ))}
+                {NAV_LINKS.map((nav) =>
+                  "children" in nav ? (
+                    <React.Fragment key={nav.label}>
+                      <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                        {nav.label}
+                      </DropdownMenuLabel>
+
+                      {nav.children.map((child) => (
+                        <DropdownMenuItem
+                          key={child.to}
+                          asChild
+                          className="text-xs cursor-pointer focus:bg-background focus:text-foreground">
+                          <Link to={child.to}>{child.label}</Link>
+                        </DropdownMenuItem>
+                      ))}
+                    </React.Fragment>
+                  ) : (
+                    <DropdownMenuItem
+                      key={nav.to}
+                      asChild
+                      className="text-xs cursor-pointer focus:bg-background focus:text-foreground">
+                      <Link to={nav.to}>{nav.label}</Link>
+                    </DropdownMenuItem>
+                  )
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -292,6 +348,7 @@ export default function App() {
             <Route path="/changelog" element={<Changelog />} />
             <Route path="/about" element={<About />} />
             <Route path="/breakdown" element={<Breakdown />} />
+            <Route path="/shop" element={<Shop />} />
             <Route path="/Future/:name" element={<Test />} />
           </Routes>
         </main>

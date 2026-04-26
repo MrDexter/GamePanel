@@ -57,6 +57,7 @@ builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<IProcessorService, ProcessorService>();
 builder.Services.AddScoped<IAuthService, AuthenticationService>();
 builder.Services.AddScoped<IStatsService, StatsService>();
+builder.Services.AddScoped<IShopService, ShopService>();
 // For the Azure App Service test platform, Disable this and do a manual trigger on job creation to save on resources
 // builder.Services.AddHostedService<JobWorker>();
 builder.Services.AddScoped<IJobWorker, JobWorker>();
@@ -73,7 +74,9 @@ builder.Services.AddOpenApi(options => {
             new() { Name = "Group Management", Description = "Group analytics and management" },
             new() { Name = "Job Management", Description = "Background worker controls" },
             new() { Name = "Statistics", Description = "Range of different Statistics"},
-            new() { Name = "Security and Authentication", Description = "Security and Authentication" }
+            new() { Name = "Security and Authentication", Description = "Security and Authentication" },
+            new() { Name = "Logging", Description = "Logging Management"},
+            new() { Name = "Shop", Description = "Shop Management"}
         };
         return Task.CompletedTask;
     });
@@ -110,6 +113,7 @@ app.MapMiscEndpoints();
 app.MapAuthEndpoints();
 app.MapGangEndpoints();
 app.MapStatsEndpoints();
+app.MapShopEndpoints();
 app.MapOpenApi();
 app.MapScalarApiReference();
 

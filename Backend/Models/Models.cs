@@ -298,3 +298,18 @@ public class SteamPlayer
     public string AvatarFull { get; set; } = string.Empty;
     public string SteamId { get; set; } = string.Empty;
 }
+
+public record ShopCategory(
+    string Name,
+    List<ShopProduct> Products
+);
+
+public record ShopProduct
+{
+    public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public int PricePence { get; set; }
+    public string Description { get; set; } = string.Empty;
+    public int? DonatorLevel { get; set; }
+    public int? DurationDays { get; set; }
+}
