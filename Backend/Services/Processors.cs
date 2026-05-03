@@ -6,6 +6,7 @@ using Azure.Storage.Blobs;
 using Azure.Storage.Sas;
 using System.Reflection.Metadata;
 using DecsPage.Services;
+using Stripe.Terminal;
 
 namespace DecsPage.Services;
 
@@ -26,8 +27,9 @@ public class ProcessorService : IProcessorService
     private readonly IPlayerService _playerService;
     private readonly IGangService _gangService;
     private readonly IJobService _jobService;
+    private readonly IShopService _shopService;
 
-    public ProcessorService(IConfiguration config, ILogger<ProcessorService> logger, IWebHostEnvironment env, IPlayerService playerService, IGangService gangService, IJobService jobService)
+    public ProcessorService(IConfiguration config, ILogger<ProcessorService> logger, IWebHostEnvironment env, IPlayerService playerService, IGangService gangService, IJobService jobService, IShopService shopService)
     {
         connectionString = config.GetConnectionString("DefaultConnection")
         ?? throw new Exception("No Default Connection");
@@ -45,6 +47,7 @@ public class ProcessorService : IProcessorService
         _playerService = playerService;
         _gangService = gangService;
         _jobService = jobService;
+        _shopService = shopService;
     }
 
     public async Task<string>UploadBlobAsync(string name, string content, CancellationToken stopToken)
@@ -105,7 +108,7 @@ public class ProcessorService : IProcessorService
         var filename = $"{type}_{id}_{DateTime.UtcNow:ddMMyyyyHHmmss}.csv";
 
         var job = await _jobService.GetJobAsync(id);
-        if (job.Status == "Cancel")
+        if (job.Status == "Cancelled")
             throw new OperationCanceledException("Cancel Requested!");
         if (_env.IsDevelopment())
         {
@@ -119,6 +122,58 @@ public class ProcessorService : IProcessorService
             var blobPath = await UploadBlobAsync(filename, sb.ToString(), stopToken);
             return blobPath;  
         }; 
+    }
+
+    public async Task CompleteOrderFulfilment (Order order, CancellationToken stopToken)
+    {
+        var basket = JsonSerializer.Deserialize<List<Dictionary<string, string>>>(order.Basket) ?? new();
+        foreach (var item in basket)
+        {
+            stopToken.ThrowIfCancellationRequested();
+            Console.Write(item);
+            var product = _shopService.GetItem(item["productId"]);
+            switch (product.Id)
+            {
+                case "thirtyDays":
+                case "sixtyDays":
+                case "oneYear":
+                    await ApplyMembership(order.ReceiverId, product.DonatorLevel ?? 1, product.DurationDays ?? 30, stopToken);
+                    break;
+                default:
+                    throw new InvalidDataException("Invalid / Unsupported Product Type");
+
+            } 
+        }
+    }
+
+    public async Task ApplyMembership(string ReceiverId, int level, int durationDays, CancellationToken stopToken)
+    { 
+      using var connection = new SqlConnection(connectionString);
+        {
+            await connection.OpenAsync();
+
+            var sql = @"UPDATE players SET donorlevel = @donatorLevel, 
+            donorExpiry = DATEADD(
+                day,
+                @durationDays,
+                CASE 
+                    WHEN donorExpiry IS NOT NULL AND donorExpiry > GETUTCDATE()
+                    THEN donorExpiry
+                    ELSE GETUTCDATE()
+                END
+            ) WHERE playerid = @id";
+
+            using var command = new SqlCommand(sql, connection);
+
+            command.Parameters.AddWithValue("@donatorLevel", level);
+            command.Parameters.AddWithValue("@durationDays", durationDays);
+            command.Parameters.AddWithValue("@id", ReceiverId);
+
+            var rows = await command.ExecuteNonQueryAsync();
+
+            if (rows == 0)
+                throw new InvalidOperationException("Receiver player not found.");
+        }
     }
 
     public async Task<string>GetJobProcessorAsync(Job jobData, CancellationToken stopToken)
@@ -146,6 +201,10 @@ public class ProcessorService : IProcessorService
                 case "jobExport":
                     var job = await _jobService.GetJobAsync(Convert.ToInt32(data!["jobId"]));
                     return await ConvertToCSV(jobData.Id, "jobExport", [job], stopToken);
+                case "orderFulfilment":
+                    var order = await _shopService.GetOrder(Convert.ToInt32(data!["orderId"]));
+                    await CompleteOrderFulfilment(order, stopToken);
+                    return "Yes";
                 default:
                     throw new InvalidDataException("Processor not found");
 

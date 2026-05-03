@@ -14,7 +14,8 @@ services:
       context: ./Backend
       dockerfile: Dockerfile
     ports:
-      - "5214:8080" # Maps local port 5214 to container port 8080
+      - "5214:8080"
+      # - "7214:7214"
     environment:
       - ConnectionStrings__DefaultConnection=${CONNECTION_STRING}
       - AuthTokens__ClientSecret=${AuthTokens__ClientSecret}
@@ -25,8 +26,14 @@ services:
       - Storage__ConnectionString=${Storage__ConnectionString}
       - Storage__Container=${Storage__Container}
       - Steam__Key=${STEAM_KEY}
+      - STRIPE__SECRET=${STRIPE_SECRET}
+      # - ASPNETCORE_URLS=https://+:7214;http://+:8080
+      # - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+      # - ASPNETCORE_Kestrel__Certificates__Default__Password=${Certificate_Pass}
     depends_on:
       - db
+    # volumes:
+      # - ./https:/https:ro
     develop:
       watch:
         - action: rebuild
@@ -44,6 +51,7 @@ services:
       - "5173:5173"
     environment:
       - VITE_API_URL=${VITE_API_URL}
+      - VITE_STRIPE_PUBLISH=${STRIPE_PUBLISH}
     depends_on:
       - api
     develop:

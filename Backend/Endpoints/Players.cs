@@ -91,7 +91,7 @@ public static class PlayerEndpoints
 
         group.MapPost("/{id}/export", async (string id, IJobService jobs) =>
         {
-            var jobId = await jobs.CreateJobAsync("playerExport", new { playerId =  id} );
+            var jobId = await jobs.CreateJobAsync("playerExport", new { playerId = id} );
             return Results.Accepted($"/jobs/{jobId}", new {jobId});
         })
         .RequireAuthorization("Staff")

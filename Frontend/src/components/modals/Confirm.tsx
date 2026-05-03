@@ -27,13 +27,13 @@ export default function ConfirmModal({
 
         <div className="flex justify-end gap-2 mt-4">
           <button
-            className="px-3 py-1 border border-border rounded-sm"
+            className="px-3 py-1 border border-border rounded-sm cursor-pointer"
             onClick={onClose}
           >
             Cancel
           </button>
           <button
-            className="px-3 py-1 bg-red-500 text-foreground rounded-sm"
+            className="px-3 py-1 bg-red-500 text-foreground rounded-sm cursor-pointer"
             onClick={() => {
               onConfirm();
               onClose();

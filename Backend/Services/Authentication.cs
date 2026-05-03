@@ -29,16 +29,16 @@ public interface IAuthService
     Task<UserDetails> GetUserDetails (string column, string filter);
 }
 
-public class AuthenticationService : IAuthService
+public class AuthService : IAuthService
 {
     private readonly string connectionString;
     private readonly string expectedSecret;
     public readonly SecurityKey key;
     public readonly IPlayerService player;
-    private readonly ILogger<AuthenticationService> _logger;
+    private readonly ILogger<AuthService> _logger;
     public readonly ILoggingService logging;
     public readonly string steamWebKey;
-    public AuthenticationService(IConfiguration config, ILogger<AuthenticationService> logger, IPlayerService playerService, ILoggingService loggingService)
+    public AuthService(IConfiguration config, ILogger<AuthService> logger, IPlayerService playerService, ILoggingService loggingService)
     {
         connectionString = config.GetConnectionString("DefaultConnection")
         ?? throw new InvalidOperationException("Missing Default Connection");

@@ -158,5 +158,6 @@ export const JOB_TYPE_LABELS: Record<string, string> = {
   gangsExport: "Groups Export",
   gangExport: "Group Export",
   jobExport: "Job Export",
-  jobsExport: "Jobs Export"
+  jobsExport: "Jobs Export",
+  orderFulfilment: "Order Fulfilment"
 };

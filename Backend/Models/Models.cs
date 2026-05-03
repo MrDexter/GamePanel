@@ -313,3 +313,36 @@ public record ShopProduct
     public int? DonatorLevel { get; set; }
     public int? DurationDays { get; set; }
 }
+
+public record StripeOptions
+{
+    public string Option { get; set; }  = string.Empty;
+}
+
+public record CreateCheckoutSessionRequest(
+    string ProductId,
+    string PurchaserId,
+    string ReceiverId
+    );
+
+public record CreateCheckoutSessionResponse(string ClientSecret);
+
+public record CheckoutSessionStatusResponse(
+    string? Status,
+    string? PaymentStatus,
+    Dictionary<string, string>? Data,
+    int? OrderId
+);
+
+public record Order(
+    int Id,
+    string PurchaserId,
+    string ReceiverId,
+    string Basket,
+    string Status,
+    string PaymentStatus,
+    int AmountPence,
+    string Currency,
+    DateTime CreatedAt,
+    DateTime UpdatedAt
+);

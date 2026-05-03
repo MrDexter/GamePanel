@@ -211,13 +211,13 @@ export default function Stats() {
             <TabsList className="grid w-full grid-cols-2 bg-background border border-border h-9 p-1">
             <TabsTrigger
                 value="Player"
-                className="text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card! data-[state=active]:text-foreground"
+                className="text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card! data-[state=active]:text-foreground cursor-pointer"
             >
                 Players
             </TabsTrigger>
             <TabsTrigger
                 value="Group"
-                className="text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card! data-[state=active]:text-foreground"
+                className="text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-card! data-[state=active]:text-foreground cursor-pointer"
             >
                 Groups
             </TabsTrigger>
@@ -235,7 +235,7 @@ export default function Stats() {
                 <DropdownMenuTrigger asChild>
                 <Button
                     variant="outline"
-                    className="h-7 px-2.5 text-xs uppercase text-foreground border-border hover:bg-background"
+                    className="h-7 px-2.5 text-xs uppercase text-foreground border-border hover:bg-background cursor-pointer"
                 >
                     {ORDER_OPTIONS.find(opt => opt.value === orderby)?.label ?? orderby}
                 </Button>
@@ -265,7 +265,7 @@ export default function Stats() {
                 onClick={() =>
                 updateParams({ direction: direction === "asc" ? "desc" : "asc" })
                 }
-                className="h-7 w-7 border-border text-muted-foreground hover:text-foreground hover:bg-background"
+                className="h-7 w-7 border-border text-muted-foreground hover:text-foreground hover:bg-background cursor-pointer"
             >
                 <ArrowUp
                 className={`h-3.5 w-3.5 transition-transform ${
@@ -287,7 +287,7 @@ export default function Stats() {
                     <Button
                     key={status}
                     onClick={() => toggleFactions(status)}
-                    className={`h-7 px-2.5 text-xs rounded-sm uppercase transition-colors ${
+                    className={`h-7 px-2.5 text-xs rounded-sm uppercase transition-colors cursor-pointer ${
                         active
                         ? "bg-emerald-700/40 text-foreground border-emerald-500 hover:bg-emerald-800/50"
                         : "bg-card text-muted-foreground border-border hover:bg-background hover:text-foreground"

@@ -1,5 +1,23 @@
 [
   {
+    "date": "03-05-2026",
+    "version": "0.9.6",
+    "title": "Shop & UX Improvement",
+    "type": "Feature",
+    "category": "Full",
+    "changes": [
+      { "type": "backend", "text": "Added Stripe payment endpoints for shop transactions" },
+      { "type": "frontend", "text": "Added store page for purchasing memberships and in-game perks, with products loaded from the API" },
+      { "type": "frontend", "text": "Added Stripe checkout flow for processing payments" },
+      { "type": "backend", "text": "Added order endpoints for creating, updating, listing and retrieving orders" },
+      { "type": "backend", "text": "Added order fulfilment jobs to automatically apply memberships after successful payment" },
+      { "type": "frontend", "text": "Moved project links into a dropdown menu in the navigation bar" },
+      { "type": "frontend", "text": "Added pointer cursors to interactive elements for clearer UX" },
+      { "type": "frontend", "text": "Fixed intermittent login refresh issues caused by duplicate callback handling" },
+      { "type": "backend", "text": "Fixed JWT authentication issues caused by outdated package versions" }
+    ]
+  },
+  {
     "date": "19-04-2026",
     "version": "0.9.5",
     "title": "Steam Integration",

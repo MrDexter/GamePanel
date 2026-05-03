@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Routes, Route, Link } from 'react-router-dom'
 // Pages
 import Stats from "@/features/Stats"
@@ -9,6 +9,7 @@ import Jobs from "@/features/Jobs"
 import Home from "@/features/Home"
 import Test from "@/features/Test"
 import Shop from "@/features/Shop"
+import { CheckoutForm, Return } from "@/features/Checkout"
 import changelogData from "@/features/changelog.json";
 import LoginModal from "@/components/modals/Login"
 import ChangePasswordModal from "@/components/modals/ChangePassword"
@@ -30,7 +31,10 @@ import { applyTheme, getStoredTheme, setTheme } from "@/lib/theme"
 
 export default function App() {
   applyTheme(getStoredTheme());
+  const hasRun = useRef(false);
+  const { searchParams, updateParams } = useQueryParams();
   const [health, setHealth] = useState<any>(null);
+  const jwtToken = searchParams.get("token");
   useEffect(() => {
     const checkHealth = async () => {
       try {
@@ -62,36 +66,50 @@ export default function App() {
     };
     setLogoutHandler(globalLogout);
 
-    const LoginStatus = async () => {
+    const loginStatus = async () => {
+      if (hasRun.current) return;
+      hasRun.current = true;
+
+      let token = jwtToken ?? localStorage.getItem("token");
+
       if (jwtToken) {
         localStorage.setItem("token", jwtToken);
         updateParams({ token: null, login: null });
       }
-      const token = localStorage.getItem("token");
-      if (token) {
+
+      if (!token) return;
+
+      try {
         const decodedToken = jwtDecode<any>(token);
         setUser(decodedToken);
-        try {
-          var res = await apiFetch("POST", "/auth/refreshToken");
-          if (!res.ok)throw new Error("Unauthorized");
-          var data = await res.json();
-          localStorage.setItem("token", data.token);
-          const newDecodedToken = jwtDecode<any>(data.token);
-          setUser(newDecodedToken);
-          setPerms(data.permissions);
-          if(newDecodedToken.ChangePassword == "True") {
-            setisResetPasswordOpen(true);
-            toast.info("Security Action Required", { 
-                description: "Please update your temporary password." 
-            });
-          };
-          console.log("Session restored via refresh token.");
-        } catch (err) {
-          globalLogout(true);
-        };
-      };
+
+        const res = await apiFetch("POST", "/auth/refreshToken");
+
+        if (!res.ok) throw new Error("Unauthorized");
+
+        const data = await res.json();
+
+        localStorage.setItem("token", data.token);
+
+        const newDecodedToken = jwtDecode<any>(data.token);
+
+        setUser(newDecodedToken);
+        setPerms(data.permissions);
+
+        if (newDecodedToken.ChangePassword === "True") {
+          setisResetPasswordOpen(true);
+          toast.info("Security Action Required", {
+            description: "Please update your temporary password.",
+          });
+        }
+
+        console.log("Session restored via refresh token.");
+      } catch {
+        globalLogout(true);
+      }
     };
-    LoginStatus()
+
+    loginStatus();
   }, []);
 
     const handleLogout = async (e?: React.MouseEvent<HTMLButtonElement>) => {
@@ -108,9 +126,7 @@ export default function App() {
     };
   };
 
-  const { searchParams, updateParams } = useQueryParams();
   const isLoginOpen = searchParams.get("login") === "true";
-  const jwtToken = searchParams.get("token");
   const [isResetPasswordOpen, setisResetPasswordOpen] = useState(false);
   const [isChangePasswordOpen, setisChangePasswordOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -349,6 +365,8 @@ export default function App() {
             <Route path="/about" element={<About />} />
             <Route path="/breakdown" element={<Breakdown />} />
             <Route path="/shop" element={<Shop />} />
+            <Route path="/checkout" element={<CheckoutForm />} />
+            <Route path="/return" element={<Return />} />
             <Route path="/Future/:name" element={<Test />} />
           </Routes>
         </main>

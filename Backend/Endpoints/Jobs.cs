@@ -68,7 +68,7 @@ public static class JobEndpoints
                     return Results.NotFound(new { message = "Job not found!" });
                 if (job.Status == "Complete")
                     return Results.BadRequest(new { message = "Job is already Complete!"});
-                await jobs.UpdateJobStatusAsync(id, "Cancel", "");
+                await jobs.UpdateJobStatusAsync(id, "Cancelled", "");
                 return Results.Ok(new {message = "Job has been set to Cancell!"}); 
             } catch (InvalidDataException error)
             {
@@ -87,7 +87,7 @@ public static class JobEndpoints
                 var job = await jobs.GetJobAsync(id);
                 if (job is null)
                     return Results.NotFound(new { message = "Job not found!" });
-                if (job.Status != "Failed")
+                if (job.Status != "Failed" && job.Status != "Cancelled")
                     return Results.BadRequest(new { message = "The job has not Failed!"});
                 await jobs.UpdateJobStatusAsync(id, "Pending", "");
                 return Results.Ok(new {message = "Job has been reset!"});

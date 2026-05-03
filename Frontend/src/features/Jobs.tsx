@@ -92,8 +92,8 @@ export default function Stats() {
     const changeJobStatus = async (id : number, type : string) => {
         try {
             const res = await apiFetch("POST", `/jobs/${id}/${type}`)
+            const data = await res.json();
             if (res.ok) {
-                const data = await res.json();
                 if (type == "duplicate") {
                     toast.success("Background Job Queued", {
                         description: `ID: ${data.jobId} - Job Duplicated`,
@@ -105,6 +105,8 @@ export default function Stats() {
                 } else {
                     toast.success(data.message);
                 }
+            } else {
+                toast.error("Failed", { description: data.message ?? "API Error" });
             }
         } catch (error : any) {
             toast.error(error.message);
@@ -281,7 +283,7 @@ export default function Stats() {
                     <Button
                         key={status}
                         onClick={() => toggleStatus(status)}
-                        className={`h-7 px-2.5 text-xs rounded-sm uppercase transition-colors
+                        className={`h-7 px-2.5 text-xs rounded-sm uppercase transition-colors cursor-pointer
                         ${
                             active
                             ? "bg-emerald-700/40 text-foreground border-emerald-500 hover:bg-emerald-800/50"
@@ -320,7 +322,7 @@ export default function Stats() {
                 return (
                 <div
                     key={data.id}
-                    className="p-4 bg-card border border-border rounded-lg hover:border-blue-500 transition-all cursor-pointer group">
+                    className="p-4 bg-card border border-border rounded-lg hover:border-blue-500 transition-all group">
                     <div className="flex justify-between items-start mb-4 border-b border-border pb-3 ">
                     <div>
                         <h3 className="font-bold text-lg uppercase text-foreground  leading-tight">
@@ -333,7 +335,7 @@ export default function Stats() {
 
                     <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button className="text-[12px] px-3 py-2 bg-blue-600 rounded border border-border-accent text-foreground hover:bg-blue-800">
+                        <Button className="text-[12px] px-3 py-2 bg-blue-600 rounded border border-border-accent text-foreground cursor-pointer hover:bg-blue-800">
                             ID. {data.id} <ChevronDown className="h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -350,9 +352,8 @@ export default function Stats() {
                         </DropdownMenuItem>
                         <DropdownMenuSeparator className="bg-background" />
 
-                        <DropdownMenuItem disabled={(data.status !== "Failed") || (user?.adminlevel || 0) < (perms?.admin?.JOB_MANAGEMENT ?? 99)} 
+                        <DropdownMenuItem disabled={(data.status !== "Failed" && data.status !== "Cancelled") || (user?.adminlevel || 0) < (perms?.admin?.JOB_MANAGEMENT ?? 99)} 
                         className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-foreground" onClick={() => openConfirm("Reset Job", "Are you sure you want to reset this job?", () => changeJobStatus(Number(data.id), "reset"))}>
-                            
                         Reset Job
                         </DropdownMenuItem>
                         
@@ -408,17 +409,19 @@ export default function Stats() {
                         </div>
 
                         {/* Results left */}
-                        <div className="flex flex-col">
-                            <span className="text-[10px] text-muted-foreground uppercase font-bold">
-                                Results
-                            </span>
-                            <span className="text-foreground hover:text-blue-400 underline cursor-pointer opacity-0" >
-                                View
-                            </span>
-                            <span className="text-foreground hover:text-blue-400 underline cursor-pointer" onClick={() => openConfirm("Download Job File", "Are you sure you want to download this job?", () => downloadJob(Number(data.id)))}>
-                                Download
-                            </span>
-                        </div>
+                        {data.status === "Completed" && !!data.result && (
+                            <div className="flex flex-col">
+                                <span className="text-[10px] text-muted-foreground uppercase font-bold">
+                                    Results
+                                </span>
+                                <span className="text-foreground hover:text-blue-400 underline cursor-pointer opacity-0" >
+                                    View
+                                </span>
+                                <span className="text-foreground hover:text-blue-400 underline cursor-pointer" onClick={() => openConfirm("Download Job File", "Are you sure you want to download this job?", () => downloadJob(Number(data.id)))}>
+                                    Download
+                                </span>
+                            </div>
+                        )}
 
                         {/* Dates right */}
                         <div className="flex flex-col">

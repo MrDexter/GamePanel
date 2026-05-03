@@ -9,6 +9,7 @@ using DecsPage.Services;
 using DecsPage.Background;
 using Microsoft.OpenApi;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +34,31 @@ builder.Services.AddAuthentication(options =>
         ),
         ClockSkew = TimeSpan.Zero 
     };
+
+    // options.Events = new JwtBearerEvents
+    // {
+    //     OnAuthenticationFailed = context =>
+    //     {
+    //         Console.WriteLine("JWT AUTH FAILED:");
+    //         Console.WriteLine(context.Exception.Message);
+    //         return Task.CompletedTask;
+    //     },
+    //     OnChallenge = context =>
+    //     {
+    //         Console.WriteLine("JWT CHALLENGE:");
+    //         Console.WriteLine(context.Error);
+    //         Console.WriteLine(context.ErrorDescription);
+    //         return Task.CompletedTask;
+    //     },
+    //     OnTokenValidated = context =>
+    //     {
+    //         Console.WriteLine("JWT VALIDATED");
+    //         foreach (var claim in context.Principal!.Claims)
+    //             Console.WriteLine($"{claim.Type}: {claim.Value}");
+
+    //         return Task.CompletedTask;
+    //     }
+    // };
 })
 .AddSteam(options => 
 {
@@ -49,13 +75,21 @@ builder.Services.AddAuthorization(options =>
         policy.RequireClaim("adminlevel", "5", "6", "7", "8"));
 });
 
+builder.Services.AddSingleton(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var secretKey = config["Stripe:Secret"] ?? throw new InvalidOperationException("Stripe secret key is missing.");
+
+    return new StripeClient(secretKey);
+});
+
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<IPlayerService, PlayerService>();
 builder.Services.AddScoped<IGangService, GangService>();
 builder.Services.AddScoped<ILoggingService, LoggingService>();
 builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<IProcessorService, ProcessorService>();
-builder.Services.AddScoped<IAuthService, AuthenticationService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IStatsService, StatsService>();
 builder.Services.AddScoped<IShopService, ShopService>();
 // For the Azure App Service test platform, Disable this and do a manual trigger on job creation to save on resources

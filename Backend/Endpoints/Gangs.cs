@@ -46,7 +46,7 @@ public static class GangEndpoints
 
         group.MapPost("/{id}/export", async (string id, IJobService jobs) =>
         {
-            var jobId = await jobs.CreateJobAsync("gangExport", new { gangId =  id} );
+            var jobId = await jobs.CreateJobAsync("gangExport", new { gangId = id} );
             return Results.Accepted($"/jobs/{jobId}", new {jobId});
         })
         .RequireAuthorization("Staff")

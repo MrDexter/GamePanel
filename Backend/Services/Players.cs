@@ -71,6 +71,7 @@ public class PlayerService : IPlayerService
                 "DESC" => "DESC",
                 _ => "ASC"
             };
+            // Consider adding a Keyset Pagination system using last highest ID Where ID > 36 (Page 3 if 12 items per page) More Efficient
             if (limit.HasValue || offset.HasValue)
             {
                 sql += $" ORDER BY {safeOrderBy} {safeDirection} OFFSET @offset ROWS";
