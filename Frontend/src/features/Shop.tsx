@@ -17,7 +17,7 @@ export default function Shop() {
     const navigate = useNavigate();
     const { searchParams, updateParams } = useQueryParams();
     const search = searchParams.get("search") ?? "";
-    const orderby = searchParams.get("orderby") ?? "duration";
+    const orderby = searchParams.get("orderby") ?? "price";
     const direction = searchParams.get("direction") ?? "asc";
     // const [isLoading, setIsLoading] = useState(false);
     const [results, setResults] = useState<any[]>([]);
