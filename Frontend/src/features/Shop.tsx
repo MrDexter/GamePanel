@@ -254,7 +254,7 @@ return (
             </div>
           </section>
         ))}
-      </div>
+      </div> 
 
       {/* Footer / Pagination */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between px-1 py-4 border-t border-border">
