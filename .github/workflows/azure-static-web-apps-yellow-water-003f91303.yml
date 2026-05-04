@@ -12,6 +12,7 @@ on:
       - main
     paths:
       - 'Frontend/**'
+      - '.github/workflows/**'
 
 jobs:
   build_and_deploy_job:
@@ -29,6 +30,7 @@ jobs:
         env:
           VITE_STRIPE_PUBLISH: ${{ secrets.VITE_STRIPE_PUBLISH }}
         run: |
+          echo "Stripe key length: ${#VITE_STRIPE_PUBLISH}"
           cd Frontend
           npm install
           npm run build
