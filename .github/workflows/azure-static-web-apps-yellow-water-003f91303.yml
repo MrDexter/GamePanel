@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'Frontend/**' # Only trigger if files in the backend folder change
+      - '.github/workflows/**'
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
