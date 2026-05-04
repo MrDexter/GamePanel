@@ -5,7 +5,7 @@ import {Button } from "@/components/ui/button"
 import {Badge } from "@/components/ui/badge"
 import { Card, CardContent} from "@/components/ui/card"
 import { formatMoney, formatDate, useQueryParams} from "@/lib/constants"
-import { useNavigate } from "react-router-dom"
+// import { useNavigate } from "react-router-dom"
 import { apiFetch } from "@/lib/api"
 // import LoadingOverlay from "@/components/modals/Loading"
 import { X, ArrowUp, ChevronRight, ChevronLeft } from "lucide-react"
@@ -15,7 +15,7 @@ import {DropdownMenu,DropdownMenuContent,DropdownMenuItem, DropdownMenuTrigger} 
 
 export default function Orders() {
     const { user, perms } = useAuth();
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
     const { searchParams, updateParams } = useQueryParams();
     const search = searchParams.get("search") ?? "";
     const [searchInput, setSearchInput] = useState(search ?? "");
