@@ -34,6 +34,30 @@ public static class ShopEndpoints
         .WithSummary("Get a Specific Product")
         .WithDescription("Get a specific Item using the Item ID");
 
+        group.MapGet("/orders", async (IShopService shop, HttpContext ctx, string? search, int? limit, int? offset, string? orderby, string? direction, bool? adminMode) =>
+        {
+            var orders = await shop.GetOrders(ctx, search, limit, offset, orderby, direction, adminMode);
+            return Results.Ok(new {orders = orders.Data, totalRows = orders.TotalRows});
+        })
+        .RequireAuthorization()
+        .WithSummary("Get All Orders")
+        .WithDescription("Get a list of all Orders");
+
+        group.MapGet("/order", async (int id, IShopService shop) =>
+        {
+            try
+            {
+                var order = await shop.GetOrder(id);
+                return Results.Ok(order);
+                
+            } catch (InvalidOperationException)
+            {
+                return Results.NotFound("Order Not Found");
+            }
+        })
+        .WithSummary("Get a Specific Order")
+        .WithDescription("Get a specific Item using the Order Id");
+
         group.MapPost("/create-checkout-session", async ([FromBody] CreateCheckoutSessionRequest request, IShopService shop, CancellationToken cancellationToken) =>
         {
             try
@@ -56,11 +80,6 @@ public static class ShopEndpoints
         group.MapGet("/session-status", async ( [FromQuery(Name = "session_id")] string sessionId, IShopService shop, IJobService jobs, CancellationToken cancellationToken) =>
             {
                 var result = await shop.GetSessionStatusAsync(sessionId, cancellationToken);
-
-                if (result.Status == "complete" && result.PaymentStatus == "paid")
-                {
-                    var jobId = await jobs.CreateJobAsync("orderFulfilment", new { orderId = result.OrderId.ToString()} );
-                }
 
                 return Results.Ok(result);
             })

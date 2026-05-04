@@ -32,7 +32,7 @@ export const apiFetch = async (method: HttpMethod, path: string, options: Reques
         method: method,
         credentials: "include",
         ...options,
-        headers: buildHeaders(token), 
+        headers: buildHeaders(data.token), 
       });
     } else {
       localStorage.removeItem("token");

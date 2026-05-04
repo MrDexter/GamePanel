@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace DecsPage.Models;
 
 public record Player (
@@ -331,14 +333,15 @@ public record CheckoutSessionStatusResponse(
     string? Status,
     string? PaymentStatus,
     Dictionary<string, string>? Data,
-    int? OrderId
+    int? OrderId,
+    int? JobId
 );
 
 public record Order(
     int Id,
     string PurchaserId,
     string ReceiverId,
-    string Basket,
+    List<Dictionary<string, JsonElement>> Basket,
     string Status,
     string PaymentStatus,
     int AmountPence,

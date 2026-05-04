@@ -126,12 +126,11 @@ public class ProcessorService : IProcessorService
 
     public async Task CompleteOrderFulfilment (Order order, CancellationToken stopToken)
     {
-        var basket = JsonSerializer.Deserialize<List<Dictionary<string, string>>>(order.Basket) ?? new();
-        foreach (var item in basket)
+        foreach (var item in order.Basket)
         {
             stopToken.ThrowIfCancellationRequested();
             Console.Write(item);
-            var product = _shopService.GetItem(item["productId"]);
+            var product = _shopService.GetItem(item["productId"].ToString());
             switch (product.Id)
             {
                 case "thirtyDays":

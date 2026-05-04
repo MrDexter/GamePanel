@@ -1,5 +1,21 @@
 [
   {
+    "date": "04-05-2026",
+    "version": "0.9.7",
+    "title": "Orders",
+    "type": "Feature",
+    "category": "Full",
+    "changes": [
+        { "type": "backend", "text": "Added order endpoints (Get Orders / Get Order) with search, sorting, and permission handling" },
+        { "type": "frontend", "text": "Added Orders page accessible via user menu, including admin mode to view all orders" },
+        { "type": "frontend", "text": "Improved checkout return page with loading state, fulfilment job ID, and clearer messaging" },
+        { "type": "frontend", "text": "Resolved search input lag caused by URL parameter updates (debounced local state)" },
+        { "type": "frontend", "text": "Improved player page responsiveness and layout on smaller screens" },
+        { "type": "frontend", "text": "Fixed JWT refresh flow where updated token was not applied to subsequent API requests" },
+        { "type": "backend", "text": "Refactored order basket handling to structured JSON for flexible item support" }
+      ]
+  },
+  {
     "date": "03-05-2026",
     "version": "0.9.6",
     "title": "Shop & UX Improvement",

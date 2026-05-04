@@ -21,7 +21,7 @@ public interface IShopService
     ShopProduct GetItem(string id);
     Task<CreateCheckoutSessionResponse> CreateCheckoutSessionAsync (CreateCheckoutSessionRequest request,CancellationToken cancellationToken);
     Task<CheckoutSessionStatusResponse> GetSessionStatusAsync(string sessionId,CancellationToken cancellationToken);
-    Task<PaginatedRecord<Order>>GetOrders(string? search, int? limit, int? offset);
+    Task<PaginatedRecord<Order>>GetOrders(HttpContext ctx,  string? search, int? limit, int? offset, string? orderby, string? direction, bool? adminMode);
     Task<Order>GetOrder(int id);
 }
 
@@ -30,13 +30,15 @@ public class ShopService : IShopService
         public readonly string stripe_key;
         public readonly string connectionString;
         private readonly string _domain;
-    public ShopService (IConfiguration config, IWebHostEnvironment env)
+        public readonly IJobService _jobs;
+    public ShopService (IConfiguration config, IWebHostEnvironment env, IJobService job)
     {
         stripe_key = config["Stripe:Secret"]
         ?? throw new InvalidOperationException("Missing Stripe Key");
         connectionString = config.GetConnectionString("DefaultConnection")
         ?? throw new InvalidOperationException("Missing Default Connection");
         _domain = config["Frontend:BaseUrl"] ?? "https://decspage.com";
+        _jobs = job;
     }
     public async Task<Dictionary<string, ShopCategory>> GetProducts(string? search, string? orderby, string? direction)
     {
@@ -165,11 +167,19 @@ public class ShopService : IShopService
 
         var orderId = await UpdateOrder(session);
 
+        var jobId = 0;
+
+        if (session.Status == "complete" && session.PaymentStatus == "paid")
+        {
+            jobId = await _jobs.CreateJobAsync("orderFulfilment", new { orderId = orderId.ToString()});
+        }
+
         return new CheckoutSessionStatusResponse(
             Status: session.Status,
             PaymentStatus: session.PaymentStatus,
             Data: session.Metadata,
-            OrderId: orderId
+            OrderId: orderId,
+            JobId: jobId
         );
     }
 
@@ -217,14 +227,22 @@ public class ShopService : IShopService
         }
     }
 
-    public async Task<PaginatedRecord<Order>>GetOrders(string? search, int? limit, int? offset)
+    public async Task<PaginatedRecord<Order>>GetOrders(HttpContext ctx, string? search, int? limit, int? offset, string? orderby, string? direction, bool? adminMode)
     {
+        
+        var userId = ctx.User.FindFirst("SteamID")?.Value ?? throw new UnauthorizedAccessException("There isn't a SteamId associated with your account!");
+        var userAdmin = ctx.User.FindFirst("adminlevel")?.Value ?? "0";
+        var isAdmin = int.TryParse(userAdmin, out var level) && level >= 4;
         var totalRows = 0;
         var result = new List<Order>();
         using (var connection = new SqlConnection(connectionString))
         {
             await connection.OpenAsync();
             var sql = @"Select id, PurchaserId, ReceiverId, BasketJson, Status, PaymentStatus, AmountPence, Currency, CreatedAt, UpdatedAt, COUNT(*) OVER() AS TotalRows FROM orders WHERE 1=1 ";
+            if (!(adminMode ?? false) || !isAdmin)
+            {
+                sql += "AND PurchaserId = @steamid AND Status != 'incomplete'";
+            }
             if (!string.IsNullOrWhiteSpace(search))
             {
                 sql += @"
@@ -236,7 +254,21 @@ public class ShopService : IShopService
                     )
                 ";
             };
-           sql += " ORDER BY created_at DESC ";
+            var safeOrderBy = (orderby ?? "id").ToLower() switch
+            {
+                "id" => "id",
+                "status" => "Status",
+                "price" => "AmountPence",
+                _ => "id"
+            };
+
+            var safeDirection = (direction ?? "ASC").ToUpper() switch
+            {
+                "ASC" => "ASC",
+                "DESC" => "DESC",
+                _ => "ASC"
+            };
+           sql += $" ORDER BY {safeOrderBy} {safeDirection} ";
             if (limit.HasValue || offset.HasValue)
             {
                 sql += " OFFSET @offset ROWS";
@@ -249,6 +281,7 @@ public class ShopService : IShopService
             command.Parameters.AddWithValue("@offset", offset ?? 0);
             command.Parameters.AddWithValue("@limit", limit ?? 0);
             command.Parameters.AddWithValue("@search", search ?? "");
+            command.Parameters.AddWithValue("@steamid", userId);
             var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
@@ -256,11 +289,15 @@ public class ShopService : IShopService
                 {
                     totalRows = reader.GetInt32(reader.GetOrdinal("TotalRows"));
                 }
+                var basketJson = reader["BasketJson"].ToString() ?? string.Empty;
+
+                var basket = JsonSerializer.Deserialize<List<Dictionary<string, JsonElement>>>(basketJson) ?? new();
+                
                 var row = new Order (
                     Id: Convert.ToInt32(reader["Id"]),
                     PurchaserId: reader["PurchaserId"].ToString() ?? string.Empty,
                     ReceiverId: reader["ReceiverId"].ToString() ?? string.Empty,
-                    Basket: reader["BasketJson"].ToString() ?? "{}",
+                    Basket: basket,
                     Status: reader["Status"].ToString() ?? string.Empty,
                     PaymentStatus: reader["PaymentStatus"].ToString() ?? string.Empty,
                     AmountPence: Convert.ToInt32(reader["AmountPence"]),
@@ -291,11 +328,14 @@ public class ShopService : IShopService
             {
                 throw new InvalidDataException("Order not found!");
             }
+            var basketJson = reader["BasketJson"].ToString() ?? string.Empty;
+
+            var basket = JsonSerializer.Deserialize<List<Dictionary<string, JsonElement>>>(basketJson) ?? new();
             return new Order (
                 Id: Convert.ToInt32(reader["Id"]),
                 PurchaserId: reader["PurchaserId"].ToString() ?? string.Empty,
                 ReceiverId: reader["ReceiverId"].ToString() ?? string.Empty,
-                Basket: reader["BasketJson"].ToString() ?? "{}",
+                Basket: basket,
                 Status: reader["Status"].ToString() ?? string.Empty,
                 PaymentStatus: reader["PaymentStatus"].ToString() ?? string.Empty,
                 AmountPence: Convert.ToInt32(reader["AmountPence"]),

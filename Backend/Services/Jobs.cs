@@ -10,7 +10,7 @@ public interface IJobService
 {
   Task<PaginatedRecord<Job>>GetJobsAsync(string? search, string? statuses, int? limit, int? offset);
   Task<Job>GetJobAsync(int id);  
-  Task<object>CreateJobAsync(string type, object? payload);
+  Task<int>CreateJobAsync(string type, object? payload);
   Task StartWorker();
   Task <Job>GetWaitingJobAsync(CancellationToken stopToken);
   Task<String>UpdateJobStatusAsync(int id, string status, string? result);
@@ -122,7 +122,7 @@ public class JobService : IJobService
         };
     }
 
-    public async Task<object>CreateJobAsync(string type, object? payload)
+    public async Task<int>CreateJobAsync(string type, object? payload)
     {
         var JsonPayload = JsonSerializer.Serialize(payload);
         using (var connection = new SqlConnection(connectionString))

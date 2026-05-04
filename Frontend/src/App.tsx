@@ -9,6 +9,7 @@ import Jobs from "@/features/Jobs"
 import Home from "@/features/Home"
 import Test from "@/features/Test"
 import Shop from "@/features/Shop"
+import Orders from "@/features/Orders"
 import { CheckoutForm, Return } from "@/features/Checkout"
 import changelogData from "@/features/changelog.json";
 import LoginModal from "@/components/modals/Login"
@@ -268,12 +269,23 @@ export default function App() {
                         Change Password
                         </DropdownMenuItem>
                         
+                        <DropdownMenuSeparator className="bg-background" />
+                        
                         <DropdownMenuItem asChild>
                         <Link 
                           to={`/search/${user.SteamID}`} 
                           className="flex w-full items-center cursor-pointer">
                           <UserCircle className="h-3.5 w-3.5 text-muted-foreground" />
                           <span>View Profile</span>
+                        </Link>
+                      </DropdownMenuItem>
+                        
+                        <DropdownMenuItem asChild>
+                        <Link 
+                          to={`/orders`} 
+                          className="flex w-full items-center cursor-pointer">
+                          <UserCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span>View Orders</span>
                         </Link>
                       </DropdownMenuItem>
 
@@ -367,6 +379,7 @@ export default function App() {
             <Route path="/shop" element={<Shop />} />
             <Route path="/checkout" element={<CheckoutForm />} />
             <Route path="/return" element={<Return />} />
+            <Route path="/orders" element={<Orders />} />
             <Route path="/Future/:name" element={<Test />} />
           </Routes>
         </main>

@@ -17,6 +17,7 @@ export default function Shop() {
     const navigate = useNavigate();
     const { searchParams, updateParams } = useQueryParams();
     const search = searchParams.get("search") ?? "";
+    const [searchInput, setSearchInput] = useState(search ?? "");
     const orderby = searchParams.get("orderby") ?? "price";
     const direction = searchParams.get("direction") ?? "asc";
     // const [isLoading, setIsLoading] = useState(false);
@@ -32,6 +33,14 @@ export default function Shop() {
         { value: "price", label: "Price", entry: "bankacc" },
         { value: "duration", label: "Duration", entry: "duration"}
     ] as const;
+    
+    useEffect(() => {
+      const timeout = setTimeout(() => {
+          updateParams({ search: searchInput, page: 1 });
+      }, 300);
+
+      return () => clearTimeout(timeout);
+    }, [searchInput]);
 
     const fetchProducts = async () => {
         try {
@@ -132,18 +141,18 @@ return (
             <div className="relative w-full md:w-72 bg-card rounded-xl">
               <Input
                 placeholder="Search products..."
-                value={search}
-                onChange={(e) => updateParams({ search: e.target.value, page: 1 })}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Escape") updateParams({ search: "" });
+                  if (e.key === "Escape") setSearchInput("");
                 }}
                 className="h-7 text-xs bg-card border border-border text-foreground pr-9"
               />
 
               <button
-                onClick={() => updateParams({ search: "" })}
+                onClick={() => setSearchInput("")}
                 className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded transition-all ${
-                  search
+                  searchInput
                     ? "opacity-100 hover:bg-background text-muted-foreground hover:text-foreground"
                     : "opacity-0 pointer-events-none"
                 }`}
@@ -227,7 +236,7 @@ return (
                         {!product.durationDays && (
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Delivery</span>
-                            <span className="font-bold text-foreground">Automatic</span>
+                            <span className="font-bold text-foreground">Manual</span>
                           </div>
                         )}
                       </div>
