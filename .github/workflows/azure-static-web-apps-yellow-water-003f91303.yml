@@ -6,14 +6,12 @@ on:
       - main
     paths:
       - 'Frontend/**' # Only trigger if files in the backend folder change
-      - '.github/workflows/**'
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
       - main
     paths:
       - 'Frontend/**'
-      - '.github/workflows/**'
 
 jobs:
   build_and_deploy_job:
@@ -31,7 +29,6 @@ jobs:
         env:
           VITE_STRIPE_PUBLISH: ${{ secrets.VITE_STRIPE_PUBLISH }}
         run: |
-          echo "Stripe key length: ${#VITE_STRIPE_PUBLISH}"
           cd Frontend
           npm install
           npm run build
