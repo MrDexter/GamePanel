@@ -124,6 +124,26 @@ public static class JobEndpoints
         .WithDescription("Set the job to be either Priority or Not")
         .Produces(200);
 
+        group.MapPost("/{id}/manualComplete", async (int id, IJobService jobs) =>
+        {
+            try
+            {
+                var job = await jobs.GetJobAsync(id);
+                if (job is null)
+                    return Results.NotFound(new { message = "Job not found!" });
+                await jobs.MarkCompleted(id);
+                
+                return Results.Ok(new {message = "Toggle State has been changed to: "}); 
+            } catch (InvalidOperationException error)
+            {
+                return Results.BadRequest(new {message = error.Message});
+            }
+        })
+        .RequireAuthorization("SeniorStaff")
+        .WithSummary("Mark Manual as Completed ")
+        .WithDescription("Set the Manual Payload entry as complete")
+        .Produces(200);
+
         group.MapGet("/{id}/download", async (int id, bool? direct, IJobService jobs, IProcessorService processor) =>
         {
             bool isDirect = direct ?? true;

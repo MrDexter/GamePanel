@@ -15,7 +15,9 @@
         { "type": "backend", "text": "Changed Stripe and related handling to accept Basket Format"},
         { "type": "backend", "text": "Fixed product count showing category count"},
         { "type": "backend", "text": "Added fulfilmentMode to Products for display and Worker Processing"},
-        { "type": "frontend", "text": "Added basket and fulfilment information to Order conclusion Page"}
+        { "type": "frontend", "text": "Added basket and fulfilment information to Order conclusion Page"},
+        { "type": "frontend", "text": "Added Maanual Param to Job Payload for tracking manually applied fulfilment"},
+        { "type": "backend", "text": "Added Endpoint to Update Manual Job Payload Param to Completed"}
       ]
   },
   {

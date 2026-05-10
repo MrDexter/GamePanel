@@ -21,7 +21,7 @@ export default function Orders() {
     const search = searchParams.get("search") ?? "";
     const [searchInput, setSearchInput] = useState(search ?? "");
     const orderby = searchParams.get("orderby") ?? "id";
-    const direction = searchParams.get("direction") ?? "asc";
+    const direction = searchParams.get("direction") ?? "desc";
     const [adminMode, setAdminMode] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(0);
     const isViewOrderOpen = searchParams.get("viewOrder") === "true";

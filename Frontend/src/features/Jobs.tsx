@@ -123,6 +123,21 @@ export default function Stats() {
         
         }
     }
+    const markAsComplete = async (id : number) => {
+        try {
+            const res = await apiFetch("POST", `/jobs/${id}/manualComplete`)
+            const data = await res.json();
+            if (res.ok) {
+                toast.success(data.message);
+            } else {
+                toast.error("Failed", { description: data.message ?? "API Error" });
+            }
+        } catch (error : any) {
+            toast.error(error.message);
+            console.error(error);
+        
+        }
+    }
 
     const handleExport = async (id?: number) => {
         const adminlevel = parseInt(user?.adminlevel ?? 0);
@@ -357,7 +372,7 @@ export default function Stats() {
                         <DropdownMenuItem disabled={(user?.adminlevel || 0) < (perms?.admin?.EXPORT_DATA ?? 99)} 
                         className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-foreground" onClick={() => handleExport(Number(data.id))}>
                         <FileJson className="h-3.5 w-3.5 text-muted-foreground" />
-                            Export Job Metadata
+                        Export Job Metadata
                         </DropdownMenuItem>
                         <DropdownMenuSeparator className="bg-background" />
 
@@ -377,6 +392,11 @@ export default function Stats() {
                         </DropdownMenuItem>
 
                         <DropdownMenuSeparator className="bg-background" />
+                        
+                        <DropdownMenuItem disabled={(payload?.manual !== "Incomplete" ) || (user?.adminlevel || 0) < (perms?.admin?.JOB_MANAGEMENT ?? 99)} 
+                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-foreground" onClick={() => openConfirm("Mark as Complete", "Are you sure you want to mark this job as complete?", () => markAsComplete(Number(data.id)))}>
+                        Mark as Complete
+                        </DropdownMenuItem>
                         
                         <DropdownMenuItem disabled={(data.status !== "Pending") || (user?.adminlevel || 0) < (perms?.admin?.JOB_MANAGEMENT ?? 99)} 
                         className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-foreground" onClick={() => openConfirm("Toggle Priority", "Are you sure you want to toggle priority for this job?", () => changeJobStatus(Number(data.id), "priority"))}>

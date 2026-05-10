@@ -16,8 +16,9 @@ export default function ViewOrderModal({open, setOpen, selectedOrder}: {open: an
     if (!selectedOrder) return null;
     if (!open) return null;
     const { user, perms } = useAuth();
-    const { searchParams, updateParams } = useQueryParams();
+    const { updateParams } = useQueryParams();
     // const selectedOrder = searchParams.get("viewOrder") ?? null;
+    const [payload, setPayload] = useState<any>([]);
     const [order, setOrder] = useState<OrderLong | null>(null);
     const navigate = useNavigate();
 
@@ -29,8 +30,8 @@ export default function ViewOrderModal({open, setOpen, selectedOrder}: {open: an
                 setOrder(null);
             };
             const data = await res.json();
-            console.log(data);
             setOrder(data);
+            setPayload(JSON.parse(data?.job?.payload ?? "{}"))
         } catch (error) {
             setOrder(null);
             console.error("Fetch Error", error);
@@ -69,6 +70,18 @@ export default function ViewOrderModal({open, setOpen, selectedOrder}: {open: an
         : paymentStatus
     }
 
+    const getFulfilmentMode = (basket?: any[]) => {
+        if (!basket || basket.length === 0) return "None";
+
+        const firstMode = basket[0].fulfilmentMode ?? "Manual";
+
+        const allSame = basket.every(
+            item => (item.fulfilmentMode ?? "Manual") === firstMode
+        );
+
+        return allSame ? firstMode : "Mixed";
+    };
+
     if (user?.steamId != order?.purchaserId) {
         if ((user?.adminlevel ?? 0) < (perms?.admin?.ORDER_MANAGEMENT ?? 99) ){
             updateParams({ viewOrder: null });
@@ -102,13 +115,22 @@ export default function ViewOrderModal({open, setOpen, selectedOrder}: {open: an
 
                 <div className="space-y-6">
                 {/* Summary */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                     <div className="rounded-lg border border-border bg-background/75 p-3">
                     <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
                         Amount
                     </p>
                     <p className="text-lg font-black">
                         {formatMoney(Number(order?.amountPence || 0) / 100)}
+                    </p>
+                    </div>
+
+                    <div className="rounded-lg border border-border bg-background/75 p-3">
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                        Updated
+                    </p>
+                    <p className="text-xs">
+                        {formatDate(order?.updatedAt ?? "")}
                     </p>
                     </div>
 
@@ -126,16 +148,7 @@ export default function ViewOrderModal({open, setOpen, selectedOrder}: {open: an
                         Receiver
                     </p>
                     <p className="text-xs font-mono truncate">
-                        {order?.purchaserId === order?.receiverId ? "You" : order?.receiverId}
-                    </p>
-                    </div>
-
-                    <div className="rounded-lg border border-border bg-background/75 p-3">
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                        Updated
-                    </p>
-                    <p className="text-xs">
-                        {formatDate(order?.updatedAt ?? "")}
+                        {order?.purchaserId === order?.receiverId ? order?.receiverId + " (You)" : order?.receiverId}
                     </p>
                     </div>
                 </div>
@@ -154,10 +167,13 @@ export default function ViewOrderModal({open, setOpen, selectedOrder}: {open: an
                         >
                         <div className="min-w-0">
                             <p className="font-bold text-foreground truncate">
-                            {item.productName}
+                            {item.name}
                             </p>
+                            {/* <p className="text-xs text-muted-foreground font-mono">
+                            {item.description}
+                            </p> */}
                             <p className="text-xs text-muted-foreground font-mono">
-                            {item.productId}
+                            Fulfilment: {item.fulfilmentMode}
                             </p>
                         </div>
 
@@ -187,7 +203,7 @@ export default function ViewOrderModal({open, setOpen, selectedOrder}: {open: an
                             Type
                         </p>
                         <p className="text-xs text-muted-foreground">
-                            {"Automatic"}
+                            {getFulfilmentMode(order?.basket)}
                         </p>
                         </div>
 
@@ -203,10 +219,12 @@ export default function ViewOrderModal({open, setOpen, selectedOrder}: {open: an
                     </div>
 
                     {order?.job && (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-border">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-3 border-t border-border">
                         <div>
                             <p className="text-[10px] uppercase text-muted-foreground">Status</p>
-                            <p className="text-sm font-bold">{order?.job.status}</p>
+                            <p className="text-sm font-bold">
+                                {payload?.manual === "Incomplete" && order?.job.status === "Complete" ? "Auto Complete" : order?.job.status }
+                            </p>
                         </div>
 
                         {/* <div>
@@ -216,12 +234,12 @@ export default function ViewOrderModal({open, setOpen, selectedOrder}: {open: an
 
                         <div>
                             <p className="text-[10px] uppercase text-muted-foreground">Created</p>
-                            <p className="text-sm">{formatDate(order?.job.createdAt)}</p>
+                            <p className="text-sm">{formatDate(order?.job.createdAt, true)}</p>
                         </div>
 
                         <div>
                             <p className="text-[10px] uppercase text-muted-foreground">Updated</p>
-                            <p className="text-sm">{formatDate(order?.job.updatedAt)}</p>
+                            <p className="text-sm">{formatDate(order?.job.updatedAt, true)}</p>
                         </div>
                         </div>
                     )}

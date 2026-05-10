@@ -169,12 +169,23 @@ public class ShopService : IShopService
 
         var jobId = 0;
 
+        var basket = JsonSerializer.Deserialize<List<ShopProduct>>(orderDetails.BasketJson);
+
         if (session.Status == "complete" && session.PaymentStatus == "paid")
-        {
-            jobId = await _jobs.CreateJobAsync("orderFulfilment", new { orderId = orderDetails.OrderId.ToString()});
+        {   
+            var jobPayload = new Dictionary<string, object>
+            {
+                ["orderId"] = orderDetails.OrderId.ToString()
+            };
+
+            if (basket!.Any(p => p.FulfilmentMode.Contains("Manual")))
+            {
+                jobPayload["manual"] = "Incomplete";
+            }
+
+            jobId = await _jobs.CreateJobAsync("orderFulfilment", jobPayload);
         }
 
-        var basket = JsonSerializer.Deserialize<List<ShopProduct>>(orderDetails.BasketJson);
 
         return new CheckoutSessionStatusResponse(
             Status: session.Status,

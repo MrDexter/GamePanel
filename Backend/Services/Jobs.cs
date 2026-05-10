@@ -15,6 +15,7 @@ public interface IJobService
   Task <Job>GetWaitingJobAsync(CancellationToken stopToken);
   Task<String>UpdateJobStatusAsync(int id, string status, string? result);
   Task<bool>TogglePriority(int id, bool toggle);
+  Task MarkCompleted(int id);
 
 };
 
@@ -203,6 +204,20 @@ public class JobService : IJobService
             if (reader == 0)
                 throw new InvalidDataException("Failed to Set to Priority");
             return true;
+        }
+    }
+
+    public async Task MarkCompleted(int id)
+    {
+        using (var connection = new SqlConnection(connectionString))
+        {
+            await connection.OpenAsync();
+            var sql = $"UPDATE jobs SET payload = JSON_MODIFY(payload, '$.manual', 'Complete') WHERE id = @id";
+            using var command = new SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@id", id);
+            int reader = await command.ExecuteNonQueryAsync();
+            if (reader == 0)
+                throw new InvalidOperationException("Failed to Update!");
         }
     }
 
