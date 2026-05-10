@@ -133,7 +133,7 @@ public static class JobEndpoints
                     return Results.NotFound(new { message = "Job not found!" });
                 await jobs.MarkCompleted(id);
                 
-                return Results.Ok(new {message = "Toggle State has been changed to: "}); 
+                return Results.Ok(new {message = "Job has been marked as Complete!"}); 
             } catch (InvalidOperationException error)
             {
                 return Results.BadRequest(new {message = error.Message});
