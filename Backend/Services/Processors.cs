@@ -7,6 +7,7 @@ using Azure.Storage.Sas;
 using System.Reflection.Metadata;
 using DecsPage.Services;
 using Stripe.Terminal;
+using Stripe;
 
 namespace DecsPage.Services;
 
@@ -116,7 +117,7 @@ public class ProcessorService : IProcessorService
             Directory.CreateDirectory(folder);
 
             var location = Path.Combine(folder, filename);
-            await File.WriteAllTextAsync(location, sb.ToString());
+            await System.IO.File.WriteAllTextAsync(location, sb.ToString());
             return location;
         } else {
             var blobPath = await UploadBlobAsync(filename, sb.ToString(), stopToken);
@@ -124,24 +125,27 @@ public class ProcessorService : IProcessorService
         }; 
     }
 
-    public async Task CompleteOrderFulfilment (Order order, CancellationToken stopToken)
+    public async Task CompleteOrderFulfilment (OrderLong order, CancellationToken stopToken)
     {
         foreach (var item in order.Basket)
         {
             stopToken.ThrowIfCancellationRequested();
-            Console.Write(item);
-            var product = _shopService.GetItem(item["productId"].ToString());
-            switch (product.Id)
+            if (item.FulfilmentMode == "Auto")
             {
-                case "thirtyDays":
-                case "sixtyDays":
-                case "oneYear":
-                    await ApplyMembership(order.ReceiverId, product.DonatorLevel ?? 1, product.DurationDays ?? 30, stopToken);
-                    break;
-                default:
-                    throw new InvalidDataException("Invalid / Unsupported Product Type");
+                var product = _shopService.GetItem(item.Id.ToString());
+                switch (product.Id)
+                {
+                    case "thirtyDays":
+                    case "sixtyDays":
+                    case "oneYear":
+                        await ApplyMembership(order.ReceiverId, product.DonatorLevel ?? 1, product.DurationDays ?? 30, stopToken);
+                        break;
+                    default:
+                        Console.WriteLine("Product not Supported / Found " + product.Id);
+                        break;
 
-            } 
+                } 
+            }
         }
     }
 

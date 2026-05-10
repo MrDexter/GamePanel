@@ -1,5 +1,24 @@
 [
   {
+    "date": "10-05-2026",
+    "version": "0.9.8",
+    "title": "Order Model, Further Ui Changes",
+    "type": "Feature",
+    "category": "Full",
+    "changes": [
+        { "type": "backend", "text": "Added Order Model for more indepth order information" },
+        { "type": "frontend", "text": "Fixed display issue with 'View Logs' on mobile device" },
+        { "type": "frontend", "text": "Improved mobile display of Player page spacing / size" },
+        { "type": "frontend", "text": "Moved the Status indiciator into the User Menu Dropdown" },
+        { "type": "frontend", "text": "Added Tailwind Toolbars for matching toolbar themes" },
+        { "type": "frontend", "text": "Added Basket System to the Shop" },
+        { "type": "backend", "text": "Changed Stripe and related handling to accept Basket Format"},
+        { "type": "backend", "text": "Fixed product count showing category count"},
+        { "type": "backend", "text": "Added fulfilmentMode to Products for display and Worker Processing"},
+        { "type": "frontend", "text": "Added basket and fulfilment information to Order conclusion Page"}
+      ]
+  },
+  {
     "date": "04-05-2026",
     "version": "0.9.7",
     "title": "Orders",

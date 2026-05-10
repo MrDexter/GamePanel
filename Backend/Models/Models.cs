@@ -314,6 +314,8 @@ public record ShopProduct
     public string Description { get; set; } = string.Empty;
     public int? DonatorLevel { get; set; }
     public int? DurationDays { get; set; }
+    public string FulfilmentMode { get; set; } = "Manual";
+    public int? Quantity {get; set;}
 }
 
 public record StripeOptions
@@ -322,7 +324,7 @@ public record StripeOptions
 }
 
 public record CreateCheckoutSessionRequest(
-    string ProductId,
+    List<ShopProduct> Basket,
     string PurchaserId,
     string ReceiverId
     );
@@ -334,6 +336,7 @@ public record CheckoutSessionStatusResponse(
     string? PaymentStatus,
     Dictionary<string, string>? Data,
     int? OrderId,
+    List<ShopProduct>? Basket,
     int? JobId
 );
 
@@ -341,11 +344,33 @@ public record Order(
     int Id,
     string PurchaserId,
     string ReceiverId,
-    List<Dictionary<string, JsonElement>> Basket,
+    List<ShopProduct> Basket,
     string Status,
     string PaymentStatus,
     int AmountPence,
     string Currency,
     DateTime CreatedAt,
     DateTime UpdatedAt
+);
+
+public record OrderLong(
+    int Id,
+    string PurchaserId,
+    string ReceiverId,
+    List<ShopProduct> Basket,
+    string Status,
+    string PaymentStatus,
+    string PaymentMethod,
+    string StripeCheckoutSessionId,
+    string StripePaymentIntentId,
+    int AmountPence,
+    string Currency,
+    DateTime CreatedAt,
+    DateTime UpdatedAt,
+    Job Job
+);
+
+public record UpdateOrderResult(
+    int OrderId,
+    string BasketJson
 );

@@ -117,7 +117,7 @@ export default function ViewLogsModal({open, setOpen, player}: {open: boolean; s
     );
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl bg-popover/90 border-border text-foreground">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-popover/90 border-border text-foreground scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/15 hover:scrollbar-thumb-white/25 scrollbar-thumb-rounded-full">
         <DialogHeader>
             <DialogTitle className="text-2xl font-black uppercase tracking-tighter">
             Logs: {player.name} ({player.playerid})

@@ -14,8 +14,9 @@ public static class ShopEndpoints
         {
             var products = await shop.GetProducts(search, orderby, direction);
             var productsList = products.Values.ToList();
-            return Results.Ok(new {products = productsList, totalProducts = products.Count()});
+            return Results.Ok(new {products = productsList, totalProducts = products.Values.Sum(c => c.Products.Count)});
         })
+        .Produces<PaginatedRecord<ShopCategory>>(200)
         .WithSummary("Get All Products")
         .WithDescription("Get a list of all items available on the shop");
 
@@ -31,6 +32,7 @@ public static class ShopEndpoints
                 return Results.NotFound("Item Not Found");
             }
         })
+        .Produces<ShopProduct>(200)
         .WithSummary("Get a Specific Product")
         .WithDescription("Get a specific Item using the Item ID");
 
@@ -39,11 +41,12 @@ public static class ShopEndpoints
             var orders = await shop.GetOrders(ctx, search, limit, offset, orderby, direction, adminMode);
             return Results.Ok(new {orders = orders.Data, totalRows = orders.TotalRows});
         })
+        .Produces<PaginatedRecord<Order>>(200)
         .RequireAuthorization()
         .WithSummary("Get All Orders")
         .WithDescription("Get a list of all Orders");
 
-        group.MapGet("/order", async (int id, IShopService shop) =>
+        group.MapGet("/order/{id}", async (int id, IShopService shop) =>
         {
             try
             {
@@ -55,6 +58,7 @@ public static class ShopEndpoints
                 return Results.NotFound("Order Not Found");
             }
         })
+        .Produces<OrderLong>(200)
         .WithSummary("Get a Specific Order")
         .WithDescription("Get a specific Item using the Order Id");
 
@@ -78,12 +82,12 @@ public static class ShopEndpoints
         .Produces(400);
 
         group.MapGet("/session-status", async ( [FromQuery(Name = "session_id")] string sessionId, IShopService shop, IJobService jobs, CancellationToken cancellationToken) =>
-            {
-                var result = await shop.GetSessionStatusAsync(sessionId, cancellationToken);
+        {
+            var result = await shop.GetSessionStatusAsync(sessionId, cancellationToken);
 
-                return Results.Ok(result);
-            })
-            .Produces<CheckoutSessionStatusResponse>(200);
+            return Results.Ok(result);
+        })
+        .Produces<CheckoutSessionStatusResponse>(200);
 
         return app;
     }

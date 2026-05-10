@@ -3,12 +3,11 @@ import {Badge } from "@/components/ui/badge"
 import {Button } from "@/components/ui/button"
 import React, { useState, useEffect } from 'react'
 import { apiFetch } from "@/lib/api";
-import { ClipboardCopy } from "lucide-react"; //ClipboardCheck
 import { useParams, useNavigate, useLocation, Link  } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
-import { Pencil, EllipsisVertical, FileJson, Key, Trash2 } from "lucide-react"
+import { Pencil, EllipsisVertical, FileJson, Key, Trash2, Copy } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import {formatDate, unitNames, formatMoney, unitRankNames, FACTIONS, useQueryParams } from "@/lib/constants"
+import {formatDate, unitNames, formatMoney, unitRankNames, FACTIONS, useQueryParams, copyToClipboard } from "@/lib/constants"
 import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,DropdownMenuSeparator, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
 // import { jwtDecode } from 'jwt-decode';
 import { useAuth } from "@/lib/AuthContext"
@@ -34,11 +33,6 @@ const sideColor: Record<string, string> = {
 const typeColor: Record<string, string> = {
     "Car": "bg-green-600",
     "Air": "bg-red-600"
-};
-
-const copyToClipboard = (text: string) => {
-  navigator.clipboard.writeText(text);
-  toast.success("Text copied to clipboard!");
 };
 
 export default function StatsPlayer() {
@@ -248,7 +242,7 @@ export default function StatsPlayer() {
     }
     const gangRank = player.gang?.members.find((member: GangMember) => member.id === player.playerid);
     return (
-        <div className="max-w-5xl mx-auto py-10 px-6 space-y-8">
+        <div className="max-w-5xl mx-auto md:py-10 md:px-6 space-y-8">
         {/* Top Row: Back Button & Status */}
         <div className="flex flex-wrap justify-between items-center gap-3">
         <Button
@@ -657,7 +651,7 @@ export default function StatsPlayer() {
                                     onClick={() => copyToClipboard(parseInventory(v.inventory))}
                                     className="text-muted-foreground hover:text-foreground transition-colors"
                                     title="Copy Raw Inventory">
-                                    <ClipboardCopy className="h-3 w-3" />
+                                    <Copy className="h-3 w-3" />
                                 </button>
                                 )}
                             </div>
@@ -723,7 +717,7 @@ export default function StatsPlayer() {
                                 className="text-muted-foreground hover:text-foreground transition-colors"
                                 title="Copy Virtual Inventory"
                                 >
-                                <ClipboardCopy className="h-3 w-3" />
+                                <Copy className="h-3 w-3" />
                                 </button>
                             )}
                             </div>
@@ -743,7 +737,7 @@ export default function StatsPlayer() {
                                 className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                                 title="Copy Physical Inventory"
                                 > 
-                                <ClipboardCopy className="h-3 w-3" />
+                                <Copy className="h-3 w-3" />
                                 </button>
                             )}
                             </div>

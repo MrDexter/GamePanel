@@ -6,7 +6,7 @@ import {Button } from "@/components/ui/button"
 import {EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js';
 import { useNavigate, Link } from "react-router-dom";
 import { apiFetch } from "@/lib/api";
-import { useQueryParams } from "@/lib/constants";
+import { useQueryParams, formatMoney } from "@/lib/constants";
 import { useAuth } from "@/lib/AuthContext";
   import LoadingOverlay from "@/components/modals/Loading"
 
@@ -19,13 +19,13 @@ const stripePromise = loadStripe(Stripe_Publish);
 export const CheckoutForm = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { searchParams } = useQueryParams();
-  const product = searchParams.get("product") ?? "";
+  // const { searchParams } = useQueryParams();
+  const basket = JSON.parse(localStorage.getItem("basket") ?? "[]");
 
   const fetchClientSecret = useCallback(() => {
     return apiFetch("POST", "/shop/create-checkout-session", {
       body: JSON.stringify({
-        productId: product,
+        basket: basket,
         purchaserId: user?.SteamID ?? "",
         ReceiverId: user?.SteamID ?? "" // Setup for Gifting later
       }),
@@ -38,7 +38,8 @@ export const CheckoutForm = () => {
         navigate("/shop");
         throw new Error(data.message);
       }
-
+      localStorage.setItem("basket", "[]");
+      window.dispatchEvent(new Event("basketUpdated"));
       return data.clientSecret;
     });
   }, []);
@@ -61,10 +62,11 @@ export const Return = () => {
   const hasRun = useRef(false);
   const { user } = useAuth();
   const [status, setStatus] = useState(null);
-  const [paymentStatus, setPaymentStatus] = useState(null);
+  // const [paymentStatus, setPaymentStatus] = useState(null);
   const [metaData, setMetaData] = useState<any>([]);
   const [orderId, setOrderId] = useState(null);
   const [jobId, setJobId] = useState(null);
+  const [basket, setBasket] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { searchParams, updateParams } = useQueryParams();
@@ -80,19 +82,15 @@ export const Return = () => {
       .then((data) => {
         setStatus(data.status);
         setMetaData(data.data);
-        setPaymentStatus(data.paymentStatus);
+        // setPaymentStatus(data.paymentStatus);
         setOrderId(data.orderId);
         setJobId(data.jobId);
+        setBasket(data.basket);
         updateParams({ session_id: null });
       });
       setIsLoading(false);
   }, []);
 
-  if (status === 'open') {
-  }
-
-  if (status === "complete" && paymentStatus === "paid") {
-  }
 return (
   <Card className="bg-card border-border max-w-2xl mx-auto">
     <CardHeader>
@@ -102,7 +100,7 @@ return (
 
       {status === "complete" ? (
         <p className="text-sm text-muted-foreground">
-          Thanks for your purchase. Your {metaData.productName ?? "purchase"} should be applied shortly.
+          Thanks for your purchase. Your items should be applied shortly.
         </p>
       ) : (
         <p className="text-sm text-muted-foreground">
@@ -124,14 +122,14 @@ return (
           </span>
         </div>
 
-        <div className="flex justify-between text-sm">
+        {/* <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">
             {status === "complete" ? "Delivery" : "Session"}
           </span>
           <span className="text-foreground font-medium">
             {status === "complete" ? "Instant" : "Not completed"}
           </span>
-        </div>
+        </div> */}
 
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">
@@ -152,15 +150,82 @@ return (
             Job ID
           </span>
           <span className="text-foreground font-medium">
+            {jobId !== 0 && jobId !== null ? (
+              <div>
             #<Link
               to={`/jobs?search=${jobId}`}
               className="px-0.5 text-blue-400 underline cursor-pointer"
               >
               {jobId}
             </Link>
+            </div>
+          ) : (
+            "None"
+          )}
           </span>
         </div>
       </div>
+
+      {basket?.length > 0 && (
+        <div className="rounded-lg border border-border bg-background p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+              Order Summary
+            </span>
+
+            <span className="text-xs text-muted-foreground">
+              {basket.length} item{basket.length === 1 ? "" : "s"}
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            {basket.map((item: any) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between gap-3 border-t border-border pt-2 first:border-t-0 first:pt-0"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-foreground truncate">
+                    {item.name}
+                  </p>
+
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                      Qty {item.quantity}
+                    </span>
+
+                    <span
+                      className={`text-[10px] uppercase tracking-widest ${
+                        item.fulfilmentMode === "Auto"
+                          ? "text-emerald-500"
+                          : "text-amber-500"
+                      }`}
+                    >
+                      Fulfillment: {item.fulfilmentMode ?? "Manual"}
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-sm font-black text-foreground shrink-0">
+                  {formatMoney((item.pricePence * item.quantity) / 100)}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-between border-t border-border pt-3 text-sm">
+            <span className="text-muted-foreground">Total</span>
+            <span className="font-black text-foreground">
+              {formatMoney(
+                basket.reduce(
+                  (sum: number, item: any) => sum + item.pricePence * item.quantity,
+                  0
+                ) / 100
+              )}
+            </span>
+          </div>
+        </div>
+      )}
 
       {status === "complete" ? (
         <div className="space-y-1 text-sm text-muted-foreground">
@@ -180,7 +245,7 @@ return (
         ) : (
           <Button
             disabled={!metaData.productId}
-            onClick={() => navigate(`/checkout?product=${metaData.productId}`)}
+            onClick={() => {localStorage.setItem("basket", JSON.stringify(basket)); window.dispatchEvent(new Event("basketUpdated")); navigate(`/checkout`)}}
           >
             Retry
           </Button>

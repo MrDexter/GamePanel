@@ -8,6 +8,7 @@ import { formatMoney, formatDate, useQueryParams} from "@/lib/constants"
 // import { useNavigate } from "react-router-dom"
 import { apiFetch } from "@/lib/api"
 // import LoadingOverlay from "@/components/modals/Loading"
+import ViewOrderModal from '@/components/modals/ViewOrder'
 import { X, ArrowUp, ChevronRight, ChevronLeft } from "lucide-react"
 import { useAuth } from "@/lib/AuthContext"
 import {DropdownMenu,DropdownMenuContent,DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
@@ -22,6 +23,8 @@ export default function Orders() {
     const orderby = searchParams.get("orderby") ?? "id";
     const direction = searchParams.get("direction") ?? "asc";
     const [adminMode, setAdminMode] = useState(false);
+    const [selectedOrder, setSelectedOrder] = useState(0);
+    const isViewOrderOpen = searchParams.get("viewOrder") === "true";
     // const [isLoading, setIsLoading] = useState(false);
     const [orders, setOrders] = useState<any[]>([]);
     const currentPage = Number(searchParams.get("page") ?? 1);
@@ -38,7 +41,7 @@ export default function Orders() {
 
     useEffect(() => {
       const timeout = setTimeout(() => {
-          updateParams({ search: searchInput, page: 1 });
+          updateParams({ search: searchInput, page: null });
       }, 300);
 
       return () => clearTimeout(timeout);
@@ -243,14 +246,13 @@ return (
                   </div>
 
                   <div className="flex items-end">
-                    {/* <Button
-                      variant="outline"
+                    <Button
                       size="sm"
-                      onClick={() => navigate(`/orders/${order.id}`)}
-                      className="w-full"
+                      onClick={() => {setSelectedOrder(order.id); updateParams({ viewOrder: true })}}
+                      className="w-full bg-background text-foreground hover:bg-card hover:text-bold"
                     >
                       View
-                    </Button> */}
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -290,6 +292,7 @@ return (
       </div>
 
     </div>
+    <ViewOrderModal open={isViewOrderOpen} setOpen={(value) => updateParams({ viewOrder: value ? "true" : null })} selectedOrder ={selectedOrder}/>
   </div>
 );
 }

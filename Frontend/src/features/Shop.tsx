@@ -7,9 +7,10 @@ import { formatMoney, useQueryParams} from "@/lib/constants"
 import { useNavigate } from "react-router-dom"
 import { apiFetch } from "@/lib/api"
 // import LoadingOverlay from "@/components/modals/Loading"
-import { ChevronLeft, ChevronRight, X, ArrowUp } from "lucide-react"
+import { ChevronLeft, ChevronRight, X, ArrowUp, ShoppingBasket, Trash2 } from "lucide-react"
 import { useAuth } from "@/lib/AuthContext"
 import {DropdownMenu,DropdownMenuContent,DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
+import type { BasketItem } from '@/types/modals'
 
 
 export default function Shop() {
@@ -17,9 +18,9 @@ export default function Shop() {
     const navigate = useNavigate();
     const { searchParams, updateParams } = useQueryParams();
     const search = searchParams.get("search") ?? "";
-    const [searchInput, setSearchInput] = useState(search ?? "");
     const orderby = searchParams.get("orderby") ?? "price";
     const direction = searchParams.get("direction") ?? "asc";
+    const [searchInput, setSearchInput] = useState(search ?? "");
     // const [isLoading, setIsLoading] = useState(false);
     const [results, setResults] = useState<any[]>([]);
     const currentPage = Number(searchParams.get("page") ?? 1);
@@ -27,6 +28,7 @@ export default function Shop() {
     const itemPerPage = 12;
     const totalPages = Math.max(1, Math.ceil(totalRows / itemPerPage));
     const offset = Math.max(0, (itemPerPage * (currentPage - 1)));
+    const [basket, setBasket] = useState<BasketItem[]>([]);
 
     const ORDER_OPTIONS = [
         { value: "name", label: "Name", entry: "name" },
@@ -51,6 +53,7 @@ export default function Shop() {
             };
             const data = await res.json();
             setResults(data.products);
+            console.log(data.products)
             setTotalRows(data.totalProducts)
         } catch (error) {
             setResults([]);
@@ -58,10 +61,60 @@ export default function Shop() {
         }
     };
 
+    const fetchBasket = () => {
+      const basket = JSON.parse(localStorage.getItem("basket") ?? "[]");
+      setBasket(basket);
+    };
+
+    const updateBasket = (type: "add" | "remove", item: BasketItem) => {
+    // Example Shop Item Data: {"id": "thirtyDays","name": "30 Day Membership","pricePence": 1000,"description": "Purchase Donator Membership for 30 days","donatorLevel": 1,"durationDays": 30,"fulfilmentMode": "Auto"}
+      setBasket(prev => {
+        let next = [...prev];
+
+        const existingIndex = next.findIndex(x => x.id === item.id);
+
+        if (existingIndex !== -1) {
+          if (type === "add") {
+            next[existingIndex] = {
+              ...next[existingIndex],
+              quantity: next[existingIndex].quantity + 1
+            };
+          } else {
+            const currentQty = next[existingIndex].quantity;
+
+            if (currentQty <= 1) {
+              next = next.filter(x => x.id !== item.id);
+            } else {
+              next[existingIndex] = {
+                ...next[existingIndex],
+                quantity: currentQty - 1
+              };
+            }
+          }
+        } else if (type === "add") {
+          next.push({
+            ...item,
+            quantity: 1
+          });
+        }
+
+        localStorage.setItem("basket", JSON.stringify(next));
+        window.dispatchEvent(new Event("basketUpdated"));
+
+        return next;
+      });
+    };
+    const resetBasket = () => {
+        setBasket([]);
+        localStorage.setItem("basket", "[]");
+        window.dispatchEvent(new Event("basketUpdated"));
+    };
+
     useEffect(() => {
         const delayedSearch = setTimeout(async () => {
             // setIsLoading(true);
-            fetchProducts()
+            fetchProducts();
+            fetchBasket();
         }, search.trim() ? 500 : 0);
         return () => clearTimeout(delayedSearch)
     }, [search, orderby, direction, currentPage, totalPages]);
@@ -91,7 +144,7 @@ return (
       </div>
 
       {/* Controls */}
-      <Card className="bg-background/50 border-border/50">
+      <Card className="sticky top-20 z-20 bg-background/80 backdrop-blur border-border/50">
         <CardContent className="px-3 py-0">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-2">
@@ -137,7 +190,106 @@ return (
                 />
               </Button>
             </div>
+            <div className="flex items-center gap-2 w-full md:w-auto">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="relative h-7 px-2.5 text-[11px] uppercase text-foreground border-border hover:bg-card cursor-pointer"
+                >
+                  <ShoppingBasket className="h-4 w-4" />
 
+                  {basket.length > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 min-w-4 h-4 px-1 flex items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white leading-none">
+                      {basket.length}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent
+                align="end"
+                className="w-80 bg-card border-border text-foreground p-0"
+              >
+              <div className="flex items-center justify-between border-b border-border p-3">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-widest">
+                    Basket
+                  </p>
+
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                    {basket.length} item{basket.length === 1 ? "" : "s"}
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => resetBasket()}
+                  className="text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors rounded-md p-1.5 cursor-pointer"
+                  title="Reset Basket"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+                {basket.length > 0 ? (
+                  <div className="max-h-72 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/15">
+                    {basket.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between gap-3 p-3 border-b border-border last:border-b-0"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-foreground truncate">
+                            {item.name}
+                          </p>
+                          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                            Qty {item.quantity}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <p className="text-sm font-black text-foreground">
+                            {formatMoney((item.pricePence * item.quantity) / 100)}
+                          </p>
+                          <button
+                            onClick={() => updateBasket("remove", item)}
+                            className="text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors rounded-md cursor-pointer"
+                            title="Remove Item"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-4 text-sm text-muted-foreground">
+                    Basket is empty.
+                  </div>
+                )}
+
+                <div className="p-3 border-t border-border space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Total</span>
+                    <span className="font-black text-foreground">
+                      {formatMoney(
+                        basket.reduce(
+                          (sum, item) => sum + item.pricePence * item.quantity,
+                          0
+                        ) / 100
+                      )}
+                    </span>
+                  </div>
+
+                  <Button
+                    disabled={basket.length === 0}
+                    onClick={() => navigate(`/checkout`)}
+                    className="w-full h-8 text-xs uppercase bg-emerald-500 text-white"
+                  >
+                    Checkout
+                  </Button>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <div className="relative w-full md:w-72 bg-card rounded-xl">
               <Input
                 placeholder="Search products..."
@@ -159,6 +311,7 @@ return (
               >
                 <X className="h-4 w-4" />
               </button>
+            </div>
             </div>
           </div>
         </CardContent>
@@ -211,9 +364,13 @@ return (
                           {formatMoney(product.pricePence / 100)}
                         </p>
 
-                        {product.durationDays && (
+                        {product.durationDays ? (
                           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                             {product.durationDays} days access
+                          </p>
+                        ) : (
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                            One Time Use
                           </p>
                         )}
                       </div>
@@ -233,10 +390,10 @@ return (
                           </div>
                         )}
 
-                        {!product.durationDays && (
+                        {product.fulfilmentMode && (
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Delivery</span>
-                            <span className="font-bold text-foreground">Manual</span>
+                            <span className="font-bold text-foreground">{product.fulfilmentMode}</span>
                           </div>
                         )}
                       </div>
@@ -250,10 +407,11 @@ return (
                         </Button>
                       ) : (
                         <Button
-                          onClick={() => navigate(`/checkout?product=${product.id}`)}
+                          // onClick={() => navigate(`/checkout?product=${product.id}`)}
+                          onClick={() => updateBasket("add", product)}
                           className="w-full cursor-pointer bg-emerald-600 text-white hover:bg-emerald-700"
                         >
-                          Purchase
+                          Add To Basket
                         </Button>
                       )}
                     </CardContent>

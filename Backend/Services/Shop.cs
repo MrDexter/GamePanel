@@ -22,7 +22,7 @@ public interface IShopService
     Task<CreateCheckoutSessionResponse> CreateCheckoutSessionAsync (CreateCheckoutSessionRequest request,CancellationToken cancellationToken);
     Task<CheckoutSessionStatusResponse> GetSessionStatusAsync(string sessionId,CancellationToken cancellationToken);
     Task<PaginatedRecord<Order>>GetOrders(HttpContext ctx,  string? search, int? limit, int? offset, string? orderby, string? direction, bool? adminMode);
-    Task<Order>GetOrder(int id);
+    Task<OrderLong>GetOrder(int id);
 }
 
 public class ShopService : IShopService
@@ -105,15 +105,19 @@ public class ShopService : IShopService
     {
         if (string.IsNullOrWhiteSpace(request.ReceiverId)) throw new InvalidDataException("Missing SteamId, Make sure you are logged in!"); 
 
-        
-        var product = GetItem(request.ProductId);
-        var domain = _domain;
+        var lineItemsOptions = new List<SessionLineItemOptions>();
+        var totalPence = 0;
 
-        var options = new SessionCreateOptions
+        foreach (var item in request.Basket)
         {
-            LineItems = new List<SessionLineItemOptions>
-            {
-                new SessionLineItemOptions
+            var product = GetItem(item.Id);
+
+            if (item.PricePence != product.PricePence) throw new InvalidDataException("Price mismatch on " + product.Name);
+            if (item.Quantity <= 0)continue;
+
+            totalPence += product.PricePence * (item.Quantity ?? 0);
+            
+            lineItemsOptions.Add(new SessionLineItemOptions
                 {
                     PriceData = new SessionLineItemPriceDataOptions
                     {
@@ -125,33 +129,29 @@ public class ShopService : IShopService
                             Description = product.Description
                         },
                     },
-                    Quantity = 1,
-                },
-            },
+                    Quantity = item.Quantity,
+                }
+            );
+        }
+
+        if (lineItemsOptions.Count == 0) throw new InvalidDataException("Basket is empty.");
+
+        var domain = _domain;
+
+        var options = new SessionCreateOptions
+        {
+            LineItems = lineItemsOptions,
             UiMode = "embedded_page",
             Mode = "payment",
             ReturnUrl = $"{domain}/return?session_id={{CHECKOUT_SESSION_ID}}",
-            Metadata = new Dictionary<string, string> 
-            {
-                ["productId"] = product.Id,
-                ["productName"] = product.Name,
-                ["productPrice"] = product.PricePence.ToString()
-            }
+            // Metadata = new Dictionary<string, string> 
+            // {
+            // }
         };
         var client = new StripeClient(stripe_key);
         Session session = client.V1.Checkout.Sessions.Create(options);
-        var basket = new List<object>
-        {
-            new
-            {
-                productId = product.Id,
-                productName = product.Name,
-                pricePence = product.PricePence.ToString(),
-                quantity = 1.ToString()
-            }
-        };
-        var basketJson = JsonSerializer.Serialize(basket);
-        var orderId = await InsertNewOrder(request.PurchaserId, request.ReceiverId, basketJson, product.PricePence, "gbp", session.Id);
+        var basketJson = JsonSerializer.Serialize(request.Basket);
+        var orderId = await InsertNewOrder(request.PurchaserId, request.ReceiverId, basketJson, totalPence, "gbp", session.Id);
 
         if (string.IsNullOrWhiteSpace(session.ClientSecret))
             throw new InvalidOperationException("Failed to create checkout session.");
@@ -165,20 +165,23 @@ public class ShopService : IShopService
 
         Session session = client.V1.Checkout.Sessions.Get(sessionId);
 
-        var orderId = await UpdateOrder(session);
+        var orderDetails = await UpdateOrder(session);
 
         var jobId = 0;
 
         if (session.Status == "complete" && session.PaymentStatus == "paid")
         {
-            jobId = await _jobs.CreateJobAsync("orderFulfilment", new { orderId = orderId.ToString()});
+            jobId = await _jobs.CreateJobAsync("orderFulfilment", new { orderId = orderDetails.OrderId.ToString()});
         }
+
+        var basket = JsonSerializer.Deserialize<List<ShopProduct>>(orderDetails.BasketJson);
 
         return new CheckoutSessionStatusResponse(
             Status: session.Status,
             PaymentStatus: session.PaymentStatus,
             Data: session.Metadata,
-            OrderId: orderId,
+            OrderId: orderDetails.OrderId,
+            Basket: basket,
             JobId: jobId
         );
     }
@@ -205,14 +208,14 @@ public class ShopService : IShopService
         }
     }
 
-    public async Task<int> UpdateOrder(Session session)
+    public async Task<UpdateOrderResult> UpdateOrder(Session session)
     {
         using var connection = new SqlConnection(connectionString);
         {
             await connection.OpenAsync();
             var sql =   @"UPDATE orders SET 
                         status = @status, PaymentStatus = @paymentStatus, StripePaymentIntentId = @PaymentId, PaymentMethod = @paymentMethod, UpdatedAt = GETUTCDATE() 
-                        OUTPUT INSERTED.Id 
+                        OUTPUT INSERTED.Id, INSERTED.BasketJson
                         WHERE StripeCheckoutSessionId = @sessionId";
             using var command = new SqlCommand(sql, connection);
             command.Parameters.AddWithValue("@status", session.Status);
@@ -221,9 +224,14 @@ public class ShopService : IShopService
             command.Parameters.AddWithValue("@paymentMethod", "Card");
             command.Parameters.AddWithValue("@sessionId", session.Id);  
 
-            var id = Convert.ToInt32(await command.ExecuteScalarAsync());
+            using var reader = await command.ExecuteReaderAsync();
 
-            return id;
+            if (!await reader.ReadAsync()) throw new InvalidOperationException("Order update failed.");
+
+            var orderId = Convert.ToInt32(reader["Id"]);
+            var basketJson = reader["BasketJson"].ToString() ?? "[]";
+
+            return new UpdateOrderResult(orderId, basketJson);
         }
     }
 
@@ -291,7 +299,7 @@ public class ShopService : IShopService
                 }
                 var basketJson = reader["BasketJson"].ToString() ?? string.Empty;
 
-                var basket = JsonSerializer.Deserialize<List<Dictionary<string, JsonElement>>>(basketJson) ?? new();
+                var basket = JsonSerializer.Deserialize<List<ShopProduct>>(basketJson) ?? new();
                 
                 var row = new Order (
                     Id: Convert.ToInt32(reader["Id"]),
@@ -315,12 +323,16 @@ public class ShopService : IShopService
         return response;
     }
 
-    public async Task<Order>GetOrder(int id)
+    public async Task<OrderLong>GetOrder(int id)
     {
         using (var connection = new SqlConnection(connectionString))
         {
             await connection.OpenAsync();
-            var sql = @"Select id, PurchaserId, ReceiverId, BasketJson, Status, PaymentStatus, AmountPence, Currency, CreatedAt, UpdatedAt FROM orders where id = @id";
+            var sql = @"Select TOP 1 o.id, o.PurchaserId, o.ReceiverId, o.BasketJson, o.Status, o.PaymentStatus, o.PaymentMethod, o.StripeCheckoutSessionId, o.StripePaymentIntentId, o.AmountPence, o.Currency, o.CreatedAt, o.UpdatedAt,
+                        j.id AS jobId, j.type, j.status AS jobStatus, j.payload, j.result, j.created_at, j.updated_at, j.priority  
+                        FROM orders o 
+                        LEFT JOIN Jobs j
+                        ON TRY_CONVERT(INT, JSON_VALUE(j.Payload, '$.orderId')) = o.Id WHERE o.id = @id ORDER BY j.created_at DESC";
             using var command = new SqlCommand(sql, connection);
             command.Parameters.AddWithValue("@id", id);  
             var reader = await command.ExecuteReaderAsync();
@@ -330,18 +342,33 @@ public class ShopService : IShopService
             }
             var basketJson = reader["BasketJson"].ToString() ?? string.Empty;
 
-            var basket = JsonSerializer.Deserialize<List<Dictionary<string, JsonElement>>>(basketJson) ?? new();
-            return new Order (
+            var basket = JsonSerializer.Deserialize<List<ShopProduct>>(basketJson) ?? new();
+            return new OrderLong (
                 Id: Convert.ToInt32(reader["Id"]),
                 PurchaserId: reader["PurchaserId"].ToString() ?? string.Empty,
                 ReceiverId: reader["ReceiverId"].ToString() ?? string.Empty,
                 Basket: basket,
                 Status: reader["Status"].ToString() ?? string.Empty,
                 PaymentStatus: reader["PaymentStatus"].ToString() ?? string.Empty,
+                PaymentMethod: reader["PaymentMethod"].ToString() ?? string.Empty,
+                StripeCheckoutSessionId: reader["StripeCheckoutSessionId"].ToString() ?? string.Empty,
+                StripePaymentIntentId: reader["StripePaymentIntentId"].ToString() ?? string.Empty,
                 AmountPence: Convert.ToInt32(reader["AmountPence"]),
                 Currency: reader["Currency"].ToString() ?? string.Empty,
                 CreatedAt: reader.GetDateTime(reader.GetOrdinal("CreatedAt")),
-                UpdatedAt: reader.GetDateTime(reader.GetOrdinal("UpdatedAt"))
+                UpdatedAt: reader.GetDateTime(reader.GetOrdinal("UpdatedAt")),
+                Job: reader["jobId"] == DBNull.Value
+                    ? null!
+                    : new Job(
+                        Convert.ToInt32(reader["jobId"]),
+                        reader["type"].ToString() ?? string.Empty,
+                        reader["jobStatus"].ToString() ?? string.Empty,
+                        reader["result"].ToString() ?? string.Empty,
+                        reader["payload"].ToString() ?? "{}",
+                        Convert.ToBoolean(reader["priority"] ?? false),
+                        reader.GetDateTime(reader.GetOrdinal("created_at")),
+                        reader.GetDateTime(reader.GetOrdinal("updated_at"))
+                    )
             );
         };
     }

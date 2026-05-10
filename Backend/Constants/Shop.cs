@@ -16,7 +16,8 @@ public static class ShopProducts
                     PricePence = 1000,
                     Description = "Purchase Donator Membership for 30 days",
                     DonatorLevel = 1,
-                    DurationDays = 30
+                    DurationDays = 30,
+                    FulfilmentMode = "Auto"
                 },
                 new ShopProduct
                 {
@@ -25,7 +26,8 @@ public static class ShopProducts
                     PricePence = 5000,
                     Description = "Purchase Donator Membership for 6 months",
                     DonatorLevel = 1,
-                    DurationDays = 180
+                    DurationDays = 180,
+                    FulfilmentMode = "Auto"
                 },
                 new ShopProduct
                 {
@@ -34,7 +36,8 @@ public static class ShopProducts
                     PricePence = 9000,
                     Description = "Purchase Donator Membership for 1 year",
                     DonatorLevel = 1,
-                    DurationDays = 365
+                    DurationDays = 365,
+                    FulfilmentMode = "Auto"
                 }
             }
         ),
@@ -47,7 +50,16 @@ public static class ShopProducts
                     Id = "Airdrop",
                     Name = "Airdrop",
                     PricePence = 2500,
-                    Description = "Ability to Call in 1 Airdrop"
+                    Description = "Ability to Call in 1 Airdrop",
+                    FulfilmentMode = "Manual"
+                },
+                new ShopProduct
+                {
+                    Id = "ClothingCrate",
+                    Name = "Clothing Crate",
+                    PricePence = 2500,
+                    Description = "One Clothing crete token",
+                    FulfilmentMode = "Manual"
                 }
             }
         )
