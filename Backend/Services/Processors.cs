@@ -7,6 +7,7 @@ using Azure.Storage.Sas;
 using System.Reflection.Metadata;
 using DecsPage.Services;
 using Stripe.Terminal;
+using Stripe;
 
 namespace DecsPage.Services;
 
@@ -116,7 +117,7 @@ public class ProcessorService : IProcessorService
             Directory.CreateDirectory(folder);
 
             var location = Path.Combine(folder, filename);
-            await File.WriteAllTextAsync(location, sb.ToString());
+            await System.IO.File.WriteAllTextAsync(location, sb.ToString());
             return location;
         } else {
             var blobPath = await UploadBlobAsync(filename, sb.ToString(), stopToken);
@@ -124,25 +125,29 @@ public class ProcessorService : IProcessorService
         }; 
     }
 
-    public async Task CompleteOrderFulfilment (Order order, CancellationToken stopToken)
+    public async Task CompleteOrderFulfilment (OrderLong order, CancellationToken stopToken)
     {
-        var basket = JsonSerializer.Deserialize<List<Dictionary<string, string>>>(order.Basket) ?? new();
-        foreach (var item in basket)
+        foreach (var item in order.Basket)
         {
             stopToken.ThrowIfCancellationRequested();
-            Console.Write(item);
-            var product = _shopService.GetItem(item["productId"]);
-            switch (product.Id)
+            if (item.FulfilmentMode == "Auto")
             {
-                case "thirtyDays":
-                case "sixtyDays":
-                case "oneYear":
-                    await ApplyMembership(order.ReceiverId, product.DonatorLevel ?? 1, product.DurationDays ?? 30, stopToken);
-                    break;
-                default:
-                    throw new InvalidDataException("Invalid / Unsupported Product Type");
+                var product = await _shopService.GetItem(item.NameId);
+                switch (product.NameId)
+                {
+                    case "thirtyDays":
+                    case "sixtyDays":
+                    case "oneYear":
+                        int donatorLevel = product.ParamsJson.FirstOrDefault(x => x["key"].GetString() == "donatorLevel")?["value"].GetInt32() ?? 1;
+                        var durationDays = int.Parse(product.ParamsJson. FirstOrDefault(x => x["key"].GetString() == "durationDays")?["value"].GetString() ?? "30");
+                        await ApplyMembership(order.ReceiverId, donatorLevel, durationDays, stopToken);
+                        break;
+                    default:
+                        Console.WriteLine("Product not Supported / Found " + product.NameId);
+                        break;
 
-            } 
+                } 
+            }
         }
     }
 
@@ -202,9 +207,9 @@ public class ProcessorService : IProcessorService
                     var job = await _jobService.GetJobAsync(Convert.ToInt32(data!["jobId"]));
                     return await ConvertToCSV(jobData.Id, "jobExport", [job], stopToken);
                 case "orderFulfilment":
-                    var order = await _shopService.GetOrder(Convert.ToInt32(data!["orderId"]));
+                    var order = await _shopService.GetOrder(Convert.ToInt32(data!["orderId"]), true, null);
                     await CompleteOrderFulfilment(order, stopToken);
-                    return "Yes";
+                    return "";
                 default:
                     throw new InvalidDataException("Processor not found");
 

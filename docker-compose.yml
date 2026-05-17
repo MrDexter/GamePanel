@@ -27,6 +27,7 @@ services:
       - Storage__Container=${Storage__Container}
       - Steam__Key=${STEAM_KEY}
       - STRIPE__SECRET=${STRIPE_SECRET}
+      - Frontend__BaseUrl=http://localhost:5173
       # - ASPNETCORE_URLS=https://+:7214;http://+:8080
       # - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
       # - ASPNETCORE_Kestrel__Certificates__Default__Password=${Certificate_Pass}

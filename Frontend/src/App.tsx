@@ -9,6 +9,7 @@ import Jobs from "@/features/Jobs"
 import Home from "@/features/Home"
 import Test from "@/features/Test"
 import Shop from "@/features/Shop"
+import Orders from "@/features/Orders"
 import { CheckoutForm, Return } from "@/features/Checkout"
 import changelogData from "@/features/changelog.json";
 import LoginModal from "@/components/modals/Login"
@@ -30,11 +31,15 @@ import { applyTheme, getStoredTheme, setTheme } from "@/lib/theme"
 
 
 export default function App() {
+  const [user, setUser] = useState<any>(null);
+  const [perms, setPerms] = useState<any>(null);
   applyTheme(getStoredTheme());
   const hasRun = useRef(false);
+  const [basket, setBasket] = useState(0);
   const { searchParams, updateParams } = useQueryParams();
   const [health, setHealth] = useState<any>(null);
   const jwtToken = searchParams.get("token");
+
   useEffect(() => {
     const checkHealth = async () => {
       try {
@@ -54,8 +59,6 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  const [user, setUser] = useState<any>(null);
-  const [perms, setPerms] = useState<any>(null);
   useEffect(() => {
     const globalLogout = (silent = false) => {
       localStorage.removeItem("token");
@@ -112,6 +115,21 @@ export default function App() {
     loginStatus();
   }, []);
 
+  useEffect(() => {
+  const updateBasketDot = () => {
+    const basket = JSON.parse(localStorage.getItem("basket") ?? "[]");
+    setBasket(basket.length);
+  };
+
+  updateBasketDot();
+
+  window.addEventListener("basketUpdated", updateBasketDot);
+
+  return () => {
+    window.removeEventListener("basketUpdated", updateBasketDot);
+  };
+}, []);
+
     const handleLogout = async (e?: React.MouseEvent<HTMLButtonElement>) => {
       if (e) e.preventDefault();
       try {
@@ -156,6 +174,41 @@ export default function App() {
     }
   ];
 
+  const healthStatus = (
+    <DropdownMenuItem className='group relative flex gap-2'>
+      <div className={`h-2 w-2 rounded-full ${
+        health?.status === "Healthy" ? "bg-green-500 animate-pulse" : 
+        health?.status === "Unhealthy" ? "bg-amber-500" : "bg-red-500"
+      }`} />
+      <span className="text-xs tracking-tighter text-foreground group-hover:text-foreground transition-colors">
+      Status: {
+      {
+        "Healthy": "Online",
+        "Unhealthy": "Error",
+        "Offline": "Offline"
+      }[health?.status as string] ?? "Checking..."}
+      </span>
+      
+      
+      {/* The Hover Details */}
+      <div className="absolute top-6 right-0 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 bg-card border border-border p-3 rounded-lg shadow-2xl z-50 min-w-40 ">
+        <p className="text-[9px] uppercase tracking-widest text-foreground mb-2 border-b border-border pb-1">System Health</p>
+        {health?.services?.length > 0 ? (
+          health.services.map((s: any) => (
+            <div key={s.name} className="flex justify-between text-[10px] uppercase py-0.5">
+              <span className="text-foreground">{s.name}</span>
+              <span className={s.status === "Healthy" ? "text-green-500" : "text-red-500"}>
+                {s.status === "Healthy" ? "OK" : "ERR"}
+              </span>
+            </div>
+          ))
+        ) : (
+          <p className="text-[10px] text-red-400">API Unreachable</p>
+        )}
+    </div>
+  </DropdownMenuItem>
+  )
+
   return (
  <AuthContext.Provider value={{ user, setUser, logout: handleLogout, perms, setPerms }}>
       <div className='min-h-screen bg-background text-foreground font-sans selection:bg-blue-500/30'>
@@ -190,7 +243,19 @@ export default function App() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-              <Link key={nav.to} to={nav.to} className="text-muted-foreground hover:text-foreground transition-colors">{nav.label}</Link>
+                <Link
+                  key={nav.to}
+                  to={nav.to}
+                  className="relative inline-flex text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {nav.label}
+
+                  {nav.label === "Shop" && basket > 0 && (
+                    <span className="absolute -top-1.5 -right-3 min-w-4 h-4 px-1 flex items-center justify-center rounded-full bg-red-700 text-[9px] font-bold text-white leading-none">
+                      {basket}
+                    </span>
+                  )}
+                </Link>
             ))}
           </div>
 
@@ -253,11 +318,17 @@ export default function App() {
                     </DropdownMenuTrigger>
                     
                     <DropdownMenuContent align="end" className="w-48 bg-card border-border text-foreground">
+                        
+                        {healthStatus}
+
+                        <DropdownMenuSeparator className="bg-background" />
+
                         <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
                         User Actions
                         </DropdownMenuLabel>
+
                         <DropdownMenuSeparator className="bg-background" />
-                        
+
                         <DropdownMenuItem className="text-xs gap-2 cursor-pointer focus:bg-background focus:text-foreground" onClick={() => handleThemeToggle()}>
                         <FileJson className="h-3.5 w-3.5 text-muted-foreground" />
                         Toggle Theme
@@ -268,12 +339,23 @@ export default function App() {
                         Change Password
                         </DropdownMenuItem>
                         
+                        <DropdownMenuSeparator className="bg-background" />
+                        
                         <DropdownMenuItem asChild>
                         <Link 
                           to={`/search/${user.SteamID}`} 
                           className="flex w-full items-center cursor-pointer">
                           <UserCircle className="h-3.5 w-3.5 text-muted-foreground" />
                           <span>View Profile</span>
+                        </Link>
+                      </DropdownMenuItem>
+                        
+                        <DropdownMenuItem asChild>
+                        <Link 
+                          to={`/orders`} 
+                          className="flex w-full items-center cursor-pointer">
+                          <UserCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span>View Orders</span>
                         </Link>
                       </DropdownMenuItem>
 
@@ -300,6 +382,10 @@ export default function App() {
                     </DropdownMenuTrigger>
                     
                     <DropdownMenuContent align="end" className="w-48 bg-card border-border text-foreground">
+                        {healthStatus}
+
+                        <DropdownMenuSeparator className="bg-background" />
+
                         <DropdownMenuItem className="text-xs gap-2 cursor-pointer focus:bg-background focus:text-foreground" onClick={() => handleThemeToggle()}>
                         <ArrowLeftRight className="h-3.5 w-3.5" />
                         Toggle Theme
@@ -310,43 +396,11 @@ export default function App() {
                         <LogIn className="h-3.5 w-3.5" />
                         Login
                         </DropdownMenuItem>
+                        <DropdownMenuSeparator className='bg-card'/>
                     </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
               )}
-              {/* The Health Indicator */} 
-                <div className='group relative gap-3 flex items-center border-l border-border pl-6'>
-                  <span className="text-[10px] font-bold uppercase tracking-tighter text-foreground group-hover:text-foreground transition-colors">
-                  Status: {
-                  {
-                    "Healthy": "Online",
-                    "Unhealthy": "Error",
-                    "Offline": "Offline"
-                  }[health?.status as string] ?? "Checking..."}
-                  </span>
-                  <div className={`h-2 w-2 rounded-full ${
-                    health?.status === "Healthy" ? "bg-green-500 animate-pulse" : 
-                    health?.status === "Unhealthy" ? "bg-amber-500" : "bg-red-500"
-                  }`} />
-                  
-                  
-                  {/* The Hover Details */}
-                  <div className="absolute top-10 right-0 hidden group-hover:block bg-card border border-border p-3 rounded-lg shadow-2xl z-50 min-w-35">
-                    <p className="text-[9px] text-foreground mb-2 border-b border-border pb-1">System Health</p>
-                    {health?.services?.length > 0 ? (
-                      health.services.map((s: any) => (
-                        <div key={s.name} className="flex justify-between text-[10px] uppercase py-0.5">
-                          <span className="text-foreground">{s.name}</span>
-                          <span className={s.status === "Healthy" ? "text-green-500" : "text-red-500"}>
-                            {s.status === "Healthy" ? "OK" : "ERR"}
-                          </span>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-[10px] text-red-400">API Unreachable</p>
-                    )}
-                </div>
-              </div>
             </div>
           </div>
         </nav>
@@ -367,6 +421,7 @@ export default function App() {
             <Route path="/shop" element={<Shop />} />
             <Route path="/checkout" element={<CheckoutForm />} />
             <Route path="/return" element={<Return />} />
+            <Route path="/orders" element={<Orders />} />
             <Route path="/Future/:name" element={<Test />} />
           </Routes>
         </main>

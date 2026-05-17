@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace DecsPage.Models;
 
 public record Player (
@@ -300,18 +302,31 @@ public class SteamPlayer
 }
 
 public record ShopCategory(
+    int Id,
+    string NameId,
     string Name,
-    List<ShopProduct> Products
+    string Description,
+    int SortingOrder,
+    Boolean IsActive,
+    DateTime CreatedAt
 );
 
 public record ShopProduct
 {
-    public string Id { get; set; } = string.Empty;
+    public int Id { get; set; }
+    public string NameId { get; set; } = string.Empty;
+    public string CategoryId { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
-    public int PricePence { get; set; }
     public string Description { get; set; } = string.Empty;
-    public int? DonatorLevel { get; set; }
-    public int? DurationDays { get; set; }
+    public int PricePence { get; set; }
+    public string Currency { get; set; } = string.Empty;
+    public string FulfilmentMode { get; set; } = "Manual";
+    public Boolean IsActive { get; set; } = true;
+    public int SortingOrder { get; set; }
+    public List<Dictionary<string, JsonElement>> ParamsJson { get; set; } = new();
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public int? Quantity {get; set;}
 }
 
 public record StripeOptions
@@ -320,10 +335,10 @@ public record StripeOptions
 }
 
 public record CreateCheckoutSessionRequest(
-    string ProductId,
+    List<ShopProduct> Basket,
     string PurchaserId,
     string ReceiverId
-    );
+);
 
 public record CreateCheckoutSessionResponse(string ClientSecret);
 
@@ -331,18 +346,42 @@ public record CheckoutSessionStatusResponse(
     string? Status,
     string? PaymentStatus,
     Dictionary<string, string>? Data,
-    int? OrderId
+    int? OrderId,
+    List<ShopProduct>? Basket,
+    int? JobId
 );
 
 public record Order(
     int Id,
     string PurchaserId,
     string ReceiverId,
-    string Basket,
+    List<ShopProduct> Basket,
     string Status,
     string PaymentStatus,
     int AmountPence,
     string Currency,
     DateTime CreatedAt,
     DateTime UpdatedAt
+);
+
+public record OrderLong(
+    int Id,
+    string PurchaserId,
+    string ReceiverId,
+    List<ShopProduct> Basket,
+    string Status,
+    string PaymentStatus,
+    string PaymentMethod,
+    string StripeCheckoutSessionId,
+    string StripePaymentIntentId,
+    int AmountPence,
+    string Currency,
+    DateTime CreatedAt,
+    DateTime UpdatedAt,
+    Job Job
+);
+
+public record UpdateOrderResult(
+    int OrderId,
+    string BasketJson
 );

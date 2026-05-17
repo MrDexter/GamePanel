@@ -17,6 +17,7 @@ export default function Stats() {
     const { user, perms } = useAuth();
     const { searchParams, updateParams } = useQueryParams();
     const search = searchParams.get("search") ?? "";
+    const [searchInput, setSearchInput] = useState(search ?? "");
     const orderby = searchParams.get("orderby") ?? "id";
     const direction = searchParams.get("direction") ?? "asc";
     const [results, setResults] = useState<any[]>([]);
@@ -53,6 +54,14 @@ export default function Stats() {
             setSelectedFactions([]);
         }
     }, [statusesFromUrl]);
+
+    useEffect(() => {
+    const timeout = setTimeout(() => {
+        updateParams({ search: searchInput, page: 1 });
+    }, 300);
+
+    return () => clearTimeout(timeout);
+    }, [searchInput]);
 
     const factions = selectedFactions.length === groups.length ? "" : selectedFactions.join(",");
 
@@ -135,7 +144,7 @@ export default function Stats() {
             }
         }, search.trim() ? 500 : 0);
         return () => clearTimeout(delayedSearch)
-    }, [search, currentPage, activeTab, factions, orderby, direction]);
+    }, [searchInput, currentPage, activeTab, factions, orderby, direction]);
     return (
         <div className="max-w-4xl lg:max-w-7xl mx-auto py-10 space-y-8">
             <div className="text-center space-y-2">
@@ -187,16 +196,16 @@ export default function Stats() {
             <div className="relative w-full">
             <Input
                 placeholder="Enter Name or ID..."
-                value={search}
-                onChange={(e) => updateParams({ search: e.target.value, page: 1 })}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={(e) => {
-                if (e.key === "Escape") updateParams({ search: "" });
+                if (e.key === "Escape") setSearchInput("");
                 }}
                 className="border border-border text-foreground pr-9"
             />
 
             <button
-                onClick={() => updateParams({ search: "" })}
+                onClick={() => setSearchInput("")}
                 className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded transition-all ${
                 search
                     ? "opacity-100 hover:bg-card text-muted-foreground hover:text-foreground"

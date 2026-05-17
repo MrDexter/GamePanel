@@ -1,4 +1,5 @@
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
 
 export function useQueryParams() {
   const [searchParams] = useSearchParams();
@@ -62,6 +63,11 @@ export const formatMoneyCompact = (amount: number) => {
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(amount);
+};
+
+export const copyToClipboard = (text: string) => {
+  navigator.clipboard.writeText(text);
+  toast.success("Text copied to clipboard!");
 };
 
 export const APP_CONFIG = {

@@ -26,6 +26,8 @@ jobs:
 
       # 1. Manually compile the React code on the GitHub runner
       - name: Install and Build Frontend
+        env:
+          VITE_STRIPE_PUBLISH: ${{ secrets.VITE_STRIPE_PUBLISH }}
         run: |
           cd Frontend
           npm install

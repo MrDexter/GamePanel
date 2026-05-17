@@ -26,6 +26,7 @@ export default function Stats() {
     const [isLoading, setIsLoading] = useState(false);
     const [totalRows, setTotalRows] = useState(1);
     const search = searchParams.get("search") ?? ""
+    const [searchInput, setSearchInput] = useState(search ?? "");
     const currentPage = Number(searchParams.get("page") ?? 1);
     const itemPerPage = 12;
     const totalPages = Math.max(1, Math.ceil(totalRows / itemPerPage));
@@ -42,6 +43,14 @@ export default function Stats() {
             setSelectedStatuses(ALL_STATUSES);
         }
     }, [statusesFromUrl]);
+
+    useEffect(() => {
+      const timeout = setTimeout(() => {
+          updateParams({ search: searchInput, page: null });
+      }, 300);
+
+      return () => clearTimeout(timeout);
+    }, [searchInput]);
 
     const statuses = selectedStatuses.length === ALL_STATUSES.length ? "" : selectedStatuses.join(",");
 
@@ -105,6 +114,21 @@ export default function Stats() {
                 } else {
                     toast.success(data.message);
                 }
+            } else {
+                toast.error("Failed", { description: data.message ?? "API Error" });
+            }
+        } catch (error : any) {
+            toast.error(error.message);
+            console.error(error);
+        
+        }
+    }
+    const markAsComplete = async (id : number) => {
+        try {
+            const res = await apiFetch("POST", `/jobs/${id}/manualComplete`)
+            const data = await res.json();
+            if (res.ok) {
+                toast.success(data.message);
             } else {
                 toast.error("Failed", { description: data.message ?? "API Error" });
             }
@@ -250,18 +274,18 @@ export default function Stats() {
                 <div className="relative w-full">
                 <Input
                     placeholder="Enter Name or ID..."
-                    value={search}
-                    onChange={(e) => updateParams({ search: e.target.value, page: 1 })}
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
                     onKeyDown={(e) => {
-                    if (e.key === "Escape") updateParams({ search: "" });
+                    if (e.key === "Escape") setSearchInput("");;
                     }}
                     className="border border-border text-foreground pr-9"
                 />
 
                 <button
-                    onClick={() => updateParams({ search: "" })}
+                    onClick={() => setSearchInput("")}
                     className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded transition-all ${
-                    search
+                    searchInput
                         ? "opacity-100 hover:bg-card text-muted-foreground hover:text-foreground"
                         : "opacity-0 pointer-events-none"
                     }`}
@@ -348,7 +372,7 @@ export default function Stats() {
                         <DropdownMenuItem disabled={(user?.adminlevel || 0) < (perms?.admin?.EXPORT_DATA ?? 99)} 
                         className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-foreground" onClick={() => handleExport(Number(data.id))}>
                         <FileJson className="h-3.5 w-3.5 text-muted-foreground" />
-                            Export Job Metadata
+                        Export Job Metadata
                         </DropdownMenuItem>
                         <DropdownMenuSeparator className="bg-background" />
 
@@ -368,6 +392,11 @@ export default function Stats() {
                         </DropdownMenuItem>
 
                         <DropdownMenuSeparator className="bg-background" />
+                        
+                        <DropdownMenuItem disabled={(payload?.manual !== "Incomplete" ) || (user?.adminlevel || 0) < (perms?.admin?.JOB_MANAGEMENT ?? 99)} 
+                        className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-foreground" onClick={() => openConfirm("Mark as Complete", "Are you sure you want to mark this job as complete?", () => markAsComplete(Number(data.id)))}>
+                        Mark as Complete
+                        </DropdownMenuItem>
                         
                         <DropdownMenuItem disabled={(data.status !== "Pending") || (user?.adminlevel || 0) < (perms?.admin?.JOB_MANAGEMENT ?? 99)} 
                         className="text-xs gap-2 cursor-pointer focus:bg-card focus:text-foreground" onClick={() => openConfirm("Toggle Priority", "Are you sure you want to toggle priority for this job?", () => changeJobStatus(Number(data.id), "priority"))}>
@@ -409,7 +438,7 @@ export default function Stats() {
                         </div>
 
                         {/* Results left */}
-                        {data.status === "Completed" && !!data.result && (
+                        {data.status === "Complete" && !!data.result && (
                             <div className="flex flex-col">
                                 <span className="text-[10px] text-muted-foreground uppercase font-bold">
                                     Results

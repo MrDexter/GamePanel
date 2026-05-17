@@ -247,6 +247,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/jobs/{id}/manualComplete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark Manual as Completed
+         * @description Set the Manual Payload entry as complete
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/jobs/{id}/download": {
         parameters: {
             query?: never;
@@ -288,6 +327,82 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/jobs/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Export All Player Data
+         * @description Creates a job to export all player data into a CSV for download. Returns Job ID
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/jobs/{id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Export A Players Data
+         * @description Creates a job to export a players data into a CSV for download. Returns Job ID
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/players": {
         parameters: {
             query?: never;
@@ -306,6 +421,8 @@ export interface paths {
                     offset?: number | string;
                     search?: string;
                     factions?: string;
+                    orderby?: string;
+                    direction?: string;
                 };
                 header?: never;
                 path?: never;
@@ -653,6 +770,78 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/steamLogin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Steam Login */
+        get: {
+            parameters: {
+                query?: {
+                    currentUrl?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Found */
+                302: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/steamCallback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Steam Callback */
+        get: {
+            parameters: {
+                query?: {
+                    currentUrl?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1093,6 +1282,381 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/shop/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get All Products
+         * @description Get a list of all items available on the shop
+         */
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    orderby?: string;
+                    direction?: string;
+                    limit?: number | string;
+                    offset?: number | string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PaginatedRecordOfShopProduct"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shop/product": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a Specific Product
+         * @description Get a specific Item using the Item ID
+         */
+        get: {
+            parameters: {
+                query: {
+                    id: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ShopProduct"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shop/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get All Orders
+         * @description Get a list of all Orders
+         */
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    limit?: number | string;
+                    offset?: number | string;
+                    orderby?: string;
+                    direction?: string;
+                    adminMode?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PaginatedRecordOfOrder"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shop/order/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a Specific Order
+         * @description Get a specific Item using the Order Id
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OrderLong"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shop/productCategories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get All Product Categories
+         * @description Get a list of all Product Categories
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ShopCategory"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shop/updateProduct": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Update a Product
+         * @description Update an existing product in the shop
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ShopProduct"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shop/toggleActive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Toggle Product Active Status
+         * @description Toggle the active status of a product
+         */
+        post: {
+            parameters: {
+                query: {
+                    id: number | string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shop/create-checkout-session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateCheckoutSessionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CreateCheckoutSessionResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shop/session-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    session_id: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CheckoutSessionStatusResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1101,6 +1665,26 @@ export interface components {
             oldPassword: string;
             newPassword: string;
             confirmNewPassword: string;
+        };
+        CheckoutSessionStatusResponse: {
+            status: null | string;
+            paymentStatus: null | string;
+            data: null | {
+                [key: string]: string;
+            };
+            /** Format: int32 */
+            orderId: null | number | string;
+            basket: null | components["schemas"]["ShopProduct"][];
+            /** Format: int32 */
+            jobId: null | number | string;
+        };
+        CreateCheckoutSessionRequest: {
+            basket: components["schemas"]["ShopProduct"][];
+            purchaserId: string;
+            receiverId: string;
+        };
+        CreateCheckoutSessionResponse: {
+            clientSecret: string;
         };
         DashbaordTopAssets: {
             name?: string;
@@ -1288,6 +1872,42 @@ export interface components {
             token: string;
             permissions: components["schemas"]["Permissions"];
         };
+        Order: {
+            /** Format: int32 */
+            id: number | string;
+            purchaserId: string;
+            receiverId: string;
+            basket: components["schemas"]["ShopProduct"][];
+            status: string;
+            paymentStatus: string;
+            /** Format: int32 */
+            amountPence: number | string;
+            currency: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        OrderLong: {
+            /** Format: int32 */
+            id: number | string;
+            purchaserId: string;
+            receiverId: string;
+            basket: components["schemas"]["ShopProduct"][];
+            status: string;
+            paymentStatus: string;
+            paymentMethod: string;
+            stripeCheckoutSessionId: string;
+            stripePaymentIntentId: string;
+            /** Format: int32 */
+            amountPence: number | string;
+            currency: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            job: components["schemas"]["Job"];
+        };
         PaginatedRecordOfGangs: {
             /** Format: int32 */
             totalRows: number | string;
@@ -1298,10 +1918,20 @@ export interface components {
             totalRows: number | string;
             data: components["schemas"]["Job"][];
         };
+        PaginatedRecordOfOrder: {
+            /** Format: int32 */
+            totalRows: number | string;
+            data: components["schemas"]["Order"][];
+        };
         PaginatedRecordOfPlayer: {
             /** Format: int32 */
             totalRows: number | string;
             data: components["schemas"]["Player"][];
+        };
+        PaginatedRecordOfShopProduct: {
+            /** Format: int32 */
+            totalRows: number | string;
+            data: components["schemas"]["ShopProduct"][];
         };
         Permissions: {
             admin: {
@@ -1338,6 +1968,40 @@ export interface components {
         ResetPassword: {
             password: string;
             confirmPassword: string;
+        };
+        ShopCategory: {
+            /** Format: int32 */
+            id: number | string;
+            nameId: string;
+            name: string;
+            description: string;
+            /** Format: int32 */
+            sortingOrder: number | string;
+            isActive: boolean;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        ShopProduct: {
+            /** Format: int32 */
+            id?: number | string;
+            nameId?: string;
+            categoryId?: string;
+            name?: string;
+            description?: string;
+            /** Format: int32 */
+            pricePence?: number | string;
+            currency?: string;
+            fulfilmentMode?: string;
+            isActive?: boolean;
+            /** Format: int32 */
+            sortingOrder?: number | string;
+            paramsJson?: Record<string, never>[];
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int32 */
+            quantity?: null | number | string;
         };
         UpdateRank: {
             id: string;

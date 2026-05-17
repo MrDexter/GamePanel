@@ -3,12 +3,11 @@ import {Badge } from "@/components/ui/badge"
 import {Button } from "@/components/ui/button"
 import React, { useState, useEffect } from 'react'
 import { apiFetch } from "@/lib/api";
-import { ClipboardCopy } from "lucide-react"; //ClipboardCheck
 import { useParams, useNavigate, useLocation, Link  } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
-import { Pencil, EllipsisVertical, FileJson, Key, Trash2 } from "lucide-react"
+import { Pencil, EllipsisVertical, FileJson, Key, Trash2, Copy } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import {formatDate, unitNames, formatMoney, unitRankNames, FACTIONS, useQueryParams } from "@/lib/constants"
+import {formatDate, unitNames, formatMoney, unitRankNames, FACTIONS, useQueryParams, copyToClipboard } from "@/lib/constants"
 import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,DropdownMenuSeparator, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
 // import { jwtDecode } from 'jwt-decode';
 import { useAuth } from "@/lib/AuthContext"
@@ -34,11 +33,6 @@ const sideColor: Record<string, string> = {
 const typeColor: Record<string, string> = {
     "Car": "bg-green-600",
     "Air": "bg-red-600"
-};
-
-const copyToClipboard = (text: string) => {
-  navigator.clipboard.writeText(text);
-  toast.success("Text copied to clipboard!");
 };
 
 export default function StatsPlayer() {
@@ -248,21 +242,25 @@ export default function StatsPlayer() {
     }
     const gangRank = player.gang?.members.find((member: GangMember) => member.id === player.playerid);
     return (
-        <div className="max-w-5xl mx-auto py-10 px-6 space-y-8">
+        <div className="max-w-5xl mx-auto md:py-10 md:px-6 space-y-8">
         {/* Top Row: Back Button & Status */}
-        <div className="flex justify-between items-center">
-            <Button variant="ghost" onClick={() => {
+        <div className="flex flex-wrap justify-between items-center gap-3">
+        <Button
+            variant="ghost"
+            onClick={() => {
             if (location.state?.from) {
                 navigate(location.state.from);
             } else {
                 navigate("/search");
-            }}} 
+            }
+            }}
             className="text-foreground hover:text-foreground hover:bg-background hover:text-[16px]">
             ← Back to Search
-            </Button>
-            <div className="px-3 py-1 rounded-full bg-card border border-border text-[10px] font-bold uppercase tracking-widest text-foreground">
+        </Button>
+
+        <div className="px-3 py-1 rounded-full bg-card border border-border text-[10px] font-bold uppercase tracking-widest text-foreground">
             Last Seen: {formatDate(player.last_seen)}
-            </div>
+        </div>
         </div>
 
         <Card className="w-full bg-card border-border shadow-2xl shadow-blue-900/10 mb-6 overflow-hidden relative">
@@ -272,98 +270,110 @@ export default function StatsPlayer() {
                 <div className="flex flex-col md:flex-row items-center w-full px-2 justify-between">
                 
                 {/* Group 1: Primary Identity */}
-                <div className="flex items-center gap-6">
-                    <div className="relative h-16 w-16 flex items-center justify-center rounded-2xl bg-card border-2 border-blue-600/50 shadow-[0_0_15px_rgba(37,99,235,0.15)]">
-                    <span className="text-3xl font-black text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 min-w-0">
+                <div className="relative h-16 w-16 shrink-0 flex items-center justify-center rounded-2xl bg-card border-2 border-blue-600/50 shadow-[0_0_15px_rgba(37,99,235,0.15)]">
                     {player?.avatar ? (
-                        <a 
-                        href={"https://steamcommunity.com/profiles/" + player?.playerid} 
-                        target="_blank" 
+                    <a
+                        href={`https://steamcommunity.com/profiles/${player?.playerid}`}
+                        target="_blank"
                         rel="noreferrer"
                         className="transition-opacity hover:opacity-80"
-                        >
-                        <img 
-                            src={player.avatar} 
-                            alt={player.name} 
-                            className="w-12 h-12 rounded-md cursor-pointer" 
+                    >
+                        <img
+                        src={player.avatar}
+                        alt={player.name}
+                        className="w-12 h-12 rounded-md cursor-pointer"
                         />
-                        </a>
+                    </a>
                     ) : (
-                        <div>
+                    <span className="text-3xl font-black text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]">
                         {player.name?.[0].toUpperCase()}
+                    </span>
+                    )}
+                </div>
+
+                <div className="min-w-0 w-full space-y-2">
+                    <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter text-foreground truncate">
+                    {player.name}
+                    </h1>
+
+                    <div className="flex flex-wrap gap-2 items-center">
+                    <Badge variant="outline" className="text-[10px] border-muted-foreground text-foreground font-mono tracking-tighter">
+                        UUID: {player.uid}
+                    </Badge>
+
+                    <Badge
+                        variant="outline"
+                        className="text-[10px] max-w-full border-muted-foreground text-foreground font-mono tracking-tighter overflow-hidden"
+                    >
+                        <span className="truncate max-w-55 sm:max-w-none">
+                        ID: {player.playerid}
+                        </span>
+                    </Badge>
+
+                    {player.adminlevel > 0 && (
+                        <Badge variant="outline" className="text-[10px] border-blue-500 text-blue-500 font-mono tracking-tighter">
+                        {player.adminlevel > 4 ? "Staff Lead" : "Staff"}
+                        </Badge>
+                    )}
+
+                    {player.donorlevel > 0 && (
+                        <div className="inline-flex items-center">
+                        <TooltipProvider>
+                            <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Badge variant="outline" className="text-[10px] border-red-500 text-red-500 font-mono tracking-tighter bg-red-500/5 cursor-help">
+                                    Donator
+                                </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-card border-border text-muted-foreground shadow-2xl">
+                                 <div className="flex flex-col gap-1 p-1 items-center">
+                                 <span className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">
+                                     Subscription Expiry
+                                 </span>
+                                 <span className="text-xs font-mono text-red-500 font-bold">
+                                     {formatDate(player.donorExpiry)}
+                                 </span>
+                                 </div>
+                            </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+
+                        <span className="sm:hidden text-[10px] text-muted-foreground font-mono mt-1 px-2">
+                            Expires: {formatDate(player.donorExpiry)}
+                        </span>
                         </div>
                     )}
-                    </span>
-                    {/* Small "Active" dot in the corner */}
-                    {/* <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-green-500 border-4 border-border" /> */}
+
+                    {player.accountUsername != null && (user?.adminlevel ?? 0) >= (perms?.admin?.USER_RESET ?? 99) && (
+                        <div className="inline-flex items-center">
+                        <TooltipProvider>
+                            <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Badge variant="outline" className="text-[10px] border-green-500 text-green-500 font-mono tracking-tighter bg-green-500/5 cursor-help">
+                                    {player.accountActive ? "Active" : "Inactive"}
+                                </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-card border-border text-muted-foreground shadow-2xl">
+                                <div className="flex flex-col gap-1 p-1 items-center">
+                                <span className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">
+                                    Account Username
+                                </span>
+                                <span className="text-xs font-mono text-green-500 font-bold">
+                                    {player.accountUsername}
+                                </span>
+                                </div>
+                            </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+
+                        <span className="sm:hidden text-[10px] text-muted-foreground font-mono mt-1 px-2">
+                            {player.accountUsername}
+                        </span>
+                        </div>
+                    )}
                     </div>
-                    <div>
-                    <h1 className="text-3xl font-black uppercase tracking-tighter text-foreground">
-                        {player.name}
-                    </h1>
-                    <div className="flex gap-3 items-center mt-1">
-                        <Badge variant="outline" className="text-[10px] border-muted-foreground text-foreground font-mono tracking-tighter">
-                        UUID: {player.uid}
-                        </Badge>
-                        <Badge variant="outline" className="text-[10px] border-muted-foreground text-foreground font-mono tracking-tighter">
-                        ID: {player.playerid}
-                        </Badge>
-                        {player.adminlevel > 0 &&(
-                            <Badge variant="outline" className="text-[10px] border-blue-500 text-blue-500 font-mono tracking-tighter">
-                            {player.adminlevel > 4 ? "Staff Lead" : "Staff"}
-                            </Badge> 
-                        )}
-                        {player.donorlevel > 0 &&(
-                            <div className='text-[10px] border-border-red-700 text-red-700 font-mono tracking-tighter'>
-                                <TooltipProvider>
-                                    <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <div className="cursor-help">
-                                        <Badge variant="outline" className="text-[10px] border-red-500 text-red-500 font-mono tracking-tighter bg-red-500/5">
-                                            Donator
-                                        </Badge>
-                                        </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="bg-card border-border text-muted-foreground shadow-2xl">
-                                        <div className="flex flex-col gap-1 p-1">
-                                        <span className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">Subscription Expiry</span>
-                                        <span className="text-xs font-mono text-red-500 font-bold">
-                                            {formatDate(player.donorExpiry)}
-                                        </span>
-                                        </div>
-                                    </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            </div>
-                        )}
-                        {(player.accountUsername != null && (user?.adminlevel ?? 0) > (perms?.admin?.USER_RESET ?? 99)) &&(
-                            <div className='text-[10px] border-border-red-700 text-red-700 font-mono tracking-tighter'>
-                                <TooltipProvider>
-                                    <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <div className="cursor-help">
-                                        <Badge variant="outline" className="text-[10px] border-green-500 text-green-500 font-mono tracking-tighter bg-green-500/5">
-                                            {player.accountActive ? "Active" : "Inactive"}
-                                        </Badge>
-                                        </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="bg-card border-border text-muted-foreground shadow-2xl">
-                                        <div className="flex flex-col gap-1 p-1">
-                                        <span className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">Account Username</span>
-                                        <span className="text-xs font-mono text-green-500 font-bold">
-                                            {player.accountUsername}
-                                        </span>
-                                        </div>
-                                    </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            </div>
-                        )}
-                        {/* <span className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">
-                        Joined {formatDate(player.insert_time)}
-                        </span> */}
-                    </div>
-                    </div>
+                </div>
                 </div>
 
                 {/* Group 2: Quick Stats (Horizontal Row) */}
@@ -606,24 +616,24 @@ export default function StatsPlayer() {
         </Card> 
 
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8 w-full mx-auto">
   
         {/* Column 1: Vehicles */}
-        <div className="space-y-4">
+        <div className="space-y-4 w-full">
             <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground px-2">Registered Vehicles</h2>
             <div className="space-y-2">
             {player.vehicles?.length > 0 ? player.vehicles.map((v: Vehicles) => (
-                <div key={v.id} className="p-4 bg-card border border-border rounded-lg flex justify-between items-center">
+                <div key={v.id} className="w-full p-2 md:p-4 bg-card border border-border rounded-lg flex items-center gap-3 md:gap-4 min-w-0">
                 <div className="grid grid-col-1 items-center gap-1.5 shrink-0 w-fit">
                     <Badge variant="outline" className="border-border-accent bg-blue-600 text-foreground uppercase">{v.id}</Badge>
                     <Badge variant="outline" className={`${typeColor[v.type] ?? 'bg-blue-600'} border-border-accent text-foreground md:hidden`}>{v.type}</Badge>
                     <Badge variant="outline" className={`${sideColor[v.side] ?? 'bg-background'} border-border-accent text-foreground uppercase md:hidden`}>{v.side}</Badge>
                 </div>
 
-                <div className="flex-1 px-6">
+                <div className="flex-1 min-w-0 px-2 md:px-4">
                     <p className="font-bold text-foreground text-xs md:text-m uppercase">{v.class} 
                     </p>
-                    <div className="flex gap-2 md:gap-4 mt-1 items-center">
+                    <div className="flex gap-x-4 gap-y-2 mt-1 items-center">
                         <div className="flex flex-col">
                         <span className="text-[10px] md:text-[12px] text-muted-foreground uppercase">Plate</span>
                         <span className="text-[12px] md:text-[14px] text-foreground font-mono tracking-tighter">{v.reg}</span>
@@ -641,7 +651,7 @@ export default function StatsPlayer() {
                                     onClick={() => copyToClipboard(parseInventory(v.inventory))}
                                     className="text-muted-foreground hover:text-foreground transition-colors"
                                     title="Copy Raw Inventory">
-                                    <ClipboardCopy className="h-3 w-3" />
+                                    <Copy className="h-3 w-3" />
                                 </button>
                                 )}
                             </div>
@@ -655,7 +665,7 @@ export default function StatsPlayer() {
                 </div>
 
 
-                <div className="grid grid-rows-2 gap-2 invisible md:visible">
+                <div className="hidden md:grid grid-rows-2 gap-2 shrink-0">
                     <Badge variant="outline" className={`${typeColor[v.type] ?? 'bg-blue-600'} border-border-accent text-foreground`}>{v.type}</Badge>
                     <Badge variant="outline" className={`${sideColor[v.side] ?? 'bg-background'} border-border-accent text-foreground uppercase`}>{v.side}</Badge>
                 </div>
@@ -665,71 +675,83 @@ export default function StatsPlayer() {
         </div>
 
         {/* Column 2: Housing */}
-        <div className="space-y-4">
+        <div className="space-y-4 w-full">
             <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground px-2">Properties</h2>
             <div className="space-y-2">
             {player.housing?.length > 0 ? player.housing.map((v: Houses) => (
-                <div key={v.id} className="p-4 bg-card border border-border rounded-lg flex justify-between items-center">
+                <div key={v.id} className="w-full p-2 md:p-4 bg-card border border-border rounded-lg flex items-center gap-3 md:gap-4 min-w-0">
                 <div className="grid grid-col-1 items-center gap-1.5 shrink-0 w-fit">
                     <Badge variant="outline" className="border-border-accent bg-blue-600 text-foreground uppercase">{v.id}</Badge>
                     {v.isOrgHouse == 1 &&(
-                    <Badge variant="outline" className="bg-red-600 border-border-accent text-foreground md:invisible">Gang</Badge>
+                    <Badge variant="outline" className="bg-red-600 border-border-accent text-foreground md:hidden text-[9px] px-1">Gang</Badge>
                     )}
                 </div>
 
-                <div className="flex-1 px-6">
+                <div className="flex-1 min-w-0 px-2 md:px-4">
                     <p className="font-bold text-foreground text-xs md:text-m uppercase">{v.location.replaceAll('"', "") }
                     </p>
-                    <div className="flex gap-4 mt-1 items-center">
+                    <div className="flex gap-x-4 gap-y-2 mt-1 items-center">
                         <div className="flex flex-col">
-                        <span className="text-[10px] md:text-[12px] text-muted-foreground uppercase">Security</span>
+                        <span className="text-[10px] md:text-[12px] text-muted-foreground uppercase">Level</span>
                         <span className="text-[12px] md:text-[14px] text-foreground font-mono tracking-tighter">{v.securityLevel}</span>
                         </div>
                         
                         <div className="flex flex-col border-l border-border pl-4">
-                            <span className="text-[10px] md:text-[12px] text-muted-foreground uppercase">Virtual</span>
-                            <div className="flex items-center gap-2">
-                                <span className={`text-[12px] md:text-[14px] text-foreground font-mono" ${checkVirtualInventory(v.virtualContents) ? "text-amber-500" : "text-muted-foreground"}`}>
-                                        {checkVirtualInventory(v.virtualContents) ? "YES" : "NO"}
-                                </span>
-                                        
-                                {checkInventory(v.virtualContents) && (
-                                <button 
-                                    onClick={() => copyToClipboard(parseInventory(v.virtualContents))}
-                                    className="text-muted-foreground hover:text-foreground transition-colors"
-                                    title="Copy Raw Inventory">
-                                    <ClipboardCopy className="h-3 w-3" />
+                        <span className="text-[10px] md:text-[12px] text-muted-foreground uppercase">
+                            Cargo
+                        </span>
+
+                        <div className="flex flex-col gap-1">
+                            <div className="flex items-center">
+                            <span className={`text-[10px] uppercase w-14 ${
+                                checkVirtualInventory(v.virtualContents)
+                                    ? "text-amber-500"
+                                    : "text-muted-foreground"
+                                }`}>
+                                Virtual
+                            </span>
+
+                            {checkInventory(v.virtualContents) && (
+                                <button
+                                onClick={() => copyToClipboard(parseInventory(v.virtualContents))}
+                                className="text-muted-foreground hover:text-foreground transition-colors"
+                                title="Copy Virtual Inventory"
+                                >
+                                <Copy className="h-3 w-3" />
                                 </button>
-                                )}
+                            )}
+                            </div>
+
+                            <div className="flex items-center">
+                            <span className={`text-[10px] uppercase w-14 ${
+                                checkVirtualInventory(v.contents)
+                                    ? "text-amber-500"
+                                    : "text-muted-foreground"
+                                }`}>
+                                Physical
+                            </span>
+
+                            {checkInventory(v.contents) && (
+                                <button
+                                onClick={() => copyToClipboard(parseInventory(v.contents))}
+                                className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                title="Copy Physical Inventory"
+                                > 
+                                <Copy className="h-3 w-3" />
+                                </button>
+                            )}
                             </div>
                         </div>
-
-                        <div className="flex flex-col border-l border-border pl-4">
-                            <span className="text-[10px] md:text-[12px] text-muted-foreground uppercase">Physical</span>
-                            <div className="flex items-center gap-2">
-                                <span className={`text-[12px] md:text-[14px] text-foreground font-mono" ${checkVirtualInventory(v.contents) ? "text-amber-500" : "text-muted-foreground"}`}>
-                                        {checkVirtualInventory(v.contents) ? "YES" : "NO"}
-                                </span>
-                                        
-                                {checkInventory(v.contents) && (
-                                <button 
-                                    onClick={() => copyToClipboard(parseInventory(v.contents))}
-                                    className="text-muted-foreground hover:text-foreground transition-colors"
-                                    title="Copy Raw Inventory">
-                                    <ClipboardCopy className="h-3 w-3" />
-                                </button>
-                                )}
-                            </div>
                         </div>
 
-                        <div className="flex flex-col border-l border-border pl-4">
+                        <div className="flex flex-col border-l border-border sm:pl-2 md:pl-4">
                         <span className="text-[10px] md:text-[12px] text-muted-foreground uppercase">Purchased</span>
                         <span className="text-[12px] md:text-[14px] text-foreground">{formatDate(v.timeBought)}</span>
                         </div>
                     </div>
                 </div>
                 {v.isOrgHouse == 1 &&(
-                <Badge variant="outline" className="bg-red-600 border-border-accent text-foreground invisible md:visible">Gang</Badge>
+                <Badge variant="outline" className="bg-red-600 border-border-accent text-foreground hidden md:inline-flex">Gang</Badge>
                 )}
                 </div>
             )) : <p className="text-muted-foreground px-2">No Properties found.</p>}

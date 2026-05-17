@@ -10,11 +10,12 @@ public interface IJobService
 {
   Task<PaginatedRecord<Job>>GetJobsAsync(string? search, string? statuses, int? limit, int? offset);
   Task<Job>GetJobAsync(int id);  
-  Task<object>CreateJobAsync(string type, object? payload);
+  Task<int>CreateJobAsync(string type, object? payload);
   Task StartWorker();
   Task <Job>GetWaitingJobAsync(CancellationToken stopToken);
   Task<String>UpdateJobStatusAsync(int id, string status, string? result);
   Task<bool>TogglePriority(int id, bool toggle);
+  Task MarkCompleted(int id);
 
 };
 
@@ -122,7 +123,7 @@ public class JobService : IJobService
         };
     }
 
-    public async Task<object>CreateJobAsync(string type, object? payload)
+    public async Task<int>CreateJobAsync(string type, object? payload)
     {
         var JsonPayload = JsonSerializer.Serialize(payload);
         using (var connection = new SqlConnection(connectionString))
@@ -203,6 +204,20 @@ public class JobService : IJobService
             if (reader == 0)
                 throw new InvalidDataException("Failed to Set to Priority");
             return true;
+        }
+    }
+
+    public async Task MarkCompleted(int id)
+    {
+        using (var connection = new SqlConnection(connectionString))
+        {
+            await connection.OpenAsync();
+            var sql = $"UPDATE jobs SET payload = JSON_MODIFY(payload, '$.manual', 'Complete') WHERE id = @id";
+            using var command = new SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@id", id);
+            int reader = await command.ExecuteNonQueryAsync();
+            if (reader == 0)
+                throw new InvalidOperationException("Failed to Update!");
         }
     }
 
