@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogOverlay } from '@/components/ui/dialog'
-// import { useAuth } from "@/lib/AuthContext"
+import { useAuth } from "@/lib/AuthContext"
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
 import { Input } from '../ui/input'
@@ -31,10 +31,10 @@ function Field({
 }
 
 export default function ProductManagementModel({open, setOpen, onSuccess}: {open: boolean; setOpen: (val: boolean) => void; onSuccess: any}) {
-    const { searchParams } = useQueryParams();
+    const { searchParams, updateParams } = useQueryParams();
     // const isViewWhitelistOpen = searchParams.get("whitelist") !== null;
     // const [isLoading, setIsLoading] = useState(false);
-    // const { user, perms } = useAuth();
+    const { user, perms } = useAuth();
     const search = searchParams.get("search") ?? "";
     const orderby = searchParams.get("orderby") ?? "price";
     const direction = searchParams.get("direction") ?? "asc";
@@ -274,6 +274,11 @@ export default function ProductManagementModel({open, setOpen, onSuccess}: {open
         }, search.trim() ? 500 : 0);
         return () => clearTimeout(delayedSearch)
     }, [search, orderby, direction, currentPage, totalPages]);
+
+    if ((user?.adminlevel ?? 0) < (perms?.admin?.SHOP_MANAGEMENT ?? 99) ){
+        updateParams({ manageProducts: null });
+        return null;
+    }
 
     return (
         <Dialog open={open} onOpenChange={(open) => {
