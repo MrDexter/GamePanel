@@ -42,7 +42,7 @@ export default function Shop() {
     
     useEffect(() => {
       const timeout = setTimeout(() => {
-          updateParams({ search: searchInput, page: 1 });
+          updateParams({ search: searchInput, page: null });
       }, 300);
 
       return () => clearTimeout(timeout);
