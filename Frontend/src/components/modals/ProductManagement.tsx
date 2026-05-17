@@ -31,6 +31,7 @@ function Field({
 }
 
 export default function ProductManagementModel({open, setOpen, onSuccess}: {open: boolean; setOpen: (val: boolean) => void; onSuccess: any}) {
+    if (!open) return null;
     const { searchParams, updateParams } = useQueryParams();
     // const isViewWhitelistOpen = searchParams.get("whitelist") !== null;
     // const [isLoading, setIsLoading] = useState(false);
