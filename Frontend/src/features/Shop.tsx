@@ -1,28 +1,31 @@
 import { useState, useEffect } from 'react'
-// import { toast } from "sonner"
+import { toast } from "sonner"
 import {Input } from "@/components/ui/input"
 import {Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import { formatMoney, useQueryParams} from "@/lib/constants"
 import { useNavigate } from "react-router-dom"
 import { apiFetch } from "@/lib/api"
+import ProductManagementModel from "@/components/modals/ProductManagement"
 // import LoadingOverlay from "@/components/modals/Loading"
-import { ChevronLeft, ChevronRight, X, ArrowUp, ShoppingBasket, Trash2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, X, ArrowUp, ShoppingBasket, Trash2, Settings } from "lucide-react"
 import { useAuth } from "@/lib/AuthContext"
 import {DropdownMenu,DropdownMenuContent,DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
-import type { BasketItem } from '@/types/modals'
+import type { BasketItem, ShopCategory, ShopProduct } from '@/types/modals'
 
 
 export default function Shop() {
-    const { user } = useAuth();
+    const { user, perms } = useAuth();
     const navigate = useNavigate();
     const { searchParams, updateParams } = useQueryParams();
     const search = searchParams.get("search") ?? "";
-    const orderby = searchParams.get("orderby") ?? "price";
+    const orderby = searchParams.get("orderby") ?? "sortOrder";
     const direction = searchParams.get("direction") ?? "asc";
     const [searchInput, setSearchInput] = useState(search ?? "");
+    const isManageProductsOpen = searchParams.get("manageProducts") === "true";
     // const [isLoading, setIsLoading] = useState(false);
-    const [results, setResults] = useState<any[]>([]);
+    const [products, setProducts] = useState<ShopProduct[]>([]);
+    const [categories, setCategories] = useState<ShopCategory[]>([]);
     const currentPage = Number(searchParams.get("page") ?? 1);
     const [totalRows, setTotalRows] = useState(1);
     const itemPerPage = 12;
@@ -31,9 +34,10 @@ export default function Shop() {
     const [basket, setBasket] = useState<BasketItem[]>([]);
 
     const ORDER_OPTIONS = [
-        { value: "name", label: "Name", entry: "name" },
-        { value: "price", label: "Price", entry: "bankacc" },
-        { value: "duration", label: "Duration", entry: "duration"}
+        { value: "name", label: "Name"},
+        { value: "price", label: "Price"},
+        { value: "duration", label: "Duration"},
+        { value: "sortOrder", label: "Default" }
     ] as const;
     
     useEffect(() => {
@@ -47,16 +51,20 @@ export default function Shop() {
     const fetchProducts = async () => {
         try {
             // setIsLoading(true);
-            const res = await apiFetch("GET", `/shop/products?search=${search}&orderby=${orderby}&direction=${direction}`)
+            const res = await apiFetch("GET", `/shop/products?search=${search}&orderby=${orderby}&direction=${direction}&offset=${offset}&limit=${itemPerPage}`);
             if (!res.ok) {
-                setResults([]);
+                setProducts([]);
+                setCategories([]);
             };
             const data = await res.json();
-            setResults(data.products);
-            console.log(data.products)
+            setProducts(data.products);
+            const categories = data.categories.filter(
+            (category : ShopCategory) => category.isActive)
+            setCategories(categories);
             setTotalRows(data.totalProducts)
         } catch (error) {
-            setResults([]);
+            setProducts([]);
+            setCategories([]);
             console.error("Fetch Error", error);
         }
     };
@@ -67,7 +75,6 @@ export default function Shop() {
     };
 
     const updateBasket = (type: "add" | "remove", item: BasketItem) => {
-    // Example Shop Item Data: {"id": "thirtyDays","name": "30 Day Membership","pricePence": 1000,"description": "Purchase Donator Membership for 30 days","donatorLevel": 1,"durationDays": 30,"fulfilmentMode": "Auto"}
       setBasket(prev => {
         let next = [...prev];
 
@@ -97,12 +104,12 @@ export default function Shop() {
             quantity: 1
           });
         }
-
         localStorage.setItem("basket", JSON.stringify(next));
         window.dispatchEvent(new Event("basketUpdated"));
 
         return next;
       });
+      toast.success(`${item.name} ${type === "add" ? "added to" : "removed from"} basket`);
     };
     const resetBasket = () => {
         setBasket([]);
@@ -136,10 +143,26 @@ return (
         </div>
 
         <div className="rounded-xl border border-border bg-background/75 px-4 py-3 text-sm min-w-48">
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-            Products
-          </p>
-          <p className="text-2xl font-black text-foreground">{totalRows}</p>
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                Products
+              </p>
+
+              <p className="text-2xl font-black text-foreground">
+                {totalRows}
+              </p>
+            </div>
+            {(user?.adminlevel ?? 0) >= (perms?.admin?.SHOP_MANAGEMENT ?? 99) &&(
+              <button
+                className="text-muted-foreground hover:text-foreground transition-colors rounded-md p-1.5 cursor-pointer"
+                onClick={() => {
+                  updateParams({ manageProducts: "true" });
+                }}>
+              <Settings className="h-4.5 w-4.5" />
+            </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -319,21 +342,28 @@ return (
 
       {/* Categories */}
       <div className="space-y-10">
-        {results.map((category) => (
+        {categories.map((category) => {
+          const categoryProducts = products.filter(
+            (product) => product.categoryId === category.nameId
+            && product.isActive);
+            if (categoryProducts.length == 0) return null;
+          return (
           <section key={category.name} className="space-y-4">
-            <div className="flex items-end justify-between border-b border-border pb-3">
-              <div>
-                <h2 className="text-2xl md:text-3xl font-black tracking-tight text-foreground">
-                  {category.name}
-                </h2>
-                <p className="text-[9px] uppercase tracking-widest text-muted-foreground">
-                  {category.products.length} product{category.products.length === 1 ? "" : "s"}
-                </p>
+            {category.nameId !== "none" && (
+              <div className="flex items-end justify-between border-b border-border pb-3">
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-black tracking-tight text-foreground">
+                    {category.name}
+                  </h2>
+                  <p className="text-[9px] uppercase tracking-widest text-muted-foreground">
+                    {categoryProducts.length} product{categoryProducts.length === 1 ? "" : "s"}
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {category.products.map((product: any) => {
+              {categoryProducts.map((product: any) => {
                 const isPopular = product.id === "sixMonths";
 
                 return (
@@ -376,20 +406,19 @@ return (
                       </div>
 
                       <div className="rounded-lg border border-border bg-card/60 p-3 space-y-2 text-sm">
-                        {product.donatorLevel && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Donator Level</span>
-                            <span className="font-bold text-foreground">{product.donatorLevel}</span>
-                          </div>
-                        )}
+                      {product.paramsJson.map((param : any) => {
 
-                        {product.durationDays && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Duration</span>
-                            <span className="font-bold text-foreground">{product.durationDays} days</span>
+                        return(
+                          <div>
+                          {param.showOnStore && (
+                            <div key={param.key} className="flex justify-between">
+                              <span className="text-muted-foreground">{param.label}</span>
+                              <span className="font-bold text-foreground">{param.value}</span>
+                            </div>
+                          )}
                           </div>
-                        )}
-
+                        )
+                      })}
                         {product.fulfilmentMode && (
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Delivery</span>
@@ -420,7 +449,7 @@ return (
               })}
             </div>
           </section>
-        ))}
+        )})}
       </div> 
 
       {/* Footer / Pagination */}
@@ -453,5 +482,6 @@ return (
         </div>
       </div>
     </div>
+    <ProductManagementModel open={isManageProductsOpen} setOpen={(value) => updateParams({ manageProducts: value ? "true" : null })} onSuccess={() => fetchProducts()}/>
   </div>
 )};

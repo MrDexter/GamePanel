@@ -10,6 +10,7 @@ export type Order = components['schemas']['Order'];
 export type OrderLong = components['schemas']['OrderLong'];
 
 export type ShopProduct = components['schemas']['ShopProduct'];
+export type ShopCategory = components['schemas']['ShopCategory'];
 
 export interface BasketItem {
   id: string;
@@ -25,6 +26,11 @@ export interface BasketItem {
 //Stats / Dashboard
 export type DashboardStats = components["schemas"]["DashboardStats"];
 export type DashboardTopStats = components["schemas"]["DashboardTopStats"];
+
+export type EditableShopProduct = Omit<ShopProduct, "paramsJson"> & {
+    id: number;
+    paramsJson?: Record<string, any>;
+};
 
 // Player Data
 export interface Houses {

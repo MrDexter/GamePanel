@@ -302,19 +302,30 @@ public class SteamPlayer
 }
 
 public record ShopCategory(
+    int Id,
+    string NameId,
     string Name,
-    List<ShopProduct> Products
+    string Description,
+    int SortingOrder,
+    Boolean IsActive,
+    DateTime CreatedAt
 );
 
 public record ShopProduct
 {
-    public string Id { get; set; } = string.Empty;
+    public int Id { get; set; }
+    public string NameId { get; set; } = string.Empty;
+    public string CategoryId { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
-    public int PricePence { get; set; }
     public string Description { get; set; } = string.Empty;
-    public int? DonatorLevel { get; set; }
-    public int? DurationDays { get; set; }
+    public int PricePence { get; set; }
+    public string Currency { get; set; } = string.Empty;
     public string FulfilmentMode { get; set; } = "Manual";
+    public Boolean IsActive { get; set; } = true;
+    public int SortingOrder { get; set; }
+    public List<Dictionary<string, JsonElement>> ParamsJson { get; set; } = new();
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
     public int? Quantity {get; set;}
 }
 
@@ -327,7 +338,7 @@ public record CreateCheckoutSessionRequest(
     List<ShopProduct> Basket,
     string PurchaserId,
     string ReceiverId
-    );
+);
 
 public record CreateCheckoutSessionResponse(string ClientSecret);
 

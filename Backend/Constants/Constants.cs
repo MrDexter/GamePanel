@@ -12,7 +12,8 @@ public static class AppPermissions
         {"USER_CREATE", 5},
         {"USER_DELETE", 5},
         {"JOB_MANAGEMENT", 4},
-        {"ORDER_MANAGEMENT", 5}
+        {"ORDER_MANAGEMENT", 5},
+        {"SHOP_MANAGEMENT", 5}
     };
 
     public static int GetPermission(string key) => 

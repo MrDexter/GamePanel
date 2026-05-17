@@ -132,16 +132,18 @@ public class ProcessorService : IProcessorService
             stopToken.ThrowIfCancellationRequested();
             if (item.FulfilmentMode == "Auto")
             {
-                var product = _shopService.GetItem(item.Id.ToString());
-                switch (product.Id)
+                var product = await _shopService.GetItem(item.NameId);
+                switch (product.NameId)
                 {
                     case "thirtyDays":
                     case "sixtyDays":
                     case "oneYear":
-                        await ApplyMembership(order.ReceiverId, product.DonatorLevel ?? 1, product.DurationDays ?? 30, stopToken);
+                        int donatorLevel = product.ParamsJson.FirstOrDefault(x => x["key"].GetString() == "donatorLevel")?["value"].GetInt32() ?? 1;
+                        var durationDays = int.Parse(product.ParamsJson. FirstOrDefault(x => x["key"].GetString() == "durationDays")?["value"].GetString() ?? "30");
+                        await ApplyMembership(order.ReceiverId, donatorLevel, durationDays, stopToken);
                         break;
                     default:
-                        Console.WriteLine("Product not Supported / Found " + product.Id);
+                        Console.WriteLine("Product not Supported / Found " + product.NameId);
                         break;
 
                 } 
@@ -205,9 +207,9 @@ public class ProcessorService : IProcessorService
                     var job = await _jobService.GetJobAsync(Convert.ToInt32(data!["jobId"]));
                     return await ConvertToCSV(jobData.Id, "jobExport", [job], stopToken);
                 case "orderFulfilment":
-                    var order = await _shopService.GetOrder(Convert.ToInt32(data!["orderId"]));
+                    var order = await _shopService.GetOrder(Convert.ToInt32(data!["orderId"]), true, null);
                     await CompleteOrderFulfilment(order, stopToken);
-                    return "Yes";
+                    return "";
                 default:
                     throw new InvalidDataException("Processor not found");
 

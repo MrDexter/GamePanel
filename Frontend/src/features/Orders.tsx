@@ -12,6 +12,7 @@ import ViewOrderModal from '@/components/modals/ViewOrder'
 import { X, ArrowUp, ChevronRight, ChevronLeft } from "lucide-react"
 import { useAuth } from "@/lib/AuthContext"
 import {DropdownMenu,DropdownMenuContent,DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
+import type { ShopProduct } from '@/types/modals'
 
 
 export default function Orders() {
@@ -213,8 +214,8 @@ return (
                   </div>
 
                   <p className="text-xs text-muted-foreground">
-                    {order?.basket?.map((item : any)=> (
-                        item.productName ?? ""
+                    {order?.basket?.map((item : ShopProduct)=> (
+                        item.name ? item.name + ", " : ""
                     ))}
                   </p>
 

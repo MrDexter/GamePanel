@@ -1,12 +1,28 @@
 [
   {
+    "date": "16-05-2026",
+    "version": "0.9.9",
+    "title": "Site sode Product MAnagement",
+    "type": "Feature",
+    "category": "Full",
+    "changes": [
+        { "type": "backend", "text": "Moved Products over to SQL Database" },
+        { "type": "backend", "text": "Added Endpoints for Managing Produucts" },
+        { "type": "backend", "text": "Added Endpoints for Managing Categories" },
+        { "type": "frontend", "text": "Added Product and Category Management Model for Adding / Editing" },
+        { "type": "backend", "text": "Added JWT Security to Shop related endpoints" },
+        { "type": "backend", "text": "Fixed jobs showing download when not applicable" },
+        { "type": "frontend", "text": "Added ability to list Shop Items without a Category" }
+      ]
+  },
+  {
     "date": "10-05-2026",
     "version": "0.9.8",
     "title": "Order Model, Further Ui Changes",
     "type": "Feature",
     "category": "Full",
     "changes": [
-        { "type": "backend", "text": "Added Order Model for more indepth order information" },
+        { "type": "frontend", "text": "Added Order Model for more indepth order information" },
         { "type": "frontend", "text": "Fixed display issue with 'View Logs' on mobile device" },
         { "type": "frontend", "text": "Improved mobile display of Player page spacing / size" },
         { "type": "frontend", "text": "Moved the Status indiciator into the User Menu Dropdown" },

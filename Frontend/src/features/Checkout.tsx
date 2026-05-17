@@ -229,7 +229,7 @@ return (
 
       {status === "complete" ? (
         <div className="space-y-1 text-sm text-muted-foreground">
-          <p>In-game purchases should be available immediately, but may require a relog if you are currently in game.</p>
+          <p>Order with Auto fulfillment should be available immediately, Ingame items may require a relog.</p>
           <p>If items are missing after an hour, please contact a member of staff.</p>
         </div>
       ) : (

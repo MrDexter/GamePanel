@@ -247,6 +247,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/jobs/{id}/manualComplete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark Manual as Completed
+         * @description Set the Manual Payload entry as complete
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/jobs/{id}/download": {
         parameters: {
             query?: never;
@@ -1260,6 +1299,8 @@ export interface paths {
                     search?: string;
                     orderby?: string;
                     direction?: string;
+                    limit?: number | string;
+                    offset?: number | string;
                 };
                 header?: never;
                 path?: never;
@@ -1273,7 +1314,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["PaginatedRecordOfShopCategory"];
+                        "application/json": components["schemas"]["PaginatedRecordOfShopProduct"];
                     };
                 };
             };
@@ -1408,6 +1449,125 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shop/productCategories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get All Product Categories
+         * @description Get a list of all Product Categories
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ShopCategory"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shop/updateProduct": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Update a Product
+         * @description Update an existing product in the shop
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ShopProduct"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shop/toggleActive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Toggle Product Active Status
+         * @description Toggle the active status of a product
+         */
+        post: {
+            parameters: {
+                query: {
+                    id: number | string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -1768,10 +1928,10 @@ export interface components {
             totalRows: number | string;
             data: components["schemas"]["Player"][];
         };
-        PaginatedRecordOfShopCategory: {
+        PaginatedRecordOfShopProduct: {
             /** Format: int32 */
             totalRows: number | string;
-            data: components["schemas"]["ShopCategory"][];
+            data: components["schemas"]["ShopProduct"][];
         };
         Permissions: {
             admin: {
@@ -1810,20 +1970,36 @@ export interface components {
             confirmPassword: string;
         };
         ShopCategory: {
+            /** Format: int32 */
+            id: number | string;
+            nameId: string;
             name: string;
-            products: components["schemas"]["ShopProduct"][];
+            description: string;
+            /** Format: int32 */
+            sortingOrder: number | string;
+            isActive: boolean;
+            /** Format: date-time */
+            createdAt: string;
         };
         ShopProduct: {
-            id?: string;
-            name?: string;
             /** Format: int32 */
-            pricePence?: number | string;
+            id?: number | string;
+            nameId?: string;
+            categoryId?: string;
+            name?: string;
             description?: string;
             /** Format: int32 */
-            donatorLevel?: null | number | string;
-            /** Format: int32 */
-            durationDays?: null | number | string;
+            pricePence?: number | string;
+            currency?: string;
             fulfilmentMode?: string;
+            isActive?: boolean;
+            /** Format: int32 */
+            sortingOrder?: number | string;
+            paramsJson?: Record<string, never>[];
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
             /** Format: int32 */
             quantity?: null | number | string;
         };
