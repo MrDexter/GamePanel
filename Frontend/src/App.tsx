@@ -10,7 +10,7 @@ import Home from "@/features/Home"
 import Test from "@/features/Test"
 import Shop from "@/features/Shop"
 import Orders from "@/features/Orders"
-import { CheckoutForm, Return } from "@/features/Checkout"
+import { Checkout, Return } from "@/features/Checkout"
 import changelogData from "@/features/changelog.json";
 import LoginModal from "@/components/modals/Login"
 import ChangePasswordModal from "@/components/modals/ChangePassword"
@@ -419,7 +419,7 @@ export default function App() {
             <Route path="/about" element={<About />} />
             <Route path="/breakdown" element={<Breakdown />} />
             <Route path="/shop" element={<Shop />} />
-            <Route path="/checkout" element={<CheckoutForm />} />
+            <Route path="/checkout" element={<Checkout />} />
             <Route path="/return" element={<Return />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/Future/:name" element={<Test />} />

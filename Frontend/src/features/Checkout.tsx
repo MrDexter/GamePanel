@@ -1,9 +1,11 @@
 import { toast } from "sonner"
-import { useCallback, useState, useEffect, useRef } from "react";
+import { useCallback, useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import {loadStripe} from '@stripe/stripe-js';
 import {Button } from "@/components/ui/button"
-import {EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js';
+// import {EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js';
+import { CheckoutForm } from "@/features/CheckoutForm"
+import {CheckoutElementsProvider} from '@stripe/react-stripe-js/checkout';
 import { useNavigate, Link } from "react-router-dom";
 import { apiFetch } from "@/lib/api";
 import { useQueryParams, formatMoney } from "@/lib/constants";
@@ -16,7 +18,7 @@ import { useAuth } from "@/lib/AuthContext";
 const Stripe_Publish = import.meta.env.VITE_STRIPE_PUBLISH;
 const stripePromise = loadStripe(Stripe_Publish);
 
-export const CheckoutForm = () => {
+export const Checkout = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   // const { searchParams } = useQueryParams();
@@ -44,18 +46,60 @@ export const CheckoutForm = () => {
     });
   }, []);
 
-  const options = {fetchClientSecret};
+const appearance = {
+  theme: "night" as const,
+  inputs: 'spaced'as const,
+  labels: 'auto' as const,
+  layout: 'tabs' as const,
 
-  return (
-    <div id="checkout">
-      <EmbeddedCheckoutProvider
-        stripe={stripePromise}
-        options={options}
-      >
-        <EmbeddedCheckout />
-      </EmbeddedCheckoutProvider>
-    </div>
-  )
+
+  variables: {
+    colorPrimary: "#10b981",
+    colorBackground: "#18181b",
+    colorText: "#f4f4f5",
+    colorTextSecondary: "#a1a1aa",
+    colorDanger: "#ef4444",
+    colorLine: "#27272a",
+    fontFamily: "system-ui, sans-serif",
+    borderRadius: "10px",
+    spacingUnit: "4px",
+  },
+
+  rules: {
+    ".Input": {
+      backgroundColor: "#09090b",
+      border: "1px solid #27272a",
+      color: "#f4f4f5",
+    },
+    ".Input:focus": {
+      borderColor: "#10b981",
+      boxShadow: "0 0 0 1px #10b981",
+    },
+    ".Label": {
+      color: "#a1a1aa",
+      fontSize: "12px",
+      textTransform: "uppercase",
+      letterSpacing: "0.08em",
+    },
+    ".Tab": {
+      backgroundColor: "#09090b",
+      border: "1px solid #27272a",
+      color: "#a1a1aa",
+    },
+    ".Tab--selected": {
+      backgroundColor: "#18181b",
+      borderColor: "#10b981",
+      color: "#f4f4f5",
+    },
+  },
+};
+const clientSecret = useMemo(() => fetchClientSecret(), []);
+
+return (
+  <CheckoutElementsProvider stripe={stripePromise} options={{clientSecret, elementsOptions: {appearance}}}>
+    <CheckoutForm />
+  </CheckoutElementsProvider>
+);
 }
 
 export const Return = () => {

@@ -315,7 +315,9 @@ public class ShopService : IShopService
                         ProductData = new SessionLineItemPriceDataProductDataOptions
                         {
                             Name = product.Name,
-                            Description = product.Description
+                            Description = string.IsNullOrWhiteSpace(product.Description)
+                                ? null
+                                : product.Description
                         },
                     },
                     Quantity = item.Quantity,
@@ -330,7 +332,7 @@ public class ShopService : IShopService
         var options = new SessionCreateOptions
         {
             LineItems = lineItemsOptions,
-            UiMode = "embedded_page",
+            UiMode = "elements",
             Mode = "payment",
             ReturnUrl = $"{domain}/return?session_id={{CHECKOUT_SESSION_ID}}",
             // Metadata = new Dictionary<string, string> 

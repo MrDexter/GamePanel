@@ -9,10 +9,12 @@
         { "type": "backend", "text": "Moved Products over to SQL Database" },
         { "type": "backend", "text": "Added Endpoints for Managing Produucts" },
         { "type": "backend", "text": "Added Endpoints for Managing Categories" },
-        { "type": "frontend", "text": "Added Product and Category Management Model for Adding / Editing" },
+        { "type": "frontend", "text": "Added Product Management page with options to add, edit and delete products and categories" },
         { "type": "backend", "text": "Added JWT Security to Shop related endpoints" },
         { "type": "backend", "text": "Fixed jobs showing download when not applicable" },
-        { "type": "frontend", "text": "Added ability to list Shop Items without a Category" }
+        { "type": "frontend", "text": "Added ability to list Shop Items without a Category" },
+        { "type": "frontend", "text": "Added custom Stripe checkout page for better themed payment handling" },
+        { "type": "backend", "text": "Fixed payment issue from an item not having a description" }
       ]
   },
   {
