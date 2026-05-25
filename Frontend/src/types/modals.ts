@@ -21,7 +21,10 @@ export interface BasketItem {
   durationDays: number;
   fulfilmentMode: string;
   quantity: number;
-}
+  isGift?: boolean;
+  receiverId?: string;
+  receiverName?: string;
+} 
 
 //Stats / Dashboard
 export type DashboardStats = components["schemas"]["DashboardStats"];

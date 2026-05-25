@@ -306,7 +306,7 @@ export default function Home() {
             </CardTitle>
             </CardHeader>
 
-            <CardContent className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-sm">
+            <CardContent className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-sm min-h-65">
             <div className="rounded-xl border border-border bg-card p-3 space-y-3">
               <div className="border-b border-border pb-2">
                 <p className="text-[10px] font-black uppercase tracking-widest text-purple-500">

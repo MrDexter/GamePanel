@@ -40,8 +40,8 @@ export const Checkout = () => {
         navigate("/shop");
         throw new Error(data.message);
       }
-      localStorage.setItem("basket", "[]");
-      window.dispatchEvent(new Event("basketUpdated"));
+      // localStorage.setItem("basket", "[]");
+      // window.dispatchEvent(new Event("basketUpdated"));
       return data.clientSecret;
     });
   }, []);
@@ -120,6 +120,8 @@ export const Return = () => {
   useEffect(() => {
     if (hasRun.current) return;
     hasRun.current = true;
+    localStorage.setItem("basket", "[]");
+    window.dispatchEvent(new Event("basketUpdated"));
     setIsLoading(true)
     apiFetch("GET", `/shop/session-status?session_id=${sessionId}`)
       .then((res) => res.json())
@@ -237,7 +239,8 @@ return (
                     <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
                       Qty {item.quantity}
                     </span>
-
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
                     <span
                       className={`text-[10px] uppercase tracking-widest ${
                         item.fulfilmentMode === "Auto"
@@ -248,7 +251,17 @@ return (
                       Fulfillment: {item.fulfilmentMode ?? "Manual"}
                     </span>
                   </div>
-                </div>
+                  {item.isGift && (
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                        {"Gifted to: "}
+                        <Link to={`/players/${item.receiverId}`} className="text-blue-500 underline hover:text-blue-400">
+                            {item.receiverName} ({item.receiverId})
+                        </Link>
+                    </span>
+                  </div>
+                    )}
+                  </div>
 
                 <p className="text-sm font-black text-foreground shrink-0">
                   {formatMoney((item.pricePence * item.quantity) / 100)}

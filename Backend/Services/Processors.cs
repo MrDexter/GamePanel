@@ -139,8 +139,9 @@ public class ProcessorService : IProcessorService
                     case "sixtyDays":
                     case "oneYear":
                         int donatorLevel = product.ParamsJson.FirstOrDefault(x => x["key"].GetString() == "donatorLevel")?["value"].GetInt32() ?? 1;
-                        var durationDays = int.Parse(product.ParamsJson. FirstOrDefault(x => x["key"].GetString() == "durationDays")?["value"].GetString() ?? "30");
-                        await ApplyMembership(order.ReceiverId, donatorLevel, durationDays, stopToken);
+                        var durationDays = int.Parse(product.ParamsJson.FirstOrDefault(x => x["key"].GetString() == "durationDays")?["value"].GetString() ?? "30");
+                        var receiverId = item.ReceiverId ?? order.PurchaserId;
+                        await ApplyMembership(receiverId, donatorLevel, durationDays, stopToken);
                         break;
                     default:
                         Console.WriteLine("Product not Supported / Found " + product.NameId);

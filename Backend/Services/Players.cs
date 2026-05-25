@@ -12,7 +12,7 @@ namespace DecsPage.Services;
 public interface IPlayerService
 {
     Task<PaginatedRecord<Player>> GetAllPlayers(int? limit, int? offset, string? search, string? factions, string? orderby, string? sortby);
-    Task<List<Dictionary<string, object>>> GetPlayer(string id);
+    Task<Dictionary<string, object>> GetPlayer(string id);
     Task<UpdateRank> UpdateRank(string id, string rank, string newRank);
     Task UpdateWhitelisting(HttpContext ctx, WhitelistUpdateRequest request);
     Task<PlayerPerms>GetPlayerPerms(string id);
@@ -116,9 +116,8 @@ public class PlayerService : IPlayerService
         return response;
     }
 
-    public async Task<List<Dictionary<string, object>>> GetPlayer(string id)
+    public async Task<Dictionary<string, object>> GetPlayer(string id)
     {
-        var result = new List<Dictionary<string, object>>();
         var row = new Dictionary<string, object>();
         using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
@@ -161,13 +160,12 @@ public class PlayerService : IPlayerService
                 var steamAvatar = player?.AvatarFull; 
                 if (!string.IsNullOrEmpty(steamAvatar))
                     row["avatar"] = steamAvatar;
-                result.Add(row);
         };
         // Gang
         var sql1 = "SELECT id, name, members, bank, leader, tag FROM organisations WHERE alive = '1' AND members LIKE '%' + @pid + '%'";
         using (var command1 = new SqlCommand(sql1, connection))
         {
-           command1.Parameters.AddWithValue("@pid", result[0]["playerid"]);
+           command1.Parameters.AddWithValue("@pid", row["playerid"]);
             using var reader1 = await command1.ExecuteReaderAsync();
             var gang =  new List<Gangs>();
             while (await reader1.ReadAsync())
@@ -216,7 +214,7 @@ public class PlayerService : IPlayerService
         var sql2 = "SELECT a.id, a.location, a.securityLevel, b.VirtualContents, b.Contents, a.timeBought, a.isOrgHouse FROM housing a INNER JOIN housinginvstorage b ON (a.HousingInvStorageID=b.id) WHERE a.alive = 1 AND a.ownerPid=@pid";
         using (var command2 = new SqlCommand(sql2, connection))
         {
-            command2.Parameters.AddWithValue("@pid", result[0]["playerid"]);
+            command2.Parameters.AddWithValue("@pid", row["playerid"]);
             using var reader2 = await command2.ExecuteReaderAsync();
             var housing = new List<Houses>();
             while (await reader2.ReadAsync())
@@ -238,7 +236,7 @@ public class PlayerService : IPlayerService
         var sql3 = "Select id, side, classname, type, inventory, reg, capacity, security, acceleration, insert_time FROM vehicles where pid = @pid";
         using (var command3 = new SqlCommand(sql3, connection))
         {
-            command3.Parameters.AddWithValue("@pid", result[0]["playerid"]);
+            command3.Parameters.AddWithValue("@pid", row["playerid"]);
             using var reader3 = await command3.ExecuteReaderAsync();
             var vehicles = new List<Vehicles>();
             while (await reader3.ReadAsync())
@@ -259,7 +257,7 @@ public class PlayerService : IPlayerService
             };
             row["vehicles"] = vehicles;
         };
-        return result; 
+        return row; 
     }
 
     public async Task UpdateWhitelisting(HttpContext ctx, WhitelistUpdateRequest request)

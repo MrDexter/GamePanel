@@ -7,10 +7,12 @@ import {
 import {Button } from "@/components/ui/button"
 import {Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
+import type { BasketItem } from '@/types/modals';
 
 
 
 export function CheckoutForm() {
+  const localBasket : BasketItem[] = JSON.parse(localStorage.getItem("basket") ?? "[]");
   const checkoutState = useCheckout();
   const [email, setEmail] = useState("");
   const [processing, setProcessing] = useState(false);
@@ -28,10 +30,6 @@ export function CheckoutForm() {
   const basket = checkout.lineItems;
 
   const total = checkout.total.total.amount;
-
-  console.log("checkout", checkout);
-console.log("lineItems", checkout.lineItems);
-console.log("total", checkout.total);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,7 +97,9 @@ console.log("total", checkout.total);
 
           <CardContent className="space-y-4">
             <div className="space-y-3">
-              {basket.map((item) => (
+              {basket.map((item) => {
+                const localItem = localBasket?.find(x => x.name === item.name);
+                return (
                 <div
                   key={item.id}
                   className="flex justify-between gap-3 border-b border-border pb-3 last:border-b-0"
@@ -111,16 +111,21 @@ console.log("total", checkout.total);
                     <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
                       Qty {item.quantity}
                     </p>
-                    <p className="text-[9px] tracking-widest text-muted-foreground">
+                    <p className="text-[10px] tracking-widest text-muted-foreground">
                       {item.description}
                     </p>
+                    {localItem?.isGift && (
+                      <p className="text-[10px] tracking-widest text-blue-500">
+                        Gift: {localItem?.receiverName} ({localItem?.receiverId})
+                      </p>
+                    )}
                   </div>
 
                   <p className="text-sm font-black shrink-0">
                     {item.total.amount}
                   </p>
                 </div>
-              ))}
+              )})}
             </div>
 
             <div className="flex justify-between border-t border-border pt-4">

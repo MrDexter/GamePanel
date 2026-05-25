@@ -42,9 +42,9 @@ public static class ShopEndpoints
         .WithSummary("Get a Specific Product")
         .WithDescription("Get a specific Item using the Item ID");
 
-        group.MapGet("/orders", async (IShopService shop, HttpContext ctx, string? search, int? limit, int? offset, string? orderby, string? direction, bool? adminMode) =>
+        group.MapGet("/orders", async (IShopService shop, HttpContext ctx, string? search, int? limit, int? offset, string? orderby, string? direction, bool? adminMode, string? statuses) =>
         {
-            var orders = await shop.GetOrders(ctx, search, limit, offset, orderby, direction, adminMode);
+            var orders = await shop.GetOrders(ctx, search, limit, offset, orderby, direction, adminMode, statuses);
             return Results.Ok(new {orders = orders.Data, totalRows = orders.TotalRows});
         })
         .Produces<PaginatedRecord<Order>>(200)

@@ -200,7 +200,7 @@ export default function StatsPlayer() {
                 setPlayer("Not Found")
             };
             const data = await res.json();
-            setPlayer(data[0])
+            setPlayer(data)
             window.scrollTo({
                 top: 0,
                 behavior: 'smooth'

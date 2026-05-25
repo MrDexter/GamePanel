@@ -4,11 +4,11 @@ import {Input } from "@/components/ui/input"
 import {Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import { formatMoney, useQueryParams} from "@/lib/constants"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import { apiFetch } from "@/lib/api"
 import ProductManagementModel from "@/components/modals/ProductManagement"
 // import LoadingOverlay from "@/components/modals/Loading"
-import { ChevronLeft, ChevronRight, X, ArrowUp, ShoppingBasket, Trash2, Settings } from "lucide-react"
+import { ChevronLeft, ChevronRight, X, ArrowUp, ShoppingBasket, Trash2, Settings, Check } from "lucide-react"
 import { useAuth } from "@/lib/AuthContext"
 import {DropdownMenu,DropdownMenuContent,DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
 import type { BasketItem, ShopCategory, ShopProduct } from '@/types/modals'
@@ -32,6 +32,8 @@ export default function Shop() {
     const totalPages = Math.max(1, Math.ceil(totalRows / itemPerPage));
     const offset = Math.max(0, (itemPerPage * (currentPage - 1)));
     const [basket, setBasket] = useState<BasketItem[]>([]);
+
+    const [giftReceiverId, setGiftReceiverId] = useState<{ id: string; receiverId: string }[]>([]);
 
     const ORDER_OPTIONS = [
         { value: "name", label: "Name"},
@@ -115,6 +117,54 @@ export default function Shop() {
         setBasket([]);
         localStorage.setItem("basket", "[]");
         window.dispatchEvent(new Event("basketUpdated"));
+    };
+
+    const updateGiftInput = (itemId: string, receiverId: string) => {
+      setGiftReceiverId(prev => {
+        const next = [...prev];
+        const existingIndex = next.findIndex(x => x.id === itemId);
+        if (existingIndex !== -1) {
+          next[existingIndex] = { ...next[existingIndex], receiverId };
+        } else {
+          next.push({ id: itemId, receiverId });
+        }
+        return next;
+      });
+    };
+
+    const updateBasketGiftStatus = async (itemId: string, isGift: boolean, receiverId?: string) => {
+      let receiverName: string | undefined = undefined;
+
+      if (receiverId) {
+        try {
+          console.log("Fetching player data for receiverId:", receiverId);
+          const res = await apiFetch("GET", `/players/${receiverId}`);
+          if (res.ok) {
+            const data = await res.json();
+            receiverName = data.name;
+          } else {
+            toast.error("SteamID Not Found. Please check the SteamID64 and try again.");
+          }
+        } catch (e) {
+          toast.error("SteamID Not Found. Please check the SteamID64 and try again.");
+        }
+      }
+
+      setBasket(prev => {
+        const next = [...prev];
+        const existingIndex = next.findIndex(x => x.id === itemId);
+        if (existingIndex !== -1) {
+          next[existingIndex] = {
+            ...next[existingIndex],
+            isGift,
+            receiverId: isGift ? receiverId : undefined,
+            receiverName: isGift ? receiverName : undefined
+          };
+        }
+        localStorage.setItem("basket", JSON.stringify(next));
+
+        return next;
+      });
     };
 
     useEffect(() => {
@@ -255,7 +305,8 @@ return (
               </div>
                 {basket.length > 0 ? (
                   <div className="max-h-72 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/15">
-                    {basket.map((item) => (
+                    {basket.map((item) => {
+                    return (
                       <div
                         key={item.id}
                         className="flex items-center justify-between gap-3 p-3 border-b border-border last:border-b-0"
@@ -267,6 +318,79 @@ return (
                           <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
                             Qty {item.quantity}
                           </p>
+                          {item.isGift ? (
+                            <div>
+                            {item.receiverName !== undefined ? (
+                              <div className="mt-1 flex items-center gap-1 text-[10px] tracking-widest text-blue-500">
+                                <span>
+                                  Gift for{" "}
+                                  <Link
+                                    to={`/search/${item.receiverId}`}
+                                    className="underline hover:text-foreground"
+                                  >
+                                    {item.receiverName} ({item.receiverId})
+                                  </Link>
+                                </span>
+
+                                <button
+                                  onClick={() => updateBasketGiftStatus(item.id, false)}
+                                  className="text-muted-foreground hover:text-red-500 transition-colors cursor-pointer"
+                                  title="Remove gift recipient"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="mt-2 rounded-lg border border-border bg-card/70 p-2 space-y-2">                            
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-[10px] uppercase tracking-widest text-amber-500 font-bold">
+                                    Gift Recipient
+                                  </span>
+
+                                  <button
+                                    onClick={() => updateBasketGiftStatus(item.id, false)}
+                                    className="text-muted-foreground hover:text-red-500 transition-colors cursor-pointer"
+                                    title="Remove gift recipient"
+                                  >
+                                    <X className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+
+                                <div className="relative">
+                                  <Input
+                                    placeholder="SteamID64..."
+                                    value={giftReceiverId.find(x => x.id === item.id)?.receiverId ?? ""}
+                                    onChange={(e) => updateGiftInput(item.id, e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Escape") updateGiftInput(item.id, "");
+                                    }}
+                                    className="h-7 text-xs bg-background border border-border text-foreground pr-8"
+                                  />
+
+                                  <button
+                                    onClick={() => updateBasketGiftStatus(item.id, true, giftReceiverId.find(x => x.id === item.id)?.receiverId ?? "")}
+                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded text-muted-foreground hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors"
+                                    title="Confirm recipient"
+                                  >
+                                    <Check className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+
+                                <p className="text-[10px] text-muted-foreground leading-snug">
+                                  Enter the recipients SteamID64. Items will be delivered to them after payment.
+                                </p>
+                                </div>
+                            )}
+                            </div>
+
+                          ) : (
+                            <button
+                              onClick={() => updateBasketGiftStatus(item.id, true)}
+                              className="mt-1 text-[10px] tracking-widest text-muted-foreground hover:underline hover:text-foreground cursor-pointer"
+                            >
+                              This is a Gift
+                            </button>
+                          )}
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0">
@@ -282,7 +406,7 @@ return (
                           </button>
                         </div>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 ) : (
                   <div className="p-4 text-sm text-muted-foreground">

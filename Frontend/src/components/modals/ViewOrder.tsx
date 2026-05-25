@@ -8,9 +8,9 @@ import { Copy } from "lucide-react"
 import { useAuth } from '@/lib/AuthContext'
 // import { toast } from "sonner"
 // import LoadingOverlay from "@/components/modals/Loading"
-import { useNavigate  } from "react-router-dom"
+import { useNavigate, Link  } from "react-router-dom"
 // import {Input } from "@/components/ui/input"
-import type { OrderLong } from "@/types/modals"
+import type { OrderLong, ShopProduct } from "@/types/modals"
 
 export default function ViewOrderModal({open, setOpen, selectedOrder}: {open: any; setOpen: (val: boolean) => void; selectedOrder: number}) {
     if (!selectedOrder) return null;
@@ -115,42 +115,37 @@ export default function ViewOrderModal({open, setOpen, selectedOrder}: {open: an
 
                 <div className="space-y-6">
                 {/* Summary */}
-                <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-lg border border-border bg-background/75 p-3">
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                        Amount
-                    </p>
-                    <p className="text-lg font-black">
-                        {formatMoney(Number(order?.amountPence || 0) / 100)}
-                    </p>
+                <div className="grid grid-cols-1 gap-3">
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="rounded-lg border border-border bg-background/75 p-3">
+                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                            Amount
+                        </p>
+                        <p className="text-lg font-black">
+                            {formatMoney(Number(order?.amountPence || 0) / 100)}
+                        </p>
+                        </div>
+
+                        <div className="rounded-lg border border-border bg-background/75 p-3">
+                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                            Updated
+                        </p>
+                        <p className="text-md">
+                            {formatDate(order?.updatedAt ?? "")}
+                        </p>
+                        </div>
                     </div>
 
-                    <div className="rounded-lg border border-border bg-background/75 p-3">
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                        Updated
-                    </p>
-                    <p className="text-xs">
-                        {formatDate(order?.updatedAt ?? "")}
-                    </p>
-                    </div>
-
-                    <div className="rounded-lg border border-border bg-background/75 p-3">
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                        Purchaser
-                    </p>
-                    <p className="text-xs font-mono truncate">
-                        {order?.purchaserId}
-                    </p>
-                    </div>
-
-                    <div className="rounded-lg border border-border bg-background/75 p-3">
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                        Receiver
-                    </p>
-                    <p className="text-xs font-mono truncate">
-                        {order?.purchaserId === order?.receiverId ? order?.receiverId + " (You)" : order?.receiverId}
-                    </p>
-                    </div>
+                    {order?.purchaserId !== user?.steamId && (
+                        <div className="rounded-lg border border-border bg-background/75 p-3 justify-items-center">
+                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                            Purchaser
+                        </p>
+                        <p className="text-sm font-mono truncate">
+                            {order?.purchaserId}
+                        </p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Basket */}
@@ -160,9 +155,9 @@ export default function ViewOrderModal({open, setOpen, selectedOrder}: {open: an
                     </h3>
 
                     <div className="rounded-xl border border-border overflow-hidden">
-                    {order?.basket.map((item: any, index: number) => (
+                    {order?.basket.map((item: ShopProduct) => (
                         <div
-                        key={`${item.productId}-${index}`}
+                        key={item.id}
                         className="flex items-center justify-between gap-4 p-4 bg-background/75 border-b border-border last:border-b-0"
                         >
                         <div className="min-w-0">
@@ -175,6 +170,14 @@ export default function ViewOrderModal({open, setOpen, selectedOrder}: {open: an
                             <p className="text-xs text-muted-foreground font-mono">
                             Fulfilment: {item.fulfilmentMode}
                             </p>
+                            {item.isGift && (
+                            <p className="text-xs text-muted-foreground font-mono">
+                                {"Gifted to: "}
+                                <Link to={`/players/${item.receiverId}`} className="text-blue-500 underline hover:text-blue-400">
+                                    {item.receiverName} ({item.receiverId})
+                                </Link>
+                            </p>
+                            )}
                         </div>
 
                         <div className="text-right shrink-0">

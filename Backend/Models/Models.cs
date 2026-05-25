@@ -327,6 +327,9 @@ public record ShopProduct
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public int? Quantity {get; set;}
+    public Boolean? IsGift {get; set;} 
+    public string? ReceiverId {get; set;}
+    public string? ReceiverName {get; set;}
 }
 
 public record StripeOptions

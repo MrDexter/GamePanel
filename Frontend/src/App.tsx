@@ -60,12 +60,12 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const globalLogout = (silent = false) => {
+    const globalLogout = () => {
       localStorage.removeItem("token");
       setUser(null);
       setPerms(null);
-      if (!silent)
-        toast.error("Session Expired - Please Log back in!");
+      // if (!silent)
+      //   toast.error("Session Expired - Please Log back in!");
     };
     setLogoutHandler(globalLogout);
 
@@ -108,7 +108,7 @@ export default function App() {
 
         console.log("Session restored via refresh token.");
       } catch {
-        globalLogout(true);
+        globalLogout();
       }
     };
 
@@ -191,7 +191,7 @@ export default function App() {
       
       
       {/* The Hover Details */}
-      <div className="absolute top-6 right-0 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 bg-card border border-border p-3 rounded-lg shadow-2xl z-50 min-w-40 ">
+      <div className="absolute top-3 right-47 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 bg-card border border-border p-3 rounded-lg shadow-2xl z-50 min-w-40 ">
         <p className="text-[9px] uppercase tracking-widest text-foreground mb-2 border-b border-border pb-1">System Health</p>
         {health?.services?.length > 0 ? (
           health.services.map((s: any) => (
@@ -302,7 +302,7 @@ export default function App() {
             </DropdownMenu>
           </div>
             
-              <div className="flex items-center gap-3 cursor-pointer">
+              <div className="flex items-center gap-3 cursor-pointer overflow-y-visible">
               {/* Login Button */}
               {user ?  (
                 <div>
@@ -317,7 +317,7 @@ export default function App() {
                       </Button>
                     </DropdownMenuTrigger>
                     
-                    <DropdownMenuContent align="end" className="w-48 bg-card border-border text-foreground">
+                    <DropdownMenuContent align="end" className="w-48 bg-card border-border text-foreground overflow-visible">
                         
                         {healthStatus}
 
@@ -381,7 +381,7 @@ export default function App() {
                       </Button>
                     </DropdownMenuTrigger>
                     
-                    <DropdownMenuContent align="end" className="w-48 bg-card border-border text-foreground">
+                    <DropdownMenuContent align="end" className="w-48 bg-card border-border text-foreground overflow-visible">
                         {healthStatus}
 
                         <DropdownMenuSeparator className="bg-background" />
@@ -396,7 +396,6 @@ export default function App() {
                         <LogIn className="h-3.5 w-3.5" />
                         Login
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator className='bg-card'/>
                     </DropdownMenuContent>
                     </DropdownMenu>
                 </div>

@@ -1,5 +1,20 @@
 [
   {
+    "date": "25-05-2026",
+    "version": "1.0.0",
+    "title": "Giftign ",
+    "type": "Feature",
+    "category": "Full",
+    "changes": [
+        { "type": "frontend", "text": "Added ability to filter Orders by Status" },
+        { "type": "backend", "text": "Fixed GetPlayer returning a single entry as a table" },
+        { "type": "backend", "text": "Added support for gifting individual order items" },
+        { "type": "frontend", "text": "Added ability to gift individual basket items to another user" },
+        { "type": "frontend", "text": "Fixed Status display overlapping the User Menu" },
+        { "type": "backend", "text": "Added support for multiple gifted items per order" }
+      ]
+  },
+  {
     "date": "16-05-2026",
     "version": "0.9.9",
     "title": "Site sode Product MAnagement",

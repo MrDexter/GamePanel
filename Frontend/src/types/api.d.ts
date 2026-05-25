@@ -1327,7 +1327,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/shop/product": {
+    "/shop/product/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1340,11 +1340,11 @@ export interface paths {
          */
         get: {
             parameters: {
-                query: {
+                query?: never;
+                header?: never;
+                path: {
                     id: string;
                 };
-                header?: never;
-                path?: never;
                 cookie?: never;
             };
             requestBody?: never;
@@ -1388,6 +1388,7 @@ export interface paths {
                     orderby?: string;
                     direction?: string;
                     adminMode?: boolean;
+                    statuses?: string;
                 };
                 header?: never;
                 path?: never;
@@ -1494,7 +1495,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/shop/updateProduct": {
+    "/shop/product/{id}/update": {
         parameters: {
             query?: never;
             header?: never;
@@ -1511,7 +1512,9 @@ export interface paths {
             parameters: {
                 query?: never;
                 header?: never;
-                path?: never;
+                path: {
+                    id: string;
+                };
                 cookie?: never;
             };
             requestBody: {
@@ -1535,7 +1538,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/shop/toggleActive": {
+    "/shop/product/{id}/toggleActive": {
         parameters: {
             query?: never;
             header?: never;
@@ -1550,11 +1553,93 @@ export interface paths {
          */
         post: {
             parameters: {
-                query: {
+                query?: never;
+                header?: never;
+                path: {
                     id: number | string;
                 };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shop/category/{id}/update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Update a Category
+         * @description Update an existing category in the shop
+         */
+        post: {
+            parameters: {
+                query?: never;
                 header?: never;
-                path?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ShopCategory"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shop/category/{id}/toggleActive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Toggle Category Active Status
+         * @description Toggle the active status of a category
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | string;
+                };
                 cookie?: never;
             };
             requestBody?: never;
@@ -2002,6 +2087,9 @@ export interface components {
             updatedAt?: string;
             /** Format: int32 */
             quantity?: null | number | string;
+            isGift?: null | boolean;
+            receiverId?: null | string;
+            receiverName?: null | string;
         };
         UpdateRank: {
             id: string;

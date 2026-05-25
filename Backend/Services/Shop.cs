@@ -27,7 +27,7 @@ public interface IShopService
     Task<string> ToggleActive(int id , string type);
     Task<CreateCheckoutSessionResponse> CreateCheckoutSessionAsync (CreateCheckoutSessionRequest request,CancellationToken cancellationToken);
     Task<CheckoutSessionStatusResponse> GetSessionStatusAsync(string sessionId,CancellationToken cancellationToken);
-    Task<PaginatedRecord<Order>>GetOrders(HttpContext ctx,  string? search, int? limit, int? offset, string? orderby, string? direction, bool? adminMode);
+    Task<PaginatedRecord<Order>>GetOrders(HttpContext ctx,  string? search, int? limit, int? offset, string? orderby, string? direction, bool? adminMode, string? statuses);
     Task<OrderLong>GetOrder(int id, Boolean isAdmin, string? userId);
 }
 
@@ -57,7 +57,9 @@ public class ShopService : IShopService
             var sql = "Select Id, NameId, CategoryId, Name, Description, PricePence, Currency, FulfilmentMode, isActive, sortOrder, ParamsJson, CreatedAt, UpdatedAt,  COUNT(case isActive when 1 then 1 else null end) OVER() AS TotalRows From products WHERE 1=1";
             if (!string.IsNullOrWhiteSpace(search))
             {
-                sql += @" AND Name LIKE '%' + @search + '%' OR Description LIKE '%' + @search + '%' OR CAST(PricePence / 100.0 AS DECIMAL(10,2)) = TRY_CAST(@search AS DECIMAL(10,2))";
+                sql += @" AND Name LIKE '%' + @search + '%' 
+                OR Description LIKE '%' + @search + '%' 
+                OR CAST(PricePence / 100.0 AS DECIMAL(10,2)) = TRY_CAST(@search AS DECIMAL(10,2))";
             };
             var safeOrderBy = (orderby ?? "sortOrder").ToLower() switch
             {
@@ -317,7 +319,7 @@ public class ShopService : IShopService
                             Name = product.Name,
                             Description = string.IsNullOrWhiteSpace(product.Description)
                                 ? null
-                                : product.Description
+                                : product.Description,
                         },
                     },
                     Quantity = item.Quantity,
@@ -437,7 +439,7 @@ public class ShopService : IShopService
         }
     }
 
-    public async Task<PaginatedRecord<Order>>GetOrders(HttpContext ctx, string? search, int? limit, int? offset, string? orderby, string? direction, bool? adminMode)
+    public async Task<PaginatedRecord<Order>>GetOrders(HttpContext ctx, string? search, int? limit, int? offset, string? orderby, string? direction, bool? adminMode, string? statuses)
     {
         var userId = ctx.User.FindFirst("SteamID")?.Value ?? throw new UnauthorizedAccessException("There isn't a SteamId associated with your account!");
         var userAdmin = ctx.User.FindFirst("adminlevel")?.Value ?? "0";
@@ -450,18 +452,23 @@ public class ShopService : IShopService
             var sql = @"Select id, PurchaserId, ReceiverId, BasketJson, Status, PaymentStatus, AmountPence, Currency, CreatedAt, UpdatedAt, COUNT(*) OVER() AS TotalRows FROM orders WHERE id>40 ";
             if (!(adminMode ?? false) || !isAdmin)
             {
-                sql += "AND PurchaserId = @steamid AND Status != 'incomplete'";
+                sql += "AND PurchaserId = @steamid AND Status != 'incomplete' ";
             }
             if (!string.IsNullOrWhiteSpace(search))
             {
                 sql += @"
                     AND (
                         id LIKE '%' + @search + '%'
+                        OR PurchaserId LIKE '%' + @search + '%'
+                        OR ReceiverId LIKE '%' + @search + '%'
                         OR BasketJson LIKE '%' + @search + '%'
                         OR Status LIKE '%' + @search + '%'
-                        OR AmountPence LIKE '%' + @search + '%'
-                    )
-                ";
+                        OR CAST(AmountPence / 100.0 AS DECIMAL(10,2)) = TRY_CAST(@search AS DECIMAL(10,2))
+                    ) ";
+            };
+            if (!string.IsNullOrWhiteSpace(statuses))
+            {
+                sql += "AND (Status IN (SELECT TRIM(value) FROM STRING_SPLIT(@statuses, ','))) ";
             };
             var safeOrderBy = (orderby ?? "id").ToLower() switch
             {
@@ -491,6 +498,7 @@ public class ShopService : IShopService
             command.Parameters.AddWithValue("@limit", limit ?? 0);
             command.Parameters.AddWithValue("@search", search ?? "");
             command.Parameters.AddWithValue("@steamid", userId);
+            command.Parameters.AddWithValue("@statuses", statuses ?? "");
             var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {

@@ -34,6 +34,51 @@ export default function Orders() {
     const totalPages = Math.max(1, Math.ceil(totalRows / itemPerPage));
     const offset = Math.max(0, (itemPerPage * (currentPage - 1)));
 
+    // Statuses
+    const ALL_STATUSES = ["complete","failed"];
+    const ALL_STATUSES_ADMIN = [...ALL_STATUSES, "incomplete"];
+    const STATUSLIST = adminMode ? ALL_STATUSES_ADMIN : ALL_STATUSES;
+    const [selectedStatuses, setSelectedStatuses] = useState<string[]>(ALL_STATUSES);
+    const statusesFromUrl = searchParams.get("statuses");
+
+    useEffect(() => {
+        if (statusesFromUrl) {
+            setSelectedStatuses(statusesFromUrl.split(",").map(s => s.toLowerCase()));
+        } else {
+            setSelectedStatuses(STATUSLIST);
+        }
+    }, [statusesFromUrl]);
+
+    useEffect(() => {
+      const timeout = setTimeout(() => {
+          updateParams({ search: searchInput, page: null });
+      }, 300);
+
+      return () => clearTimeout(timeout);
+    }, [searchInput]);
+
+    const statuses = selectedStatuses.length === STATUSLIST.length ? "" : selectedStatuses.join(",");
+
+    const toggleStatus = (status: string) => {
+        setSelectedStatuses(prev => {
+            let next;
+            if (prev.includes(status)) {
+                next = prev.filter(s => s !== status);
+            } else {
+                next = [...prev, status];
+            }
+            updateParams({
+                statuses: next.length === STATUSLIST.length ? "" : next.join(","),
+                page: null
+            });
+            return next;
+        });
+    };
+    const resetStatuses = () => {
+        setSelectedStatuses(ALL_STATUSES);
+        updateParams({ statuses: "", page: null });
+    };
+
     const ORDER_OPTIONS = [
         { value: "id", label: "ID" },
         { value: "price", label: "Price"},
@@ -51,7 +96,7 @@ export default function Orders() {
     const fetchOrders = async () => {
         try {
             // setIsLoading(true);
-            const res = await apiFetch("GET", `/shop/orders?search=${search}&limit=${itemPerPage}&offset=${offset}&orderby=${orderby}&direction=${direction}&adminMode=${adminMode}`)
+            const res = await apiFetch("GET", `/shop/orders?search=${search}&limit=${itemPerPage}&offset=${offset}&orderby=${orderby}&direction=${direction}&adminMode=${adminMode}&statuses=${statuses}`);
             if (!res.ok) {
                 setOrders([]);
             };
@@ -70,7 +115,7 @@ export default function Orders() {
             fetchOrders()
         }, search.trim() ? 500 : 0);
         return () => clearTimeout(delayedSearch)
-    }, [search, orderby, direction, currentPage, adminMode]);
+    }, [search, orderby, direction, currentPage, adminMode, statuses]);
 return (
   <div className="max-w-6xl mx-auto px-4 md:px-6 py-12">
     <div className="bg-card border border-border rounded-2xl p-5 md:p-8 space-y-8">
@@ -134,13 +179,49 @@ return (
                   }`}
                 />
               </Button>
+
+              {/* Filters */}
+              <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-bold uppercase text-muted-foreground min-w-15">
+                  Include:
+              </span>
+
+              {STATUSLIST.map((status) => {
+                  const active = selectedStatuses.includes(status);
+
+                  return (
+                  <Button
+                      key={status}
+                      onClick={() => toggleStatus(status)}
+                      className={`h-7 px-2.5 text-xs rounded-sm uppercase transition-colors cursor-pointer
+                      ${
+                          active
+                          ? "bg-emerald-700/40 text-foreground border-emerald-500 hover:bg-emerald-800/50"
+                          : "bg-card text-muted-foreground border-border hover:bg-background hover:text-foreground"
+                      }`}
+                  >
+                      {status}
+                  </Button>
+                  );
+              })}
+
+              {selectedStatuses.length < ALL_STATUSES.length && (
+                  <Button
+                  onClick={resetStatuses}
+                  className="h-7 px-2.5 text-xs rounded-sm bg-card text-foreground border-border hover:bg-background hover:text-foreground flex items-center gap-1"
+                  >
+                  <X className="h-3.5 w-3.5" />
+                  Reset
+                  </Button>
+              )}
+              </div>
             </div>
 
             <div className="flex items-center gap-1 w-full md:w-96">
                 {(user?.adminlevel ?? 0) >= (perms?.admin?.ORDER_MANAGEMENT ?? 99) &&(
                     
                 <Button
-                    onClick={() => setAdminMode(!adminMode)}
+                    onClick={() => {resetStatuses(); setAdminMode(!adminMode);}}
                     className={`h-6 px-2 text-[10px] rounded-md uppercase whitespace-nowrap transition-colors cursor-pointer ${
                     adminMode
                         ? "bg-emerald-700/40 text-foreground border border-emerald-500 hover:bg-emerald-800/50"
@@ -193,6 +274,8 @@ return (
                 order.paymentStatus === "paid"
                     ? "border-emerald-500 text-emerald-500 bg-emerald-500/5"
                     : "border-red-500 text-red-500 bg-red-500/5";
+
+            const isGift = order?.basket?.some((item: ShopProduct) => item.isGift);
         
         return(
           <Card key={order.id} className="bg-background/75 border-border">
@@ -224,29 +307,32 @@ return (
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
+                <div className="flex flex-wrap items-end">
+                    {isGift && (
+                    <div className='justify-items-center min-w-24'>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Gift</p>
+                      <p className="text-xs text-blue-500">
+                        Yes
+                      </p>
+                    </div>
+                    )}
+                    {adminMode && (
+                      <div className='justify-items-center min-w-24'>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Purchaser</p>
+                          <p className="text-xs text-foreground">
+                            {order.purchaserId}
+                          </p>
+                      </div>
+                    )}
+                  <div className='justify-items-center min-w-24'>
                     <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Amount</p>
                     <p className="font-bold text-foreground">
                       {formatMoney(order.amountPence / 100)}
                     </p>
                   </div>
 
-                  <div>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Receiver</p>
-                    <p className="font-mono text-xs text-foreground truncate">
-                      {order.receiverId === user?.SteamID ? "You" : order.receiverId}
-                    </p>
-                  </div>
 
-                  <div>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Updated</p>
-                    <p className="text-xs text-foreground">
-                      {formatDate(order.updatedAt)}
-                    </p>
-                  </div>
-
-                  <div className="flex items-end">
+                  <div className="flex self-end min-w-24">
                     <Button
                       size="sm"
                       onClick={() => {setSelectedOrder(order.id); updateParams({ viewOrder: true })}}
@@ -266,7 +352,7 @@ return (
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between px-1 py-4 border-t border-border">
         <div className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">
           Showing {totalRows === 0 ? 0 : offset + 1} to{" "}
-          {Math.min(offset + itemPerPage, totalRows)} of {totalRows} products
+          {Math.min(offset + itemPerPage, totalRows)} of {totalRows} orders
         </div>
 
         <div className="flex items-center gap-1">
