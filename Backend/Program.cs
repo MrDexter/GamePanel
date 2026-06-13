@@ -118,7 +118,7 @@ builder.Services.AddOpenApi(options => {
 // Cors for Frontend Support
 builder.Services.AddCors(options => {
     options.AddDefaultPolicy(policy => {
-        policy.WithOrigins("http://localhost:5173", "https://decspage.com")
+        policy.WithOrigins("http://localhost:5173", "https://panel.decspage.com")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();

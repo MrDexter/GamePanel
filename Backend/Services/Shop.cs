@@ -43,7 +43,7 @@ public class ShopService : IShopService
         ?? throw new InvalidOperationException("Missing Stripe Key");
         connectionString = config.GetConnectionString("DefaultConnection")
         ?? throw new InvalidOperationException("Missing Default Connection");
-        _domain = config["Frontend:BaseUrl"] ?? "https://decspage.com";
+        _domain = config["Frontend:BaseUrl"] ?? "https://panel.decspage.com";
         _jobs = job;
     }
     public async Task<PaginatedRecord<ShopProduct>> GetProducts(string? search, string? orderby, string? direction, int? limit, int? offset)

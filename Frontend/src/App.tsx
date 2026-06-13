@@ -4,10 +4,8 @@ import { Routes, Route, Link } from 'react-router-dom'
 import Stats from "@/features/Stats"
 import StatsPlayer from "@/features/StatsPlayer"
 import Breakdown from "@/features/Breakdown"
-import About from "@/features/About"
 import Jobs from "@/features/Jobs"
 import Home from "@/features/Home"
-import Test from "@/features/Test"
 import Shop from "@/features/Shop"
 import Orders from "@/features/Orders"
 import { Checkout, Return } from "@/features/Checkout"
@@ -168,7 +166,6 @@ export default function App() {
       label: "Project Info",
       children: [
         { to: "/changelog", label: "Changelog" },
-        { to: "/about", label: "About" },
         { to: "/breakdown", label: "Breakdown" },
       ],
     }
@@ -415,13 +412,11 @@ export default function App() {
             <Route path="/search/:id" element={<StatsPlayer />} />
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/changelog" element={<Changelog />} />
-            <Route path="/about" element={<About />} />
             <Route path="/breakdown" element={<Breakdown />} />
             <Route path="/shop" element={<Shop />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/return" element={<Return />} />
             <Route path="/orders" element={<Orders />} />
-            <Route path="/Future/:name" element={<Test />} />
           </Routes>
         </main>
         <Toaster

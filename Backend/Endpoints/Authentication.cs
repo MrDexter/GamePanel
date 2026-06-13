@@ -92,7 +92,7 @@ public static class AuthEndpoints
             }
             if (string.IsNullOrEmpty(currentUrl))
             {
-                currentUrl = "https://decspage.com/";
+                currentUrl = "https://panel.decspage.com/";
             }
             var token = await auth.SteamLogin(context, steamId64);
             string separator = currentUrl.Contains("?") ? "&" : "?" ?? "?";
