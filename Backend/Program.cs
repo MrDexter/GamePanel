@@ -99,7 +99,7 @@ builder.Services.AddScoped<IJobWorker, JobWorker>();
 // Scalar / Open API Tags, Information
 builder.Services.AddOpenApi(options => {
     options.AddDocumentTransformer((document, context, cancellationToken) => {
-        document.Info.Title = "DecsPage Project";
+        document.Info.Title = "Game Panel API";
         document.Info.Version = "v1.0.0";
         document.Info.Description = "Service to view and update Player information and export any data";
         document.Tags = new HashSet<OpenApiTag>
