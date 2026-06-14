@@ -5,8 +5,7 @@
 export default function Breakdown() {
 
     return (
-        <div className="space-y-12 max-w-6xl mx-auto md:px-6 py-12">
-        <div className="bg-card border border-border rounded-xl p-6">
+        <div className="space-y-12 max-w-6xl mx-auto md:px-6 py-12 bg-card border border-border rounded-xl p-6">
             <section id="stats" className="scroll-mt-20 space-y-6">
                 <div className="border-l-4 border-blue-600 pl-4">
                     <h2 className="text-3xl font-black uppercase italic tracking-tighter text-foreground">
@@ -241,7 +240,6 @@ export default function Breakdown() {
                 </div>
 
             </section>
-        </div>
         </div>
     )
 }
